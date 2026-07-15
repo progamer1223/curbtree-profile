@@ -185,6 +185,7 @@
         </span>
       </div>
 
+      <!-- TOP FRAME -->
       <div class="glass-card p-5 sm:p-8 main-frame-tall relative frame-common" id="main-frame">
         <div class="top-frame-content">
           <div class="profile-pic-offset">
@@ -210,6 +211,7 @@
         </div>
       </div>
 
+      <!-- BOTTOM FRAME -->
       <div class="glass-card p-5 sm:p-6 flex flex-col items-center justify-center gap-3 min-h-[120px] frame-common" id="bottom-frame">
         <div id="display-socials" class="w-full flex flex-row flex-wrap items-center justify-center gap-4 sm:gap-6"></div>
       </div>
@@ -350,7 +352,8 @@
       <div class="flex items-center gap-2"><label class="text-xs text-gray-400">FX Color</label><input type="color" id="fx-color" value="#ffffff" onchange="updateFxColor()" class="w-6 h-6 p-0 border-0 bg-transparent" /></div>
     </div>
 
-    <div class="border-t border-white/5 pt-4 space-y-3">
+    <!-- FRAME STYLING SECTION -->
+    <div class="border-t border-white/5 pt-4 space-y-3" id="frame-styling-section">
       <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Frame Styling</h3>
       <div class="flex items-center gap-4">
         <label class="text-xs text-gray-400">Background</label>
@@ -580,16 +583,73 @@ function saveAllSettings() {
   state.tilt.intensity = parseFloat(document.getElementById('tilt-intensity').value) || 8;
   state.tilt.speed = parseFloat(document.getElementById('tilt-speed').value) || 0.15;
   
+  // FRAME STYLING - Properly save all values
   state.frameBg = document.getElementById('frame-bg-color').value;
   state.frameTransparency = parseInt(document.getElementById('frame-transparency').value) / 100;
   state.frameOutline = parseInt(document.getElementById('frame-outline-opacity').value) / 100;
   state.frameBlur = parseFloat(document.getElementById('frame-blur').value);
+  
+  // Also update the display labels
+  document.getElementById('transparency-label').textContent = Math.round(state.frameTransparency * 100) + '%';
+  document.getElementById('outline-label').textContent = Math.round(state.frameOutline * 100) + '%';
+  document.getElementById('blur-label').textContent = state.frameBlur + 'px';
   
   localStorage.setItem('curbtree_full_profile', JSON.stringify(state));
   
   alert('✅ All settings saved! Click "Download profile.json" to upload to GitHub.');
   
   applyAllSettings();
+}
+
+// ─── FRAME STYLING - FIXED ─────────────────────────────────
+function updateFrameStyle() {
+  // Get values from inputs
+  const bg = document.getElementById('frame-bg-color').value;
+  const transparency = parseInt(document.getElementById('frame-transparency').value) / 100;
+  const outline = parseInt(document.getElementById('frame-outline-opacity').value) / 100;
+  const blur = parseFloat(document.getElementById('frame-blur').value);
+  
+  // Update state
+  state.frameBg = bg;
+  state.frameTransparency = transparency;
+  state.frameOutline = outline;
+  state.frameBlur = blur;
+  
+  // Update labels
+  document.getElementById('transparency-label').textContent = Math.round(transparency * 100) + '%';
+  document.getElementById('outline-label').textContent = Math.round(outline * 100) + '%';
+  document.getElementById('blur-label').textContent = blur + 'px';
+  
+  // Apply to frames
+  applyFrameStyles(bg, transparency, outline, blur);
+}
+
+function applyFrameStyles(bg, transparency, outline, blur) {
+  // Create RGBA color with proper alpha
+  const alpha = Math.round(transparency * 255).toString(16).padStart(2, '0');
+  const bgWithAlpha = bg + alpha;
+  const borderColor = `rgba(255,255,255,${outline * 0.8})`;
+  const blurValue = `blur(${blur}px)`;
+  
+  // Apply to both frames
+  const frames = [DOM.mainFrame, DOM.bottomFrame];
+  frames.forEach(frame => {
+    if (frame) {
+      frame.style.background = bgWithAlpha;
+      frame.style.borderColor = borderColor;
+      frame.style.backdropFilter = blurValue;
+      frame.style.webkitBackdropFilter = blurValue;
+      frame.style.backgroundColor = bgWithAlpha;
+    }
+  });
+  
+  // Also update the glass-card class elements directly
+  document.querySelectorAll('.glass-card').forEach(el => {
+    el.style.background = bgWithAlpha;
+    el.style.borderColor = borderColor;
+    el.style.backdropFilter = blurValue;
+    el.style.webkitBackdropFilter = blurValue;
+  });
 }
 
 // ─── APPLY ALL SETTINGS ─────────────────────────────────────
@@ -637,12 +697,12 @@ function applyAllSettings() {
   const statItems = DOM.statsBar.querySelectorAll('.stat-item');
   statItems.forEach(item => item.style.color = state.statsColor);
   
+  // Frame Styling - apply with current state
+  applyFrameStyles(state.frameBg, state.frameTransparency, state.frameOutline, state.frameBlur);
+  
   applyTypography();
-  updateFrameStyle();
   applyGlow();
   restartTypewriter();
-  
-  // Update cursor class
   applyCursorClasses();
 }
 
@@ -672,33 +732,6 @@ function updateBioColor(color) { state.bioColor = color; DOM.displayBio.style.co
 function updateMusicColor(color) { state.musicColor = color; DOM.inlineTrack.style.color = color; DOM.volumeIcon.style.color = color; }
 function updateStatsColor(color) { state.statsColor = color; const items = DOM.statsBar.querySelectorAll('.stat-item'); items.forEach(item => item.style.color = color); }
 function updateSocialColor(color) { state.socialColor = color; document.querySelectorAll('.social-tooltip').forEach(el => el.style.color = color); }
-
-// ─── FRAME STYLING ──────────────────────────────────────────
-function updateFrameStyle() {
-  const bg = state.frameBg;
-  const transparency = state.frameTransparency;
-  const outline = state.frameOutline;
-  const blur = state.frameBlur;
-  
-  const alpha = Math.round(transparency * 255).toString(16).padStart(2, '0');
-  const bgWithAlpha = bg + alpha;
-  const borderColor = `rgba(255,255,255,${outline * 0.8})`;
-  const blurValue = `blur(${blur}px)`;
-  
-  [DOM.mainFrame, DOM.bottomFrame].forEach(frame => {
-    if (frame) {
-      frame.style.background = bgWithAlpha;
-      frame.style.borderColor = borderColor;
-      frame.style.backdropFilter = blurValue;
-      frame.style.webkitBackdropFilter = blurValue;
-    }
-  });
-  
-  // Update labels
-  document.getElementById('transparency-label').textContent = Math.round(transparency * 100) + '%';
-  document.getElementById('outline-label').textContent = Math.round(outline * 100) + '%';
-  document.getElementById('blur-label').textContent = blur + 'px';
-}
 
 // ─── TYPOGRAPHY ─────────────────────────────────────────────
 function applyTypography() {
@@ -1001,17 +1034,12 @@ function updateVolume(val) { DOM.audioPlayer.volume = parseFloat(val); }
 // ─── VERCEL ANALYTICS VIEW COUNT ──────────────────────────
 async function getViewCount() {
   try {
-    // Get current count from localStorage
     let count = parseInt(localStorage.getItem('curbtree_views')) || 0;
-    
-    // Check if this is a new visit (using session storage)
     const hasVisited = sessionStorage.getItem('curbtree_visited');
     if (!hasVisited) {
       count += 1;
       localStorage.setItem('curbtree_views', count.toString());
       sessionStorage.setItem('curbtree_visited', 'true');
-      
-      // Track with Vercel Analytics if available
       if (typeof window.va !== 'undefined') {
         window.va('event', 'page_view', {
           params: {
@@ -1021,7 +1049,6 @@ async function getViewCount() {
         });
       }
     }
-    
     document.getElementById('view-count').textContent = count.toLocaleString();
     return count;
   } catch (e) {
@@ -1046,8 +1073,6 @@ function startExperience() {
     if (state.audioUrl) toggleAudio(true);
     restartTypewriter();
     applyCursorClasses();
-    
-    // Track view count
     getViewCount();
   }, 500);
 }
@@ -1246,10 +1271,14 @@ async function init() {
   document.getElementById('social-font').value = state.socialFont || 'font-inter';
   document.getElementById('social-weight').value = state.socialWeight || 'font-weight-semibold';
   
+  // FRAME STYLING - Set initial values
   document.getElementById('frame-bg-color').value = state.frameBg || '#141414';
   document.getElementById('frame-transparency').value = Math.round((state.frameTransparency || 0.55) * 100);
   document.getElementById('frame-outline-opacity').value = Math.round((state.frameOutline || 0.08) * 100);
   document.getElementById('frame-blur').value = state.frameBlur || 10;
+  
+  // Apply frame styling immediately
+  updateFrameStyle();
   
   document.getElementById('tilt-enabled').checked = state.tilt.enabled;
   document.getElementById('tilt-intensity').value = state.tilt.intensity;
@@ -1265,7 +1294,6 @@ async function init() {
   
   if (state.fx !== 'none') setEffect(state.fx);
   
-  // Get initial view count
   const count = parseInt(localStorage.getItem('curbtree_views')) || 0;
   document.getElementById('view-count').textContent = count.toLocaleString();
   
