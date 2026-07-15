@@ -385,14 +385,21 @@
       <div id="editor-socials" class="space-y-2 mt-1"></div>
     </div>
 
+    <!-- ZIP Download/Upload Section -->
     <div class="border-t border-white/5 pt-4 space-y-2">
-      <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Download for GitHub</h3>
-      <button onclick="downloadFullProject()" class="w-full bg-blue-600/60 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
-        <i class="fas fa-cloud-upload-alt"></i> Download Full Project (ZIP)
+      <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Download / Upload</h3>
+      
+      <button onclick="downloadFullProject()" class="w-full bg-blue-600/60 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
+        <i class="fas fa-cloud-download-alt"></i> Download Full Project (ZIP)
       </button>
+      
+      <button onclick="document.getElementById('upload-zip').click()" class="w-full bg-purple-600/60 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
+        <i class="fas fa-cloud-upload-alt"></i> Upload ZIP to Restore
+      </button>
+      <input type="file" id="upload-zip" accept=".zip" style="display:none;" onchange="handleZipUpload(event)" />
+      
       <p style="font-size:0.6rem; color:#666; text-align:center; margin-top:4px;">
-        Downloads profile.json + all your assets (profile pic, background, music) as a ZIP folder<br>
-        Upload the contents to GitHub to update your profile for everyone!
+        Download a ZIP with all your files, or upload one to restore everything!
       </p>
     </div>
 
@@ -499,6 +506,28 @@ const state = {
   socialWeight: 'font-weight-semibold'
 };
 
+// ─── LOAD PROFILE FROM JSON (GitHub) ─────────────────────
+async function loadProfileFromJSON() {
+  try {
+    const response = await fetch('/profile.json?t=' + Date.now());
+    if (response.ok) {
+      const data = await response.json();
+      Object.keys(data).forEach(key => {
+        if (typeof data[key] === 'object' && data[key] !== null && !Array.isArray(data[key])) {
+          state[key] = { ...state[key], ...data[key] };
+        } else {
+          state[key] = data[key];
+        }
+      });
+      console.log('✅ Profile loaded from JSON');
+      return true;
+    }
+  } catch (e) {
+    console.log('⚠️ No profile.json found, using defaults');
+  }
+  return false;
+}
+
 // ─── FILE HANDLING ──────────────────────────────────────────
 function handlePfpFileUpload(event) {
   const file = event.target.files[0];
@@ -518,18 +547,25 @@ function handleBgFileUpload(event) {
     document.getElementById('bg-filename').textContent = file.name;
     const url = URL.createObjectURL(file);
     state.bgUrl = '/assets/' + file.name;
+    
     if (file.type.startsWith('video/')) {
       state.bgType = 'video';
       document.getElementById('input-bg-type').value = 'video';
-      DOM.bgVideo.src = url;
-      DOM.bgVideo.style.display = 'block';
+      const video = DOM.bgVideo;
+      video.src = url;
+      video.style.display = 'block';
       DOM.bgImage.style.display = 'none';
+      video.muted = true;
+      video.loop = true;
+      video.playsInline = true;
+      video.play().catch(() => {});
     } else {
       state.bgType = 'image';
       document.getElementById('input-bg-type').value = 'image';
       DOM.bgImage.src = url;
       DOM.bgImage.style.display = 'block';
       DOM.bgVideo.style.display = 'none';
+      DOM.bgVideo.pause();
     }
   }
 }
@@ -555,7 +591,6 @@ async function downloadFullProject() {
   
   // Add profile.json
   const profileData = JSON.parse(JSON.stringify(state));
-  // Remove temp URLs
   profileData.pfpUrl = uploadedFiles.pfp ? '/assets/' + uploadedFiles.pfp.name : '/assets/avatar.png';
   profileData.bgUrl = uploadedFiles.bg ? '/assets/' + uploadedFiles.bg.name : '';
   profileData.audioUrl = uploadedFiles.audio ? '/assets/' + uploadedFiles.audio.name : '';
@@ -566,25 +601,21 @@ async function downloadFullProject() {
   // Add assets folder
   const assets = zip.folder('assets');
   
-  // Add profile picture
   if (uploadedFiles.pfp) {
     const pfpData = await readFileAsArrayBuffer(uploadedFiles.pfp);
     assets.file(uploadedFiles.pfp.name, pfpData);
   }
   
-  // Add background
   if (uploadedFiles.bg) {
     const bgData = await readFileAsArrayBuffer(uploadedFiles.bg);
     assets.file(uploadedFiles.bg.name, bgData);
   }
   
-  // Add audio
   if (uploadedFiles.audio) {
     const audioData = await readFileAsArrayBuffer(uploadedFiles.audio);
     assets.file(uploadedFiles.audio.name, audioData);
   }
   
-  // Generate zip
   const content = await zip.generateAsync({ type: 'blob' });
   saveAs(content, 'curbtree-profile.zip');
   
@@ -600,26 +631,121 @@ function readFileAsArrayBuffer(file) {
   });
 }
 
-// ─── LOAD PROFILE FROM JSON (GitHub) ─────────────────────
-async function loadProfileFromJSON() {
+// ─── HANDLE ZIP UPLOAD ──────────────────────────────────────
+async function handleZipUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
   try {
-    const response = await fetch('/profile.json?t=' + Date.now());
-    if (response.ok) {
-      const data = await response.json();
-      Object.keys(data).forEach(key => {
-        if (typeof data[key] === 'object' && data[key] !== null && !Array.isArray(data[key])) {
-          state[key] = { ...state[key], ...data[key] };
-        } else {
-          state[key] = data[key];
-        }
-      });
-      console.log('✅ Profile loaded from JSON');
-      return true;
+    const btn = document.querySelector('#upload-zip').previousElementSibling;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Extracting...';
+    btn.disabled = true;
+    
+    const zip = await JSZip.loadAsync(file);
+    
+    // Find profile.json
+    const profileFile = zip.file('profile.json');
+    if (!profileFile) {
+      alert('❌ No profile.json found in the ZIP file!');
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+      return;
     }
-  } catch (e) {
-    console.log('⚠️ No profile.json found, using defaults');
+    
+    const profileContent = await profileFile.async('text');
+    const profileData = JSON.parse(profileContent);
+    
+    // Update state
+    Object.keys(profileData).forEach(key => {
+      if (typeof profileData[key] === 'object' && profileData[key] !== null && !Array.isArray(profileData[key])) {
+        state[key] = { ...state[key], ...profileData[key] };
+      } else {
+        state[key] = profileData[key];
+      }
+    });
+    
+    // Extract assets folder
+    const assetsFolder = zip.folder('assets');
+    if (assetsFolder) {
+      const assetFiles = assetsFolder.file(/.*/);
+      for (const assetFile of assetFiles) {
+        if (!assetFile.dir) {
+          const blob = await assetFile.async('blob');
+          const url = URL.createObjectURL(blob);
+          const ext = assetFile.name.split('.').pop().toLowerCase();
+          
+          if (ext.match(/(png|jpg|jpeg|gif|svg|webp)/)) {
+            state.pfpUrl = '/assets/' + assetFile.name;
+            DOM.displayPfp.src = url;
+            uploadedFiles.pfp = blob;
+            document.getElementById('pfp-filename').textContent = assetFile.name;
+          } else if (ext.match(/(mp4|webm|mov)/)) {
+            state.bgUrl = '/assets/' + assetFile.name;
+            state.bgType = 'video';
+            document.getElementById('input-bg-type').value = 'video';
+            const video = DOM.bgVideo;
+            video.src = url;
+            video.style.display = 'block';
+            DOM.bgImage.style.display = 'none';
+            video.muted = true;
+            video.loop = true;
+            video.playsInline = true;
+            video.play().catch(() => {});
+            document.getElementById('bg-filename').textContent = assetFile.name;
+            uploadedFiles.bg = blob;
+          } else if (ext.match(/(mp3|wav|ogg|m4a)/)) {
+            state.audioUrl = '/assets/' + assetFile.name;
+            state.musicDisplayName = assetFile.name.replace(/\.[^/.]+$/, '');
+            DOM.audioPlayer.src = url;
+            DOM.inlineMusic.style.display = 'flex';
+            DOM.inlineTrack.textContent = state.musicDisplayName;
+            document.getElementById('input-music-name').value = state.musicDisplayName;
+            document.getElementById('audio-filename').textContent = assetFile.name;
+            uploadedFiles.audio = blob;
+          }
+        }
+      }
+    }
+    
+    // Re-render everything
+    renderDisplaySocials();
+    renderBadges();
+    renderEditorSocials();
+    renderEditorBadges();
+    renderEditorBioLines();
+    restartTypewriter();
+    updateFrameStyle();
+    applyGlow();
+    applyTypography();
+    DOM.displayUsername.style.color = state.usernameColor;
+    DOM.displayBio.style.color = state.bioColor;
+    DOM.inlineTrack.style.color = state.musicColor;
+    DOM.volumeIcon.style.color = state.musicColor;
+    DOM.locationDisplay.innerText = state.location;
+    document.getElementById('view-count').innerText = Math.floor(Math.random() * 90000).toLocaleString();
+    document.getElementById('input-username').value = state.username;
+    document.getElementById('input-location').value = state.location;
+    document.getElementById('input-music-name').value = state.musicDisplayName;
+    
+    // Update editor fields
+    document.getElementById('input-pfp-url').value = state.pfpUrl;
+    document.getElementById('input-bg-url').value = state.bgUrl;
+    document.getElementById('input-audio-url').value = state.audioUrl;
+    document.getElementById('input-bg-type').value = state.bgType;
+    
+    btn.innerHTML = '✅ Restored!';
+    btn.disabled = false;
+    setTimeout(() => {
+      btn.innerHTML = originalText;
+    }, 3000);
+    
+    alert('✅ Profile restored successfully from ZIP!');
+    
+  } catch (error) {
+    console.error('ZIP upload error:', error);
+    alert('❌ Error reading ZIP file: ' + error.message);
   }
-  return false;
 }
 
 // ─── ASSET UPDATE FUNCTIONS ──────────────────────────────
@@ -628,13 +754,19 @@ function updateBgType(val) {
   if (val === 'image' && state.bgUrl) {
     DOM.bgImage.style.display = 'block';
     DOM.bgVideo.style.display = 'none';
+    DOM.bgVideo.pause();
   } else if (val === 'video' && state.bgUrl) {
-    DOM.bgVideo.style.display = 'block';
+    const video = DOM.bgVideo;
+    video.style.display = 'block';
     DOM.bgImage.style.display = 'none';
-    if (DOM.enterScreen.style.display === 'none') DOM.bgVideo.play();
+    video.muted = true;
+    video.loop = true;
+    video.playsInline = true;
+    video.play().catch(() => {});
   } else {
     DOM.bgImage.style.display = 'none';
     DOM.bgVideo.style.display = 'none';
+    DOM.bgVideo.pause();
   }
 }
 
@@ -1186,56 +1318,6 @@ function drawFx() {
 
 function updateFxColor() { state.fxColor = document.getElementById('fx-color').value; }
 
-// ─── MEDIA UPLOADS & MUSIC ──────────────────────────────
-function handlePfpUpload(e) { 
-  const f = e.target.files[0]; 
-  if(!f) return; 
-  const url = URL.createObjectURL(f); 
-  state.pfpUrl = url; 
-  DOM.displayPfp.src = url; 
-}
-
-function handleBgUpload(e) { 
-  const f = e.target.files[0]; 
-  if(!f) return; 
-  const url = URL.createObjectURL(f); 
-  if(f.type.startsWith('video/')){ 
-    state.bgType = 'video'; 
-    DOM.bgImage.style.display = 'none'; 
-    DOM.bgVideo.style.display = 'block'; 
-    DOM.bgVideo.src = url; 
-    if(DOM.enterScreen.style.display === 'none') DOM.bgVideo.play(); 
-  } else { 
-    state.bgType = 'image'; 
-    DOM.bgVideo.style.display = 'none'; 
-    DOM.bgVideo.pause(); 
-    DOM.bgImage.style.display = 'block'; 
-    DOM.bgImage.src = url; 
-  } 
-}
-
-function handleAudioUpload(e) {
-  const f = e.target.files[0]; 
-  if(!f) return;
-  const url = URL.createObjectURL(f);
-  state.audioUrl = url;
-  DOM.audioPlayer.src = url;
-  DOM.audioPlayer.volume = parseFloat(document.getElementById('inline-volume').value);
-  DOM.inlineMusic.style.display = 'flex';
-  const name = f.name.length > 20 ? f.name.slice(0, 18) + '…' : f.name;
-  state.musicDisplayName = name;
-  DOM.inlineTrack.innerText = name;
-  document.getElementById('music-name-input').value = name;
-  if(DOM.enterScreen.style.display === 'none') toggleAudio(true);
-  applyGlow();
-  applyTypography();
-}
-
-function updateMusicName(val) {
-  state.musicDisplayName = val || 'track';
-  DOM.inlineTrack.innerText = val || 'track';
-}
-
 // ─── AUDIO ──────────────────────────────────────────────────
 function toggleAudio(force) {
   if(!state.audioUrl) return;
@@ -1319,7 +1401,7 @@ function handleFullImport(event) {
         document.getElementById('view-count').innerText = Math.floor(Math.random() * 90000).toLocaleString();
         document.getElementById('input-username').value = state.username;
         document.getElementById('input-location').value = state.location;
-        document.getElementById('music-name-input').value = state.musicDisplayName;
+        document.getElementById('input-music-name').value = state.musicDisplayName;
         alert('✅ Profile restored successfully!');
       }
     } catch (error) {
@@ -1336,8 +1418,16 @@ function startExperience() {
   setTimeout(() => {
     DOM.enterScreen.style.display = 'none';
     DOM.mainContent.classList.remove('opacity-0', 'pointer-events-none');
-    if(state.bgType === 'video' && DOM.bgVideo.src) DOM.bgVideo.play();
-    if(state.audioUrl) toggleAudio(true);
+    
+    if (state.bgType === 'video' && DOM.bgVideo.src) {
+      const video = DOM.bgVideo;
+      video.muted = true;
+      video.loop = true;
+      video.playsInline = true;
+      video.play().catch(() => {});
+    }
+    
+    if (state.audioUrl) toggleAudio(true);
     restartTypewriter();
   }, 500);
 }
@@ -1348,10 +1438,8 @@ function toggleEditor() {
 
 // ─── INIT ──────────────────────────────────────────────────
 async function init() {
-  // Load from JSON first
   await loadProfileFromJSON();
   
-  // Then load local backup
   try {
     const saved = localStorage.getItem('curbtree_full_profile');
     if (saved) {
@@ -1363,11 +1451,9 @@ async function init() {
           state[key] = data[key];
         }
       });
-      console.log('✅ Local backup loaded');
     }
   } catch(e) {}
   
-  // Render everything
   renderEditorSocials();
   renderDisplaySocials();
   renderEditorBioLines();
@@ -1377,15 +1463,13 @@ async function init() {
   initFxCanvas();
   applyGlow();
   
-  // Update UI with state
   document.getElementById('view-count').innerText = Math.floor(Math.random() * 90000).toLocaleString();
   document.getElementById('fx-color').value = '#ffffff';
   document.getElementById('bg-overlay').style.opacity = 0.55;
-  document.getElementById('music-name-input').value = state.musicDisplayName;
+  document.getElementById('input-music-name').value = state.musicDisplayName;
   document.getElementById('input-location').value = state.location;
   DOM.locationDisplay.innerText = state.location;
   
-  // Colors
   document.getElementById('username-color').value = state.usernameColor;
   document.getElementById('bio-color').value = state.bioColor;
   document.getElementById('music-color').value = state.musicColor;
@@ -1400,7 +1484,6 @@ async function init() {
   const statItems = DOM.statsBar.querySelectorAll('.stat-item');
   statItems.forEach(item => item.style.color = state.statsColor);
   
-  // Fonts
   document.getElementById('username-font').value = state.usernameFont || 'font-inter';
   document.getElementById('username-weight').value = state.usernameWeight || 'font-weight-extrabold';
   document.getElementById('bio-font').value = state.bioFont || 'font-inter';
@@ -1414,14 +1497,12 @@ async function init() {
   
   applyTypography();
   
-  // Frame
   document.getElementById('frame-bg-color').value = state.frameBg || '#141414';
   document.getElementById('frame-transparency').value = Math.round((state.frameTransparency || 0.55) * 100);
   document.getElementById('frame-outline-opacity').value = Math.round((state.frameOutline || 0.08) * 100);
   document.getElementById('frame-blur').value = state.frameBlur || 10;
   updateFrameStyle();
   
-  // Toggle switches
   document.getElementById('tilt-enabled').checked = state.tilt.enabled;
   document.getElementById('tilt-intensity').value = state.tilt.intensity;
   document.getElementById('tilt-speed').value = state.tilt.speed;
@@ -1430,13 +1511,11 @@ async function init() {
   document.getElementById('tw-cursor').checked = state.typewriter.cursor;
   document.getElementById('glow-enabled').checked = state.glowEffect.enabled;
   
-  // FX
   document.querySelectorAll('input[name="fx"]').forEach(el => {
     el.checked = el.value === state.fx;
   });
   if (state.fx !== 'none') setEffect(state.fx);
   
-  // Auto-save
   setInterval(() => {
     try {
       localStorage.setItem('curbtree_full_profile', JSON.stringify(state));
