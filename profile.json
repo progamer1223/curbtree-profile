@@ -1,36 +1,33 @@
 {
-  "username": "Curbi_",
+  "username": "@curbtree",
   "usernameColor": "#ffffff",
-  "bioColor": "#ffffff",
-  "musicColor": "#ffffff",
-  "statsColor": "#ffffff",
+  "bioColor": "#d1d5db",
+  "musicColor": "#bbbbbb",
+  "statsColor": "#999999",
   "socialColor": "#ffffff",
-  "bioLines": [
-    "Welcome to my profile."
-  ],
+  "bioLines": ["Welcome to my profile!", "Built with ❤️"],
   "location": "Earth",
   "pfpUrl": "/assets/avatar.gif",
-  "bgType": "video",
-  "bgUrl": "/assets/bg.mp4",
-  "audioUrl": "/assets/song.mp3",
-  "audioPlaying": false,
-  "musicDisplayName": "Almost Back - Lucki",
+  "bgType": "none",
+  "bgUrl": "",
+  "audioUrl": "",
+  "musicDisplayName": "My Song",
   "frameBg": "#141414",
-  "frameTransparency": 0.14,
-  "frameOutline": 0.2,
-  "frameBlur": 1,
+  "frameTransparency": 0.55,
+  "frameOutline": 0.08,
+  "frameBlur": 10,
   "typewriter": {
-    "enabled": true,
-    "applyUsername": true,
-    "cursor": true,
+    "enabled": false,
+    "applyUsername": false,
+    "cursor": false,
     "typeSpeed": 50,
     "deleteSpeed": 25,
     "pauseTime": 1500,
     "lineGap": 300
   },
   "glowEffect": {
-    "enabled": true,
-    "intensity": 2
+    "enabled": false,
+    "intensity": 4
   },
   "tilt": {
     "enabled": true,
@@ -40,9 +37,9 @@
   "links": [
     {
       "id": "1",
-      "name": "Discord",
-      "url": "_curbie_",
-      "icon": "fa-brands fa-discord",
+      "name": "GitHub",
+      "url": "https://github.com",
+      "icon": "fa-brands fa-github",
       "color": "#ffffff",
       "spin": false
     }
@@ -53,24 +50,8 @@
       "label": "Verified",
       "icon": "fa-solid fa-check-circle",
       "color": "#3b82f6"
-    },
-    {
-      "id": "b2",
-      "label": "Developer",
-      "icon": "fa-solid fa-star",
-      "color": "#ff7070"
     }
   ],
-  "fx": "snow",
-  "fxColor": "#ffffff",
-  "usernameFont": "font-inter",
-  "usernameWeight": "font-weight-extrabold",
-  "bioFont": "font-inter",
-  "bioWeight": "font-weight-normal",
-  "musicFont": "font-inter",
-  "musicWeight": "font-weight-normal",
-  "statsFont": "font-inter",
-  "statsWeight": "font-weight-normal",
-  "socialFont": "font-inter",
-  "socialWeight": "font-weight-semibold"
+  "fx": "none",
+  "fxColor": "#ffffff"
 }
