@@ -129,63 +129,18 @@
     .font-raleway { font-family: 'Raleway', sans-serif !important; }
     .font-dm-sans { font-family: 'DM Sans', sans-serif !important; }
     .font-space-grotesk { font-family: 'Space Grotesk', sans-serif !important; }
-
-    /* Password Lock Screen */
-    #lock-screen {
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,0.92);
-      backdrop-filter:blur(12px);
-      z-index:9999;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      flex-direction:column;
-      gap:20px;
-      padding:20px;
-    }
-    #lock-screen h2 { color:white; font-size:2rem; font-weight:700; }
-    #lock-screen p { color:#888; font-size:0.9rem; }
-    #lock-screen input {
-      padding:14px 24px;
-      border-radius:14px;
-      border:1px solid #333;
-      background:#1a1a1a;
-      color:white;
-      font-size:1.2rem;
-      width:320px;
-      max-width:90%;
-      outline:none;
-      transition:border-color 0.2s;
-    }
-    #lock-screen input:focus { border-color:#3b82f6; }
-    #lock-screen .lock-btn {
-      padding:14px 48px;
-      background:#3b82f6;
-      border:none;
-      border-radius:14px;
-      color:white;
-      font-size:1.1rem;
-      font-weight:600;
-      cursor:pointer;
-      transition:background 0.2s;
-    }
-    #lock-screen .lock-btn:hover { background:#2563eb; }
-    #lock-screen .lock-error { color:#ef4444; font-size:0.9rem; display:none; }
-    #lock-screen .lock-hint { color:#555; font-size:0.7rem; margin-top:-8px; }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Poppins:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&family=Raleway:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
 </head>
 <body>
 
-<!-- PASSWORD LOCK SCREEN -->
-<div id="lock-screen">
-  <h2>🔒 Edit Mode</h2>
-  <p>Enter password to edit this profile</p>
-  <input type="password" id="lock-password" placeholder="Enter password..." onkeypress="if(event.key==='Enter') unlockEditor()" />
-  <button class="lock-btn" onclick="unlockEditor()">Unlock Editor</button>
-  <div class="lock-error" id="lock-error">❌ Wrong password!</div>
-  <div class="lock-hint">Hint: The password is "curbtree"</div>
+<!-- LOCK SCREEN - ONLY SHOWS WHEN ?edit=true -->
+<div id="lock-screen" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); backdrop-filter:blur(12px); z-index:9999; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:20px; padding:20px;">
+  <h2 style="color:white; font-size:2rem; font-weight:700;">🔒 Edit Mode</h2>
+  <p style="color:#888; font-size:0.9rem;">Enter your password to edit this profile</p>
+  <input type="password" id="lock-password" placeholder="Enter password..." style="padding:14px 24px; border-radius:14px; border:1px solid #333; background:#1a1a1a; color:white; font-size:1.2rem; width:320px; max-width:90%; outline:none;" onkeypress="if(event.key==='Enter') unlockEditor()" />
+  <button class="lock-btn" style="padding:14px 48px; background:#3b82f6; border:none; border-radius:14px; color:white; font-size:1.1rem; font-weight:600; cursor:pointer;" onclick="unlockEditor()">Unlock Editor</button>
+  <div class="lock-error" id="lock-error" style="color:#ef4444; font-size:0.9rem; display:none;">❌ Wrong password!</div>
 </div>
 
 <div id="bg-container">
@@ -205,7 +160,7 @@
 
 <div id="main-content" class="w-full h-screen flex flex-col items-center justify-center relative z-10 px-4 opacity-0 pointer-events-none transition-opacity duration-700">
 
-  <!-- Edit Button - Hidden by default, shown after password -->
+  <!-- Edit Button - Hidden for viewers, shown after password -->
   <button id="edit-btn" class="absolute top-5 right-5 bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-full backdrop-blur-md border border-white/15 transition shadow-lg flex items-center gap-2 text-sm" onclick="toggleEditor()" style="display:none;">
     <i class="fas fa-sliders-h"></i> Edit
   </button>
@@ -411,14 +366,31 @@
 </div>
 
 <script>
-// ─── PASSWORD LOCK ──────────────────────────────────────────
-const EDIT_PASSWORD = "curbtree"; // Change this to your password!
+// ─── EDIT MODE DETECTION ──────────────────────────────────
+// Check if ?edit=true is in the URL
+const urlParams = new URLSearchParams(window.location.search);
+const isEditMode = urlParams.get('edit') === 'true';
+
+// Only show lock screen when in edit mode
+if (isEditMode) {
+  document.getElementById('lock-screen').style.display = 'flex';
+} else {
+  document.getElementById('lock-screen').style.display = 'none';
+  // Hide edit button completely for viewers
+  document.getElementById('edit-btn').style.display = 'none';
+}
+
+// ─── PASSWORD CHECK ──────────────────────────────────────
+const EDIT_PASSWORD = "curbtree"; // Change this!
 
 function unlockEditor() {
   const input = document.getElementById('lock-password');
   const error = document.getElementById('lock-error');
   
   if (input.value === EDIT_PASSWORD) {
+    // Save that this device is trusted
+    localStorage.setItem('curbtree_trusted', 'true');
+    
     document.getElementById('lock-screen').style.display = 'none';
     document.getElementById('edit-btn').style.display = 'flex';
     error.style.display = 'none';
@@ -427,6 +399,12 @@ function unlockEditor() {
     input.value = '';
     input.focus();
   }
+}
+
+// Auto-unlock if already trusted
+if (localStorage.getItem('curbtree_trusted') === 'true' && isEditMode) {
+  document.getElementById('lock-screen').style.display = 'none';
+  document.getElementById('edit-btn').style.display = 'flex';
 }
 
 // ─── STATE ────────────────────────────────────────────────
