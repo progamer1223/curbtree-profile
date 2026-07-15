@@ -8,6 +8,13 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Poppins:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&family=Raleway:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  
+  <!-- Vercel Analytics -->
+  <script>
+    window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  </script>
+  <script defer src="/_vercel/insights/script.js"></script>
+  
   <style>
     * { box-sizing: border-box; }
     body { margin:0; font-family:'Inter',sans-serif; background:#0b0b0b; color:white; overflow:hidden; height:100vh; }
@@ -241,7 +248,7 @@
         </div>
         <div>
           <label class="block text-xs text-gray-400">Background URL</label>
-          <input type="text" id="input-bg-url" value="" placeholder="/assets/bg.mp4" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" oninput="updateBgUrl(this.value)" />
+          <input type="text" id="input-bg-url" value="" placeholder="/assets/bg.mp4 or Cloudinary URL" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" oninput="updateBgUrl(this.value)" />
           <p class="text-[0.5rem] text-gray-500 mt-1">Enter the path to your background (e.g., /assets/bg.mp4)</p>
         </div>
         <div>
@@ -312,22 +319,22 @@
         <label><input type="checkbox" id="tw-cursor" onchange="updateTypewriterSetting('cursor',this.checked)" /> Cursor</label>
       </div>
       <div class="grid grid-cols-2 gap-2 text-xs">
-        <div>Speed <input type="range" min="10" max="200" value="50" class="w-full" oninput="updateTypewriterSetting('typeSpeed',parseInt(this.value))" /></div>
-        <div>Delete <input type="range" min="5" max="150" value="25" class="w-full" oninput="updateTypewriterSetting('deleteSpeed',parseInt(this.value))" /></div>
-        <div>Pause <input type="range" min="200" max="5000" value="1500" class="w-full" oninput="updateTypewriterSetting('pauseTime',parseInt(this.value))" /></div>
-        <div>Gap <input type="range" min="0" max="2000" value="300" class="w-full" oninput="updateTypewriterSetting('lineGap',parseInt(this.value))" /></div>
+        <div>Speed <input type="range" id="tw-typeSpeed" min="10" max="200" value="50" class="w-full" oninput="updateTypewriterSetting('typeSpeed',parseInt(this.value))" /></div>
+        <div>Delete <input type="range" id="tw-deleteSpeed" min="5" max="150" value="25" class="w-full" oninput="updateTypewriterSetting('deleteSpeed',parseInt(this.value))" /></div>
+        <div>Pause <input type="range" id="tw-pauseTime" min="200" max="5000" value="1500" class="w-full" oninput="updateTypewriterSetting('pauseTime',parseInt(this.value))" /></div>
+        <div>Gap <input type="range" id="tw-lineGap" min="0" max="2000" value="300" class="w-full" oninput="updateTypewriterSetting('lineGap',parseInt(this.value))" /></div>
       </div>
     </div>
 
     <div class="grid grid-cols-2 gap-4 border-t border-white/5 pt-4">
       <div><h4 class="text-xs text-gray-400">Glow</h4>
         <label><input type="checkbox" id="glow-enabled" onchange="updateGlowSetting('enabled',this.checked)" /> On</label>
-        <div>Intensity <input type="range" min="0.5" max="15" step="0.5" value="4" class="w-full" oninput="updateGlowSetting('intensity',parseFloat(this.value))" /></div>
+        <div>Intensity <input type="range" id="glow-intensity" min="0.5" max="15" step="0.5" value="4" class="w-full" oninput="updateGlowSetting('intensity',parseFloat(this.value))" /></div>
       </div>
       <div><h4 class="text-xs text-gray-400">Tilt</h4>
         <label><input type="checkbox" id="tilt-enabled" checked onchange="updateTiltSetting('enabled',this.checked)" /> On</label>
-        <div>Intensity <input type="range" min="0" max="30" value="8" class="w-full" oninput="updateTiltSetting('intensity',parseFloat(this.value))" /></div>
-        <div>Smooth <input type="range" min="0.01" max="1" step="0.01" value="0.15" class="w-full" oninput="updateTiltSetting('speed',parseFloat(this.value))" /></div>
+        <div>Intensity <input type="range" id="tilt-intensity" min="0" max="30" value="8" class="w-full" oninput="updateTiltSetting('intensity',parseFloat(this.value))" /></div>
+        <div>Smooth <input type="range" id="tilt-speed" min="0.01" max="1" step="0.01" value="0.15" class="w-full" oninput="updateTiltSetting('speed',parseFloat(this.value))" /></div>
       </div>
     </div>
 
@@ -533,7 +540,6 @@ async function loadProfileFromJSON() {
 
 // ─── SAVE ALL SETTINGS ──────────────────────────────────────
 function saveAllSettings() {
-  // Gather all settings from the UI
   state.username = document.getElementById('input-username').value;
   state.location = document.getElementById('input-location').value;
   state.pfpUrl = document.getElementById('input-pfp-url').value || '/assets/avatar.gif';
@@ -579,27 +585,22 @@ function saveAllSettings() {
   state.frameOutline = parseInt(document.getElementById('frame-outline-opacity').value) / 100;
   state.frameBlur = parseFloat(document.getElementById('frame-blur').value);
   
-  // Save to localStorage
   localStorage.setItem('curbtree_full_profile', JSON.stringify(state));
   
   alert('✅ All settings saved! Click "Download profile.json" to upload to GitHub.');
   
-  // Apply changes immediately
   applyAllSettings();
 }
 
 // ─── APPLY ALL SETTINGS ─────────────────────────────────────
 function applyAllSettings() {
-  // Username & Bio
   DOM.displayUsername.textContent = state.username;
   DOM.displayUsername.style.color = state.usernameColor;
   DOM.displayBio.textContent = state.bioLines[0] || '';
   DOM.displayBio.style.color = state.bioColor;
   
-  // Location
   DOM.locationDisplay.textContent = state.location;
   
-  // Profile Picture
   if (state.pfpUrl) {
     DOM.displayPfp.src = getAssetUrl(state.pfpUrl);
   }
@@ -609,6 +610,7 @@ function applyAllSettings() {
     DOM.bgImage.src = getAssetUrl(state.bgUrl);
     DOM.bgImage.style.display = 'block';
     DOM.bgVideo.style.display = 'none';
+    DOM.bgVideo.pause();
   } else if (state.bgType === 'video' && state.bgUrl) {
     DOM.bgVideo.src = getAssetUrl(state.bgUrl);
     DOM.bgVideo.style.display = 'block';
@@ -635,17 +637,13 @@ function applyAllSettings() {
   const statItems = DOM.statsBar.querySelectorAll('.stat-item');
   statItems.forEach(item => item.style.color = state.statsColor);
   
-  // Typography
   applyTypography();
-  
-  // Frame Styling
   updateFrameStyle();
-  
-  // Glow
   applyGlow();
-  
-  // Typewriter
   restartTypewriter();
+  
+  // Update cursor class
+  applyCursorClasses();
 }
 
 // ─── DOWNLOAD profile.json ──────────────────────────────────
@@ -663,8 +661,8 @@ function downloadProfileJSON() {
 
 // ─── UPDATE FUNCTIONS ──────────────────────────────────────
 function updatePfpUrl(val) { state.pfpUrl = val; DOM.displayPfp.src = getAssetUrl(val); }
-function updateBgUrl(val) { state.bgUrl = val; }
-function updateBgType(val) { state.bgType = val; }
+function updateBgUrl(val) { state.bgUrl = val; if (state.bgType !== 'none') { applyAllSettings(); } }
+function updateBgType(val) { state.bgType = val; applyAllSettings(); }
 function updateAudioUrl(val) { state.audioUrl = val; }
 function updateMusicName(val) { state.musicDisplayName = val; DOM.inlineTrack.textContent = val; }
 function updateLocation(val) { state.location = val; DOM.locationDisplay.textContent = val; }
@@ -695,6 +693,11 @@ function updateFrameStyle() {
       frame.style.webkitBackdropFilter = blurValue;
     }
   });
+  
+  // Update labels
+  document.getElementById('transparency-label').textContent = Math.round(transparency * 100) + '%';
+  document.getElementById('outline-label').textContent = Math.round(outline * 100) + '%';
+  document.getElementById('blur-label').textContent = blur + 'px';
 }
 
 // ─── TYPOGRAPHY ─────────────────────────────────────────────
@@ -720,6 +723,10 @@ function updateGlowSetting(key, val) { state.glowEffect[key] = val; applyGlow();
 
 function applyGlow() {
   const els = [DOM.displayUsername, DOM.displayBio, DOM.inlineTrack, DOM.volumeIcon, DOM.inlinePlayIcon];
+  const statItems = DOM.statsBar.querySelectorAll('.stat-item');
+  statItems.forEach(item => els.push(item));
+  document.querySelectorAll('.social-tooltip').forEach(el => els.push(el));
+  
   const on = state.glowEffect.enabled, g = parseFloat(state.glowEffect.intensity) || 0;
   els.forEach(el => {
     if (!el) return;
@@ -732,7 +739,11 @@ function applyGlow() {
 // ─── TYPEWRITER ─────────────────────────────────────────────
 let usernameTimer = null, bioTimer = null;
 
-function updateTypewriterSetting(key, val) { state.typewriter[key] = val; restartTypewriter(); }
+function updateTypewriterSetting(key, val) { 
+  state.typewriter[key] = val; 
+  restartTypewriter();
+  applyCursorClasses();
+}
 
 function restartTypewriter() {
   clearTimers();
@@ -751,10 +762,30 @@ function clearTimers() { clearTimeout(usernameTimer); clearTimeout(bioTimer); us
 
 function runUsernameCycle() {
   const text = state.username || '@username';
-  if (!state.typewriter.applyUsername) { DOM.displayUsername.textContent = text; DOM.displayUsername.style.color = state.usernameColor; return; }
+  if (!state.typewriter.applyUsername) { 
+    DOM.displayUsername.textContent = text; 
+    DOM.displayUsername.style.color = state.usernameColor; 
+    return; 
+  }
   let i = 0;
-  function type() { DOM.displayUsername.textContent = text.slice(0, i); if (i < text.length) { i++; usernameTimer = setTimeout(type, state.typewriter.typeSpeed); } else usernameTimer = setTimeout(erase, state.typewriter.pauseTime); }
-  function erase() { i--; DOM.displayUsername.textContent = text.slice(0, Math.max(i, 0)); if (i > 0) usernameTimer = setTimeout(erase, state.typewriter.deleteSpeed); else usernameTimer = setTimeout(type, state.typewriter.lineGap); }
+  function type() { 
+    DOM.displayUsername.textContent = text.slice(0, i); 
+    if (i < text.length) { 
+      i++; 
+      usernameTimer = setTimeout(type, state.typewriter.typeSpeed); 
+    } else {
+      usernameTimer = setTimeout(erase, state.typewriter.pauseTime);
+    }
+  }
+  function erase() { 
+    i--; 
+    DOM.displayUsername.textContent = text.slice(0, Math.max(i, 0)); 
+    if (i > 0) {
+      usernameTimer = setTimeout(erase, state.typewriter.deleteSpeed);
+    } else {
+      usernameTimer = setTimeout(type, state.typewriter.lineGap);
+    }
+  }
   type();
 }
 
@@ -764,11 +795,34 @@ function runBioCycle() {
   function cycle() {
     const txt = lines[idx];
     let i = 0;
-    function type() { DOM.displayBio.textContent = txt.slice(0, i); if (i < txt.length) { i++; bioTimer = setTimeout(type, state.typewriter.typeSpeed); } else if (lines.length > 1) bioTimer = setTimeout(erase, state.typewriter.pauseTime); }
-    function erase() { i--; DOM.displayBio.textContent = txt.slice(0, Math.max(i, 0)); if (i > 0) bioTimer = setTimeout(erase, state.typewriter.deleteSpeed); else { idx = (idx + 1) % lines.length; bioTimer = setTimeout(cycle, state.typewriter.lineGap); } }
+    function type() { 
+      DOM.displayBio.textContent = txt.slice(0, i); 
+      if (i < txt.length) { 
+        i++; 
+        bioTimer = setTimeout(type, state.typewriter.typeSpeed); 
+      } else if (lines.length > 1) {
+        bioTimer = setTimeout(erase, state.typewriter.pauseTime);
+      }
+    }
+    function erase() { 
+      i--; 
+      DOM.displayBio.textContent = txt.slice(0, Math.max(i, 0)); 
+      if (i > 0) {
+        bioTimer = setTimeout(erase, state.typewriter.deleteSpeed);
+      } else { 
+        idx = (idx + 1) % lines.length; 
+        bioTimer = setTimeout(cycle, state.typewriter.lineGap); 
+      }
+    }
     type();
   }
   cycle();
+}
+
+function applyCursorClasses() {
+  const showCursor = state.typewriter.enabled && state.typewriter.cursor;
+  DOM.displayBio.classList.toggle('typewriter-cursor', showCursor);
+  DOM.displayUsername.classList.toggle('typewriter-cursor', showCursor && state.typewriter.applyUsername);
 }
 
 // ─── TILT ────────────────────────────────────────────────────
@@ -783,7 +837,17 @@ function tiltLoopFn() {
   curS += (tarS - curS) * state.tilt.speed;
   const g = DOM.tiltGroup;
   if (g) {
-    g.style.transform = `perspective(1200px) rotateX(${curRX}deg) rotateY(${curRY}deg) scale3d(${curS},${curS},${curS})`;
+    const diffX = Math.abs(tarRX - curRX);
+    const diffY = Math.abs(tarRY - curRY);
+    const diffScale = Math.abs(tarS - curS);
+    if (diffX > 0.001 || diffY > 0.001 || diffScale > 0.001) {
+      g.style.transform = `perspective(1200px) rotateX(${curRX}deg) rotateY(${curRY}deg) scale3d(${curS},${curS},${curS})`;
+    } else {
+      g.style.transform = `perspective(1200px) rotateX(${tarRX}deg) rotateY(${tarRY}deg) scale3d(${tarS},${tarS},${tarS})`;
+      curRX = tarRX;
+      curRY = tarRY;
+      curS = tarS;
+    }
   }
   tiltLoop = requestAnimationFrame(tiltLoopFn);
 }
@@ -934,12 +998,45 @@ function toggleAudio(force) {
 
 function updateVolume(val) { DOM.audioPlayer.volume = parseFloat(val); }
 
+// ─── VERCEL ANALYTICS VIEW COUNT ──────────────────────────
+async function getViewCount() {
+  try {
+    // Get current count from localStorage
+    let count = parseInt(localStorage.getItem('curbtree_views')) || 0;
+    
+    // Check if this is a new visit (using session storage)
+    const hasVisited = sessionStorage.getItem('curbtree_visited');
+    if (!hasVisited) {
+      count += 1;
+      localStorage.setItem('curbtree_views', count.toString());
+      sessionStorage.setItem('curbtree_visited', 'true');
+      
+      // Track with Vercel Analytics if available
+      if (typeof window.va !== 'undefined') {
+        window.va('event', 'page_view', {
+          params: {
+            page: window.location.pathname,
+            timestamp: Date.now()
+          }
+        });
+      }
+    }
+    
+    document.getElementById('view-count').textContent = count.toLocaleString();
+    return count;
+  } catch (e) {
+    console.log('View count error:', e);
+    return 0;
+  }
+}
+
 // ─── START EXPERIENCE ──────────────────────────────────────
 function startExperience() {
   DOM.enterScreen.style.opacity = '0';
   setTimeout(() => {
     DOM.enterScreen.style.display = 'none';
     DOM.mainContent.classList.remove('opacity-0', 'pointer-events-none');
+    
     if (state.bgType === 'video' && DOM.bgVideo.src) {
       DOM.bgVideo.muted = true;
       DOM.bgVideo.loop = true;
@@ -948,6 +1045,10 @@ function startExperience() {
     }
     if (state.audioUrl) toggleAudio(true);
     restartTypewriter();
+    applyCursorClasses();
+    
+    // Track view count
+    getViewCount();
   }, 500);
 }
 
@@ -1000,9 +1101,7 @@ function renderEditorBadges() {
 }
 
 function addBadge() { state.badges.push({ id: genId(), label: "New", icon: "fa-solid fa-bolt", color: "#a78bfa" }); renderEditorBadges(); renderBadges(); }
-
 function removeBadge(id) { state.badges = state.badges.filter(b => b.id !== id); renderEditorBadges(); renderBadges(); }
-
 function updateBadge(id, key, val) { const b = state.badges.find(x => x.id === id); if (b) { b[key] = val; renderBadges(); } }
 
 // ─── BIO LINES ──────────────────────────────────────────────
@@ -1022,9 +1121,7 @@ function renderEditorBioLines() {
 }
 
 function addBioLine() { state.bioLines.push("New bio line"); renderEditorBioLines(); restartTypewriter(); }
-
 function removeBioLine(i) { if (state.bioLines.length < 2) return; state.bioLines.splice(i, 1); renderEditorBioLines(); restartTypewriter(); }
-
 function updateBioLine(i, v) { state.bioLines[i] = v; restartTypewriter(); }
 
 // ─── SOCIAL LINKS ──────────────────────────────────────────
@@ -1053,9 +1150,7 @@ function renderEditorSocials() {
 }
 
 function addSocialLink() { state.links.push({ id: genId(), name: "Link", url: "https://", icon: "fa-solid fa-link", color: "#ffffff", spin: false }); renderEditorSocials(); renderDisplaySocials(); }
-
 function removeSocialLink(id) { state.links = state.links.filter(l => l.id !== id); renderEditorSocials(); renderDisplaySocials(); }
-
 function updateSocialLink(id, key, val) { const l = state.links.find(x => x.id === id); if (l) { l[key] = val; renderDisplaySocials(); } }
 
 function renderDisplaySocials() {
@@ -1095,10 +1190,8 @@ function genId() { return Math.random().toString(36).slice(2, 8); }
 
 // ─── INIT ────────────────────────────────────────────────────
 async function init() {
-  // Load from JSON
   await loadProfileFromJSON();
   
-  // Load from localStorage backup
   try {
     const saved = localStorage.getItem('curbtree_full_profile');
     if (saved) {
@@ -1114,26 +1207,20 @@ async function init() {
     }
   } catch (e) {}
   
-  // Render everything
   renderEditorSocials();
   renderDisplaySocials();
   renderEditorBioLines();
   renderEditorBadges();
   renderBadges();
   
-  // Apply all settings
   applyAllSettings();
   
-  // Initialize effects
   initTilt();
   initFxCanvas();
   
-  // UI Setup
-  document.getElementById('view-count').innerText = Math.floor(Math.random() * 90000).toLocaleString();
   document.getElementById('fx-color').value = state.fxColor;
   document.getElementById('bg-overlay').style.opacity = 0.55;
   
-  // Set editor values
   document.getElementById('input-username').value = state.username;
   document.getElementById('input-location').value = state.location;
   document.getElementById('input-pfp-url').value = state.pfpUrl;
@@ -1178,7 +1265,10 @@ async function init() {
   
   if (state.fx !== 'none') setEffect(state.fx);
   
-  // Auto-save to localStorage
+  // Get initial view count
+  const count = parseInt(localStorage.getItem('curbtree_views')) || 0;
+  document.getElementById('view-count').textContent = count.toLocaleString();
+  
   setInterval(() => {
     try {
       localStorage.setItem('curbtree_full_profile', JSON.stringify(state));
@@ -1186,7 +1276,6 @@ async function init() {
   }, 10000);
 }
 
-// ─── START ────────────────────────────────────────────────────
 init();
 </script>
 </body>
