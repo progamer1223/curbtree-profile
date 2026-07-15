@@ -1,0 +1,76 @@
+{
+  "username": "Curbi_",
+  "usernameColor": "#ffffff",
+  "bioColor": "#ffffff",
+  "musicColor": "#ffffff",
+  "statsColor": "#ffffff",
+  "socialColor": "#ffffff",
+  "bioLines": [
+    "Welcome to my profile."
+  ],
+  "location": "Earth",
+  "pfpUrl": "/assets/27535979db8dcdd20b4b954dc5547ac2.gif",
+  "bgType": "video",
+  "bgUrl": "/assets/326a94bd-295d-4ef2-ac19-b54f4b5ac28f (1).mp4",
+  "audioUrl": "/assets/Ytmp3.gg_YouTube_Almost-Back_Media_ik7G95SYUcM_009_128k.mp3",
+  "audioPlaying": false,
+  "musicDisplayName": "Almost Back - Lucki",
+  "frameBg": "#141414",
+  "frameTransparency": 0.14,
+  "frameOutline": 0.2,
+  "frameBlur": 1,
+  "typewriter": {
+    "enabled": true,
+    "applyUsername": true,
+    "cursor": true,
+    "typeSpeed": 50,
+    "deleteSpeed": 25,
+    "pauseTime": 1500,
+    "lineGap": 300
+  },
+  "glowEffect": {
+    "enabled": true,
+    "intensity": 2
+  },
+  "tilt": {
+    "enabled": true,
+    "intensity": 8,
+    "speed": 0.15
+  },
+  "links": [
+    {
+      "id": "1",
+      "name": "Discord",
+      "url": "_curbie_",
+      "icon": "fa-brands fa-discord",
+      "color": "#ffffff",
+      "spin": false
+    }
+  ],
+  "badges": [
+    {
+      "id": "b1",
+      "label": "Verified",
+      "icon": "fa-solid fa-check-circle",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "b2",
+      "label": "Developer",
+      "icon": "fa-solid fa-star",
+      "color": "#ff7070"
+    }
+  ],
+  "fx": "snow",
+  "fxColor": "#ffffff",
+  "usernameFont": "font-inter",
+  "usernameWeight": "font-weight-extrabold",
+  "bioFont": "font-inter",
+  "bioWeight": "font-weight-normal",
+  "musicFont": "font-inter",
+  "musicWeight": "font-weight-normal",
+  "statsFont": "font-inter",
+  "statsWeight": "font-weight-normal",
+  "socialFont": "font-inter",
+  "socialWeight": "font-weight-semibold"
+}
