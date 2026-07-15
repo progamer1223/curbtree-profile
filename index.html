@@ -160,7 +160,6 @@
 
 <div id="main-content" class="w-full h-screen flex flex-col items-center justify-center relative z-10 px-4 opacity-0 pointer-events-none transition-opacity duration-700">
 
-  <!-- Edit Button - Hidden for viewers, shown after password -->
   <button id="edit-btn" class="absolute top-5 right-5 bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-full backdrop-blur-md border border-white/15 transition shadow-lg flex items-center gap-2 text-sm" onclick="toggleEditor()" style="display:none;">
     <i class="fas fa-sliders-h"></i> Edit
   </button>
@@ -352,9 +351,19 @@
     </div>
 
     <div class="border-t border-white/5 pt-4 space-y-2">
+      <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Save to GitHub</h3>
+      <button onclick="downloadProfileJSON()" class="w-full bg-blue-600/60 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
+        <i class="fas fa-cloud-upload-alt"></i> Download profile.json for GitHub
+      </button>
+      <p style="font-size:0.6rem; color:#666; text-align:center; margin-top:4px;">
+        Upload this file to GitHub to update your profile for everyone!
+      </p>
+    </div>
+
+    <div class="border-t border-white/5 pt-4 space-y-2">
       <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Backup</h3>
       <button onclick="exportFullProfile()" class="w-full bg-green-600/60 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
-        <i class="fas fa-download"></i> Download Backup
+        <i class="fas fa-download"></i> Download Backup (full)
       </button>
       <button onclick="document.getElementById('import-full').click()" class="w-full bg-yellow-600/60 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
         <i class="fas fa-upload"></i> Restore Backup
@@ -367,30 +376,25 @@
 
 <script>
 // ─── EDIT MODE DETECTION ──────────────────────────────────
-// Check if ?edit=true is in the URL
 const urlParams = new URLSearchParams(window.location.search);
 const isEditMode = urlParams.get('edit') === 'true';
 
-// Only show lock screen when in edit mode
 if (isEditMode) {
   document.getElementById('lock-screen').style.display = 'flex';
 } else {
   document.getElementById('lock-screen').style.display = 'none';
-  // Hide edit button completely for viewers
   document.getElementById('edit-btn').style.display = 'none';
 }
 
 // ─── PASSWORD CHECK ──────────────────────────────────────
-const EDIT_PASSWORD = "curbtree"; // Change this!
+const EDIT_PASSWORD = "curbtree";
 
 function unlockEditor() {
   const input = document.getElementById('lock-password');
   const error = document.getElementById('lock-error');
   
   if (input.value === EDIT_PASSWORD) {
-    // Save that this device is trusted
     localStorage.setItem('curbtree_trusted', 'true');
-    
     document.getElementById('lock-screen').style.display = 'none';
     document.getElementById('edit-btn').style.display = 'flex';
     error.style.display = 'none';
@@ -401,7 +405,6 @@ function unlockEditor() {
   }
 }
 
-// Auto-unlock if already trusted
 if (localStorage.getItem('curbtree_trusted') === 'true' && isEditMode) {
   document.getElementById('lock-screen').style.display = 'none';
   document.getElementById('edit-btn').style.display = 'flex';
@@ -442,6 +445,42 @@ const state = {
   fx: 'none',
   fxColor: '#ffffff'
 };
+
+// ─── LOAD PROFILE FROM JSON (GitHub) ─────────────────────
+async function loadProfileFromJSON() {
+  try {
+    const response = await fetch('/profile.json?t=' + Date.now());
+    if (response.ok) {
+      const data = await response.json();
+      // Deep merge the data
+      Object.keys(data).forEach(key => {
+        if (typeof data[key] === 'object' && data[key] !== null && !Array.isArray(data[key])) {
+          state[key] = { ...state[key], ...data[key] };
+        } else {
+          state[key] = data[key];
+        }
+      });
+      console.log('✅ Profile loaded from JSON');
+      return true;
+    }
+  } catch (e) {
+    console.log('⚠️ No profile.json found, using defaults');
+  }
+  return false;
+}
+
+// ─── DOWNLOAD profile.json FOR GITHUB ────────────────────
+function downloadProfileJSON() {
+  const data = JSON.stringify(state, null, 2);
+  const blob = new Blob([data], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'profile.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  alert('✅ profile.json downloaded!\n\nUpload this file to GitHub to update your profile for everyone.');
+}
 
 // ─── DOM refs ─────────────────────────────────────────────
 const DOM = {
@@ -1147,16 +1186,27 @@ function toggleEditor() {
 }
 
 // ─── INIT ──────────────────────────────────────────────────
-function init() {
-  // Load saved data from localStorage
+async function init() {
+  // 1. Load from JSON first (GitHub)
+  await loadProfileFromJSON();
+  
+  // 2. Then load local backup (browser) - overrides JSON if newer
   try {
     const saved = localStorage.getItem('curbtree_full_profile');
     if (saved) {
       const data = JSON.parse(saved);
-      Object.assign(state, data);
+      Object.keys(data).forEach(key => {
+        if (typeof data[key] === 'object' && data[key] !== null && !Array.isArray(data[key])) {
+          state[key] = { ...state[key], ...data[key] };
+        } else {
+          state[key] = data[key];
+        }
+      });
+      console.log('✅ Local backup loaded');
     }
   } catch(e) {}
   
+  // Render everything
   renderEditorSocials();
   renderDisplaySocials();
   renderEditorBioLines();
@@ -1206,7 +1256,6 @@ function init() {
   document.getElementById('frame-blur').value = state.frameBlur || 10;
   updateFrameStyle();
   
-  // Set tilt settings from state
   document.getElementById('tilt-enabled').checked = state.tilt.enabled;
   document.getElementById('tilt-intensity').value = state.tilt.intensity;
   document.getElementById('tilt-speed').value = state.tilt.speed;
@@ -1217,13 +1266,12 @@ function init() {
   
   document.getElementById('glow-enabled').checked = state.glowEffect.enabled;
   
-  // Set radio buttons for fx
   document.querySelectorAll('input[name="fx"]').forEach(el => {
     el.checked = el.value === state.fx;
   });
   if (state.fx !== 'none') setEffect(state.fx);
   
-  // Auto-save on changes
+  // Auto-save to localStorage
   setInterval(() => {
     try {
       localStorage.setItem('curbtree_full_profile', JSON.stringify(state));
