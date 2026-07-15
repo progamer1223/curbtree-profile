@@ -1,47 +1,59 @@
 {
-  "username": "@yourname",
+  "username": "Curbi_",
   "usernameColor": "#ffffff",
-  "bioColor": "#d1d5db",
-  "musicColor": "#bbbbbb",
-  "statsColor": "#999999",
+  "bioColor": "#ffffff",
+  "musicColor": "#ffffff",
+  "statsColor": "#ffffff",
   "socialColor": "#ffffff",
-  "bioLines": ["Welcome to my profile!", "Built with ❤️"],
-  "location": "Earth",
+  "bioLines": [
+    "Love yourself.",
+    "The sky is the limit."
+  ],
+  "location": "Canada",
   "pfpUrl": "/assets/avatar.gif",
   "bgType": "video",
   "bgUrl": "https://res.cloudinary.com/agrc4zdb/video/upload/v1784136136/326a94bd-295d-4ef2-ac19-b54f4b5ac28f_kxhep4.mp4",
   "audioUrl": "/assets/song.mp3",
-  "musicDisplayName": "My Song",
+  "audioPlaying": true,
+  "musicDisplayName": "Almost Back - Lucki",
   "frameBg": "#141414",
   "frameTransparency": 0.55,
   "frameOutline": 0.08,
   "frameBlur": 10,
   "typewriter": {
-    "enabled": false,
-    "applyUsername": false,
-    "cursor": false,
+    "enabled": true,
+    "applyUsername": true,
+    "cursor": true,
     "typeSpeed": 50,
-    "deleteSpeed": 25,
+    "deleteSpeed": 69,
     "pauseTime": 1500,
     "lineGap": 300
   },
   "glowEffect": {
     "enabled": false,
-    "intensity": 4
+    "intensity": 1
   },
   "tilt": {
     "enabled": true,
-    "intensity": 8,
+    "intensity": 3,
     "speed": 0.15
   },
   "links": [
     {
       "id": "1",
-      "name": "GitHub",
-      "url": "https://github.com",
-      "icon": "fa-brands fa-github",
+      "name": "Spotify",
+      "url": "https://open.spotify.com/user/l7jj332wdhl1701x0fthukvmh?si=879b92753f8347a1",
+      "icon": "fa-brands fa-spotify",
       "color": "#ffffff",
       "spin": false
+    },
+    {
+      "id": "zea21j",
+      "name": "Discord",
+      "url": "_curbie_",
+      "icon": "fa-brands fa-discord",
+      "color": "#ffffff",
+      "spin": true
     }
   ],
   "badges": [
@@ -50,8 +62,24 @@
       "label": "Verified",
       "icon": "fa-solid fa-check-circle",
       "color": "#3b82f6"
+    },
+    {
+      "id": "s1yecd",
+      "label": "Developer",
+      "icon": "fa-solid fa-crown",
+      "color": "#ff7070"
     }
   ],
-  "fx": "none",
-  "fxColor": "#ffffff"
+  "fx": "snow",
+  "fxColor": "#ffffff",
+  "usernameFont": "font-inter",
+  "usernameWeight": "font-weight-extrabold",
+  "bioFont": "font-inter",
+  "bioWeight": "font-weight-normal",
+  "musicFont": "font-inter",
+  "musicWeight": "font-weight-normal",
+  "statsFont": "font-inter",
+  "statsWeight": "font-weight-normal",
+  "socialFont": "font-inter",
+  "socialWeight": "font-weight-semibold"
 }
