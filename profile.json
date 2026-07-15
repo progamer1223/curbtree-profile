@@ -1,33 +1,36 @@
 {
-  "username": "@curbtree",
+  "username": "Curbi_",
   "usernameColor": "#ffffff",
-  "bioColor": "#d1d5db",
-  "musicColor": "#bbbbbb",
-  "statsColor": "#999999",
+  "bioColor": "#ffffff",
+  "musicColor": "#ffffff",
+  "statsColor": "#ffffff",
   "socialColor": "#ffffff",
-  "bioLines": ["Welcome to my Curbtree profile!", "Built with ❤️"],
-  "location": "Earth",
-  "pfpUrl": "https://placehold.co/140x140/222/FFF?text=Avatar",
-  "bgType": "none",
+  "bioLines": [
+    "Welcome to my profile!"
+  ],
+  "location": "Canada",
+  "pfpUrl": "blob:https://curbtree-profile.vercel.app/9cfed978-d9f7-43ca-99cb-6eb89c4dc27b",
+  "bgType": "video",
   "bgUrl": "",
-  "audioUrl": "",
-  "musicDisplayName": "track.mp3",
+  "audioUrl": "blob:https://curbtree-profile.vercel.app/dae3ee63-7a35-4390-a70e-81eac0593a68",
+  "audioPlaying": false,
+  "musicDisplayName": "Almost Back - Lucki",
   "frameBg": "#141414",
-  "frameTransparency": 0.55,
-  "frameOutline": 0.08,
-  "frameBlur": 10,
+  "frameTransparency": 0.2,
+  "frameOutline": 0.28,
+  "frameBlur": 3,
   "typewriter": {
-    "enabled": false,
-    "applyUsername": false,
-    "cursor": false,
-    "typeSpeed": 50,
-    "deleteSpeed": 25,
+    "enabled": true,
+    "applyUsername": true,
+    "cursor": true,
+    "typeSpeed": 39,
+    "deleteSpeed": 20,
     "pauseTime": 1500,
     "lineGap": 300
   },
   "glowEffect": {
-    "enabled": false,
-    "intensity": 4
+    "enabled": true,
+    "intensity": 3
   },
   "tilt": {
     "enabled": true,
@@ -37,21 +40,27 @@
   "links": [
     {
       "id": "1",
-      "name": "GitHub",
-      "url": "https://github.com",
-      "icon": "fa-brands fa-github",
+      "name": "Discord",
+      "url": "_curbie_",
+      "icon": "fa-brands fa-discord",
       "color": "#ffffff",
-      "spin": false
+      "spin": true
     }
   ],
   "badges": [
     {
       "id": "b1",
-      "label": "Curbtree",
+      "label": "Verified",
+      "icon": "fa-solid fa-circle-check",
+      "color": "#86d0fe"
+    },
+    {
+      "id": "euj28p",
+      "label": "Developer",
       "icon": "fa-solid fa-star",
-      "color": "#fbbf24"
+      "color": "#ff6b6b"
     }
   ],
-  "fx": "none",
+  "fx": "snow",
   "fxColor": "#ffffff"
 }
