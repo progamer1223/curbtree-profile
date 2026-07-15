@@ -134,7 +134,7 @@
 </head>
 <body>
 
-<!-- LOCK SCREEN - ONLY SHOWS WHEN ?edit=true -->
+<!-- LOCK SCREEN -->
 <div id="lock-screen" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); backdrop-filter:blur(12px); z-index:9999; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:20px; padding:20px;">
   <h2 style="color:white; font-size:2rem; font-weight:700;">🔒 Edit Mode</h2>
   <p style="color:#888; font-size:0.9rem;">Enter your password to edit this profile</p>
@@ -233,6 +233,40 @@
       </div>
     </div>
 
+    <!-- Assets Section -->
+    <div class="border-t border-white/5 pt-4 space-y-3">
+      <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Assets (Files)</h3>
+      <div class="space-y-2">
+        <div>
+          <label class="block text-xs text-gray-400">Profile Picture URL</label>
+          <input type="text" id="input-pfp-url" value="" placeholder="/assets/avatar.png" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" oninput="updatePfpUrl(this.value)" />
+          <p class="text-[0.5rem] text-gray-500 mt-1">Upload your image to GitHub: /assets/ folder</p>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-400">Background URL</label>
+          <input type="text" id="input-bg-url" value="" placeholder="/assets/bg.jpg" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" oninput="updateBgUrl(this.value)" />
+          <p class="text-[0.5rem] text-gray-500 mt-1">Upload your image/video to GitHub: /assets/ folder</p>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-400">Background Type</label>
+          <select id="input-bg-type" onchange="updateBgType(this.value)" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white">
+            <option value="none">None</option>
+            <option value="image">Image</option>
+            <option value="video">Video</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-400">Music URL</label>
+          <input type="text" id="input-audio-url" value="" placeholder="/assets/song.mp3" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" oninput="updateAudioUrl(this.value)" />
+          <p class="text-[0.5rem] text-gray-500 mt-1">Upload your MP3 to GitHub: /assets/ folder</p>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-400">Music Display Name</label>
+          <input type="text" id="input-music-name" value="track.mp3" oninput="updateMusicName(this.value)" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" />
+        </div>
+      </div>
+    </div>
+
     <div class="border-t border-white/5 pt-4 space-y-3">
       <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Typography</h3>
       <div class="space-y-1">
@@ -301,7 +335,7 @@
     </div>
 
     <div class="border-t border-white/5 pt-4 space-y-2">
-      <h3 class="text-xs font-semibold text-gray-400 uppercase">Background</h3>
+      <h3 class="text-xs font-semibold text-gray-400 uppercase">Background Effects</h3>
       <div><label class="text-xs text-gray-400">Brightness</label><input type="range" min="0.2" max="1.8" step="0.05" value="1" class="w-full" oninput="document.getElementById('bg-overlay').style.opacity=1-this.value/2.2" /></div>
       <div class="flex flex-wrap gap-3 text-xs">
         <label><input type="radio" name="fx" value="none" checked onchange="setEffect('none')" /> None</label>
@@ -341,13 +375,6 @@
     <div class="border-t border-white/5 pt-4">
       <div class="flex justify-between"><h3 class="text-xs font-semibold text-gray-400">Social links</h3><button onclick="addSocialLink()" class="text-xs bg-blue-600/60 px-2 py-0.5 rounded">+</button></div>
       <div id="editor-socials" class="space-y-2 mt-1"></div>
-    </div>
-
-    <div class="border-t border-white/5 pt-4 space-y-2 text-xs">
-      <div><label>PFP <input type="file" accept="image/*" onchange="handlePfpUpload(event)" class="block w-full text-xs" /></label></div>
-      <div><label>BG (img/vid) <input type="file" accept="image/*,video/mp4,video/webm" onchange="handleBgUpload(event)" class="block w-full text-xs" /></label></div>
-      <div><label>Music (mp3) <input type="file" accept="audio/mpeg" onchange="handleAudioUpload(event)" class="block w-full text-xs" /></label></div>
-      <div><label class="text-xs text-gray-400">Music display name</label><input type="text" id="music-name-input" value="track.mp3" oninput="updateMusicName(this.value)" class="w-full bg-[#222] border border-[#333] rounded px-3 py-1.5 text-sm text-white" /></div>
     </div>
 
     <div class="border-t border-white/5 pt-4 space-y-2">
@@ -420,7 +447,7 @@ const state = {
   socialColor: "#ffffff",
   bioLines: ["Welcome to my profile.", "Creating cool things on Curbtree."],
   location: "Earth",
-  pfpUrl: "https://placehold.co/140x140/222/FFF?text=Avatar",
+  pfpUrl: "/assets/avatar.png",
   bgType: 'none',
   bgUrl: '',
   audioUrl: '',
@@ -443,7 +470,17 @@ const state = {
     { id: 'b2', label: "Pro", icon: "fa-solid fa-star", color: "#fbbf24" }
   ],
   fx: 'none',
-  fxColor: '#ffffff'
+  fxColor: '#ffffff',
+  usernameFont: 'font-inter',
+  usernameWeight: 'font-weight-extrabold',
+  bioFont: 'font-inter',
+  bioWeight: 'font-weight-normal',
+  musicFont: 'font-inter',
+  musicWeight: 'font-weight-normal',
+  statsFont: 'font-inter',
+  statsWeight: 'font-weight-normal',
+  socialFont: 'font-inter',
+  socialWeight: 'font-weight-semibold'
 };
 
 // ─── LOAD PROFILE FROM JSON (GitHub) ─────────────────────
@@ -452,7 +489,6 @@ async function loadProfileFromJSON() {
     const response = await fetch('/profile.json?t=' + Date.now());
     if (response.ok) {
       const data = await response.json();
-      // Deep merge the data
       Object.keys(data).forEach(key => {
         if (typeof data[key] === 'object' && data[key] !== null && !Array.isArray(data[key])) {
           state[key] = { ...state[key], ...data[key] };
@@ -469,6 +505,51 @@ async function loadProfileFromJSON() {
   return false;
 }
 
+// ─── ASSET UPDATE FUNCTIONS ──────────────────────────────
+function updatePfpUrl(val) {
+  state.pfpUrl = val || '/assets/avatar.png';
+  DOM.displayPfp.src = state.pfpUrl;
+}
+
+function updateBgUrl(val) {
+  state.bgUrl = val || '';
+  if (state.bgType === 'image') {
+    DOM.bgImage.src = state.bgUrl;
+    DOM.bgImage.style.display = 'block';
+    DOM.bgVideo.style.display = 'none';
+  } else if (state.bgType === 'video') {
+    DOM.bgVideo.src = state.bgUrl;
+    DOM.bgVideo.style.display = 'block';
+    DOM.bgImage.style.display = 'none';
+    if (DOM.enterScreen.style.display === 'none') DOM.bgVideo.play();
+  }
+}
+
+function updateBgType(val) {
+  state.bgType = val;
+  if (val === 'image' && state.bgUrl) {
+    DOM.bgImage.src = state.bgUrl;
+    DOM.bgImage.style.display = 'block';
+    DOM.bgVideo.style.display = 'none';
+  } else if (val === 'video' && state.bgUrl) {
+    DOM.bgVideo.src = state.bgUrl;
+    DOM.bgVideo.style.display = 'block';
+    DOM.bgImage.style.display = 'none';
+    if (DOM.enterScreen.style.display === 'none') DOM.bgVideo.play();
+  } else {
+    DOM.bgImage.style.display = 'none';
+    DOM.bgVideo.style.display = 'none';
+  }
+}
+
+function updateAudioUrl(val) {
+  state.audioUrl = val || '';
+  if (state.audioUrl) {
+    DOM.audioPlayer.src = state.audioUrl;
+    DOM.inlineMusic.style.display = 'flex';
+  }
+}
+
 // ─── DOWNLOAD profile.json FOR GITHUB ────────────────────
 function downloadProfileJSON() {
   const data = JSON.stringify(state, null, 2);
@@ -479,7 +560,7 @@ function downloadProfileJSON() {
   a.download = 'profile.json';
   a.click();
   URL.revokeObjectURL(url);
-  alert('✅ profile.json downloaded!\n\nUpload this file to GitHub to update your profile for everyone.');
+  alert('✅ profile.json downloaded!\n\nUpload this file to GitHub to update your profile for everyone.\n\nMake sure your files are in the /assets/ folder!');
 }
 
 // ─── DOM refs ─────────────────────────────────────────────
@@ -1159,6 +1240,10 @@ function handleFullImport(event) {
         document.getElementById('input-username').value = state.username;
         document.getElementById('input-location').value = state.location;
         document.getElementById('music-name-input').value = state.musicDisplayName;
+        document.getElementById('input-pfp-url').value = state.pfpUrl;
+        document.getElementById('input-bg-url').value = state.bgUrl;
+        document.getElementById('input-audio-url').value = state.audioUrl;
+        document.getElementById('input-bg-type').value = state.bgType;
         alert('✅ Profile restored successfully!');
       }
     } catch (error) {
@@ -1187,10 +1272,10 @@ function toggleEditor() {
 
 // ─── INIT ──────────────────────────────────────────────────
 async function init() {
-  // 1. Load from JSON first (GitHub)
+  // Load from JSON first
   await loadProfileFromJSON();
   
-  // 2. Then load local backup (browser) - overrides JSON if newer
+  // Then load local backup
   try {
     const saved = localStorage.getItem('curbtree_full_profile');
     if (saved) {
@@ -1216,6 +1301,7 @@ async function init() {
   initFxCanvas();
   applyGlow();
   
+  // Update UI with state
   document.getElementById('view-count').innerText = Math.floor(Math.random() * 90000).toLocaleString();
   document.getElementById('fx-color').value = '#ffffff';
   document.getElementById('bg-overlay').style.opacity = 0.55;
@@ -1223,6 +1309,28 @@ async function init() {
   document.getElementById('input-location').value = state.location;
   DOM.locationDisplay.innerText = state.location;
   
+  // Asset URLs
+  document.getElementById('input-pfp-url').value = state.pfpUrl || '';
+  document.getElementById('input-bg-url').value = state.bgUrl || '';
+  document.getElementById('input-audio-url').value = state.audioUrl || '';
+  document.getElementById('input-bg-type').value = state.bgType || 'none';
+  
+  // Apply assets
+  if (state.pfpUrl) DOM.displayPfp.src = state.pfpUrl;
+  if (state.bgUrl && state.bgType === 'image') {
+    DOM.bgImage.src = state.bgUrl;
+    DOM.bgImage.style.display = 'block';
+  } else if (state.bgUrl && state.bgType === 'video') {
+    DOM.bgVideo.src = state.bgUrl;
+    DOM.bgVideo.style.display = 'block';
+  }
+  if (state.audioUrl) {
+    DOM.audioPlayer.src = state.audioUrl;
+    DOM.inlineMusic.style.display = 'flex';
+    DOM.inlineTrack.innerText = state.musicDisplayName;
+  }
+  
+  // Colors
   document.getElementById('username-color').value = state.usernameColor;
   document.getElementById('bio-color').value = state.bioColor;
   document.getElementById('music-color').value = state.musicColor;
@@ -1237,6 +1345,7 @@ async function init() {
   const statItems = DOM.statsBar.querySelectorAll('.stat-item');
   statItems.forEach(item => item.style.color = state.statsColor);
   
+  // Fonts
   document.getElementById('username-font').value = state.usernameFont || 'font-inter';
   document.getElementById('username-weight').value = state.usernameWeight || 'font-weight-extrabold';
   document.getElementById('bio-font').value = state.bioFont || 'font-inter';
@@ -1250,28 +1359,29 @@ async function init() {
   
   applyTypography();
   
+  // Frame
   document.getElementById('frame-bg-color').value = state.frameBg || '#141414';
   document.getElementById('frame-transparency').value = Math.round((state.frameTransparency || 0.55) * 100);
   document.getElementById('frame-outline-opacity').value = Math.round((state.frameOutline || 0.08) * 100);
   document.getElementById('frame-blur').value = state.frameBlur || 10;
   updateFrameStyle();
   
+  // Toggle switches
   document.getElementById('tilt-enabled').checked = state.tilt.enabled;
   document.getElementById('tilt-intensity').value = state.tilt.intensity;
   document.getElementById('tilt-speed').value = state.tilt.speed;
-  
   document.getElementById('tw-enabled').checked = state.typewriter.enabled;
   document.getElementById('tw-apply-username').checked = state.typewriter.applyUsername;
   document.getElementById('tw-cursor').checked = state.typewriter.cursor;
-  
   document.getElementById('glow-enabled').checked = state.glowEffect.enabled;
   
+  // FX
   document.querySelectorAll('input[name="fx"]').forEach(el => {
     el.checked = el.value === state.fx;
   });
   if (state.fx !== 'none') setEffect(state.fx);
   
-  // Auto-save to localStorage
+  // Auto-save
   setInterval(() => {
     try {
       localStorage.setItem('curbtree_full_profile', JSON.stringify(state));
