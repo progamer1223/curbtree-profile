@@ -7,7 +7,7 @@
   "socialColor": "#ffffff",
   "bioLines": ["Welcome to my profile!", "Built with ❤️"],
   "location": "Earth",
-  "pfpUrl": "https://res.cloudinary.com/agrc4zdb/video/upload/v1784136136/326a94bd-295d-4ef2-ac19-b54f4b5ac28f_kxhep4.mp4",
+  "pfpUrl": "/assets/avatar.gif",
   "bgType": "video",
   "bgUrl": "/assets/bg.mp4",
   "audioUrl": "/assets/song.mp3",
