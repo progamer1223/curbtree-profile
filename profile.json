@@ -1,0 +1,70 @@
+{
+  "version": "1.0",
+  "date": "2026-07-15T16:04:48.626Z",
+  "profile": {
+    "username": "Curbie",
+    "usernameColor": "#ffffff",
+    "bioColor": "#ffffff",
+    "musicColor": "#ffffff",
+    "statsColor": "#ffffff",
+    "socialColor": "#ffffff",
+    "bioLines": [
+      "Welcome to my profile."
+    ],
+    "location": "Canada",
+    "pfpUrl": "blob:https://curbtree-profile.vercel.app/793535ed-7fbe-4f93-a71a-5479257472b6",
+    "bgType": "video",
+    "bgUrl": "",
+    "audioUrl": "blob:https://curbtree-profile.vercel.app/04d9d2a3-ce44-49cd-913d-f31cc195a367",
+    "audioPlaying": false,
+    "musicDisplayName": "Almost Back - Lucki",
+    "frameBg": "#000000",
+    "frameTransparency": 0.3,
+    "frameOutline": 0.08,
+    "frameBlur": 3,
+    "typewriter": {
+      "enabled": true,
+      "applyUsername": true,
+      "cursor": true,
+      "typeSpeed": 50,
+      "deleteSpeed": 25,
+      "pauseTime": 1500,
+      "lineGap": 300
+    },
+    "glowEffect": {
+      "enabled": true,
+      "intensity": 2
+    },
+    "tilt": {
+      "enabled": true,
+      "intensity": 2,
+      "speed": 0.32
+    },
+    "links": [
+      {
+        "id": "1",
+        "name": "Discord",
+        "url": "_curbie_",
+        "icon": "fa-brands fa-discord",
+        "color": "#ffffff",
+        "spin": true
+      }
+    ],
+    "badges": [
+      {
+        "id": "b1",
+        "label": "Verified",
+        "icon": "fa-solid fa-check-circle",
+        "color": "#3b82f6"
+      },
+      {
+        "id": "b2",
+        "label": "Developer",
+        "icon": "fa-solid fa-crown",
+        "color": "#fe6262"
+      }
+    ],
+    "fx": "snow",
+    "fxColor": "#ffffff"
+  }
+}
