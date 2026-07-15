@@ -7,6 +7,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <style>
     * { box-sizing: border-box; }
     body { margin:0; font-family:'Inter',sans-serif; background:#0b0b0b; color:white; overflow:hidden; height:100vh; }
@@ -238,14 +240,25 @@
       <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Assets (Files)</h3>
       <div class="space-y-2">
         <div>
-          <label class="block text-xs text-gray-400">Profile Picture URL</label>
-          <input type="text" id="input-pfp-url" value="" placeholder="/assets/avatar.png" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" oninput="updatePfpUrl(this.value)" />
-          <p class="text-[0.5rem] text-gray-500 mt-1">Upload your image to GitHub: /assets/ folder</p>
+          <label class="block text-xs text-gray-400">Profile Picture</label>
+          <div class="flex gap-2">
+            <input type="file" id="input-pfp-file" accept="image/*" class="flex-1 bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white" onchange="handlePfpFileUpload(event)" />
+            <span id="pfp-filename" class="text-xs text-gray-500 flex items-center">No file</span>
+          </div>
         </div>
         <div>
-          <label class="block text-xs text-gray-400">Background URL</label>
-          <input type="text" id="input-bg-url" value="" placeholder="/assets/bg.jpg" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" oninput="updateBgUrl(this.value)" />
-          <p class="text-[0.5rem] text-gray-500 mt-1">Upload your image/video to GitHub: /assets/ folder</p>
+          <label class="block text-xs text-gray-400">Background (Image/Video)</label>
+          <div class="flex gap-2">
+            <input type="file" id="input-bg-file" accept="image/*,video/mp4,video/webm" class="flex-1 bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white" onchange="handleBgFileUpload(event)" />
+            <span id="bg-filename" class="text-xs text-gray-500 flex items-center">No file</span>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-400">Music (MP3)</label>
+          <div class="flex gap-2">
+            <input type="file" id="input-audio-file" accept="audio/mpeg" class="flex-1 bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white" onchange="handleAudioFileUpload(event)" />
+            <span id="audio-filename" class="text-xs text-gray-500 flex items-center">No file</span>
+          </div>
         </div>
         <div>
           <label class="block text-xs text-gray-400">Background Type</label>
@@ -254,11 +267,6 @@
             <option value="image">Image</option>
             <option value="video">Video</option>
           </select>
-        </div>
-        <div>
-          <label class="block text-xs text-gray-400">Music URL</label>
-          <input type="text" id="input-audio-url" value="" placeholder="/assets/song.mp3" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" oninput="updateAudioUrl(this.value)" />
-          <p class="text-[0.5rem] text-gray-500 mt-1">Upload your MP3 to GitHub: /assets/ folder</p>
         </div>
         <div>
           <label class="block text-xs text-gray-400">Music Display Name</label>
@@ -378,19 +386,20 @@
     </div>
 
     <div class="border-t border-white/5 pt-4 space-y-2">
-      <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Save to GitHub</h3>
-      <button onclick="downloadProfileJSON()" class="w-full bg-blue-600/60 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
-        <i class="fas fa-cloud-upload-alt"></i> Download profile.json for GitHub
+      <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Download for GitHub</h3>
+      <button onclick="downloadFullProject()" class="w-full bg-blue-600/60 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
+        <i class="fas fa-cloud-upload-alt"></i> Download Full Project (ZIP)
       </button>
       <p style="font-size:0.6rem; color:#666; text-align:center; margin-top:4px;">
-        Upload this file to GitHub to update your profile for everyone!
+        Downloads profile.json + all your assets (profile pic, background, music) as a ZIP folder<br>
+        Upload the contents to GitHub to update your profile for everyone!
       </p>
     </div>
 
     <div class="border-t border-white/5 pt-4 space-y-2">
       <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Backup</h3>
       <button onclick="exportFullProfile()" class="w-full bg-green-600/60 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
-        <i class="fas fa-download"></i> Download Backup (full)
+        <i class="fas fa-download"></i> Download Backup (JSON only)
       </button>
       <button onclick="document.getElementById('import-full').click()" class="w-full bg-yellow-600/60 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
         <i class="fas fa-upload"></i> Restore Backup
@@ -436,6 +445,13 @@ if (localStorage.getItem('curbtree_trusted') === 'true' && isEditMode) {
   document.getElementById('lock-screen').style.display = 'none';
   document.getElementById('edit-btn').style.display = 'flex';
 }
+
+// ─── STORED FILES ──────────────────────────────────────────
+let uploadedFiles = {
+  pfp: null,
+  bg: null,
+  audio: null
+};
 
 // ─── STATE ────────────────────────────────────────────────
 const state = {
@@ -483,6 +499,107 @@ const state = {
   socialWeight: 'font-weight-semibold'
 };
 
+// ─── FILE HANDLING ──────────────────────────────────────────
+function handlePfpFileUpload(event) {
+  const file = event.target.files[0];
+  if (file) {
+    uploadedFiles.pfp = file;
+    document.getElementById('pfp-filename').textContent = file.name;
+    const url = URL.createObjectURL(file);
+    state.pfpUrl = '/assets/' + file.name;
+    DOM.displayPfp.src = url;
+  }
+}
+
+function handleBgFileUpload(event) {
+  const file = event.target.files[0];
+  if (file) {
+    uploadedFiles.bg = file;
+    document.getElementById('bg-filename').textContent = file.name;
+    const url = URL.createObjectURL(file);
+    state.bgUrl = '/assets/' + file.name;
+    if (file.type.startsWith('video/')) {
+      state.bgType = 'video';
+      document.getElementById('input-bg-type').value = 'video';
+      DOM.bgVideo.src = url;
+      DOM.bgVideo.style.display = 'block';
+      DOM.bgImage.style.display = 'none';
+    } else {
+      state.bgType = 'image';
+      document.getElementById('input-bg-type').value = 'image';
+      DOM.bgImage.src = url;
+      DOM.bgImage.style.display = 'block';
+      DOM.bgVideo.style.display = 'none';
+    }
+  }
+}
+
+function handleAudioFileUpload(event) {
+  const file = event.target.files[0];
+  if (file) {
+    uploadedFiles.audio = file;
+    document.getElementById('audio-filename').textContent = file.name;
+    const url = URL.createObjectURL(file);
+    state.audioUrl = '/assets/' + file.name;
+    state.musicDisplayName = file.name.replace(/\.[^/.]+$/, '');
+    DOM.audioPlayer.src = url;
+    DOM.inlineMusic.style.display = 'flex';
+    DOM.inlineTrack.textContent = state.musicDisplayName;
+    document.getElementById('input-music-name').value = state.musicDisplayName;
+  }
+}
+
+// ─── DOWNLOAD FULL PROJECT AS ZIP ──────────────────────────
+async function downloadFullProject() {
+  const zip = new JSZip();
+  
+  // Add profile.json
+  const profileData = JSON.parse(JSON.stringify(state));
+  // Remove temp URLs
+  profileData.pfpUrl = uploadedFiles.pfp ? '/assets/' + uploadedFiles.pfp.name : '/assets/avatar.png';
+  profileData.bgUrl = uploadedFiles.bg ? '/assets/' + uploadedFiles.bg.name : '';
+  profileData.audioUrl = uploadedFiles.audio ? '/assets/' + uploadedFiles.audio.name : '';
+  
+  const profileJson = JSON.stringify(profileData, null, 2);
+  zip.file('profile.json', profileJson);
+  
+  // Add assets folder
+  const assets = zip.folder('assets');
+  
+  // Add profile picture
+  if (uploadedFiles.pfp) {
+    const pfpData = await readFileAsArrayBuffer(uploadedFiles.pfp);
+    assets.file(uploadedFiles.pfp.name, pfpData);
+  }
+  
+  // Add background
+  if (uploadedFiles.bg) {
+    const bgData = await readFileAsArrayBuffer(uploadedFiles.bg);
+    assets.file(uploadedFiles.bg.name, bgData);
+  }
+  
+  // Add audio
+  if (uploadedFiles.audio) {
+    const audioData = await readFileAsArrayBuffer(uploadedFiles.audio);
+    assets.file(uploadedFiles.audio.name, audioData);
+  }
+  
+  // Generate zip
+  const content = await zip.generateAsync({ type: 'blob' });
+  saveAs(content, 'curbtree-profile.zip');
+  
+  alert('✅ Full project downloaded!\n\nUnzip the folder and upload the contents to GitHub.\n\nThe folder contains:\n- profile.json\n- assets/ (with your files)');
+}
+
+function readFileAsArrayBuffer(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result);
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
 // ─── LOAD PROFILE FROM JSON (GitHub) ─────────────────────
 async function loadProfileFromJSON() {
   try {
@@ -506,33 +623,12 @@ async function loadProfileFromJSON() {
 }
 
 // ─── ASSET UPDATE FUNCTIONS ──────────────────────────────
-function updatePfpUrl(val) {
-  state.pfpUrl = val || '/assets/avatar.png';
-  DOM.displayPfp.src = state.pfpUrl;
-}
-
-function updateBgUrl(val) {
-  state.bgUrl = val || '';
-  if (state.bgType === 'image') {
-    DOM.bgImage.src = state.bgUrl;
-    DOM.bgImage.style.display = 'block';
-    DOM.bgVideo.style.display = 'none';
-  } else if (state.bgType === 'video') {
-    DOM.bgVideo.src = state.bgUrl;
-    DOM.bgVideo.style.display = 'block';
-    DOM.bgImage.style.display = 'none';
-    if (DOM.enterScreen.style.display === 'none') DOM.bgVideo.play();
-  }
-}
-
 function updateBgType(val) {
   state.bgType = val;
   if (val === 'image' && state.bgUrl) {
-    DOM.bgImage.src = state.bgUrl;
     DOM.bgImage.style.display = 'block';
     DOM.bgVideo.style.display = 'none';
   } else if (val === 'video' && state.bgUrl) {
-    DOM.bgVideo.src = state.bgUrl;
     DOM.bgVideo.style.display = 'block';
     DOM.bgImage.style.display = 'none';
     if (DOM.enterScreen.style.display === 'none') DOM.bgVideo.play();
@@ -542,25 +638,9 @@ function updateBgType(val) {
   }
 }
 
-function updateAudioUrl(val) {
-  state.audioUrl = val || '';
-  if (state.audioUrl) {
-    DOM.audioPlayer.src = state.audioUrl;
-    DOM.inlineMusic.style.display = 'flex';
-  }
-}
-
-// ─── DOWNLOAD profile.json FOR GITHUB ────────────────────
-function downloadProfileJSON() {
-  const data = JSON.stringify(state, null, 2);
-  const blob = new Blob([data], {type: 'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'profile.json';
-  a.click();
-  URL.revokeObjectURL(url);
-  alert('✅ profile.json downloaded!\n\nUpload this file to GitHub to update your profile for everyone.\n\nMake sure your files are in the /assets/ folder!');
+function updateMusicName(val) {
+  state.musicDisplayName = val || 'track';
+  DOM.inlineTrack.textContent = val || 'track';
 }
 
 // ─── DOM refs ─────────────────────────────────────────────
@@ -1240,10 +1320,6 @@ function handleFullImport(event) {
         document.getElementById('input-username').value = state.username;
         document.getElementById('input-location').value = state.location;
         document.getElementById('music-name-input').value = state.musicDisplayName;
-        document.getElementById('input-pfp-url').value = state.pfpUrl;
-        document.getElementById('input-bg-url').value = state.bgUrl;
-        document.getElementById('input-audio-url').value = state.audioUrl;
-        document.getElementById('input-bg-type').value = state.bgType;
         alert('✅ Profile restored successfully!');
       }
     } catch (error) {
@@ -1308,27 +1384,6 @@ async function init() {
   document.getElementById('music-name-input').value = state.musicDisplayName;
   document.getElementById('input-location').value = state.location;
   DOM.locationDisplay.innerText = state.location;
-  
-  // Asset URLs
-  document.getElementById('input-pfp-url').value = state.pfpUrl || '';
-  document.getElementById('input-bg-url').value = state.bgUrl || '';
-  document.getElementById('input-audio-url').value = state.audioUrl || '';
-  document.getElementById('input-bg-type').value = state.bgType || 'none';
-  
-  // Apply assets
-  if (state.pfpUrl) DOM.displayPfp.src = state.pfpUrl;
-  if (state.bgUrl && state.bgType === 'image') {
-    DOM.bgImage.src = state.bgUrl;
-    DOM.bgImage.style.display = 'block';
-  } else if (state.bgUrl && state.bgType === 'video') {
-    DOM.bgVideo.src = state.bgUrl;
-    DOM.bgVideo.style.display = 'block';
-  }
-  if (state.audioUrl) {
-    DOM.audioPlayer.src = state.audioUrl;
-    DOM.inlineMusic.style.display = 'flex';
-    DOM.inlineTrack.innerText = state.musicDisplayName;
-  }
   
   // Colors
   document.getElementById('username-color').value = state.usernameColor;
