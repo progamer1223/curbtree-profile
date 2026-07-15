@@ -7,8 +7,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <style>
     * { box-sizing: border-box; }
     body { margin:0; font-family:'Inter',sans-serif; background:#0b0b0b; color:white; overflow:hidden; height:100vh; }
@@ -385,21 +383,14 @@
       <div id="editor-socials" class="space-y-2 mt-1"></div>
     </div>
 
-    <!-- ZIP Download/Upload Section -->
+    <!-- ZIP Section -->
     <div class="border-t border-white/5 pt-4 space-y-2">
       <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Download / Upload</h3>
-      
       <button onclick="downloadFullProject()" class="w-full bg-blue-600/60 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
         <i class="fas fa-cloud-download-alt"></i> Download Full Project (ZIP)
       </button>
-      
-      <button onclick="document.getElementById('upload-zip').click()" class="w-full bg-purple-600/60 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
-        <i class="fas fa-cloud-upload-alt"></i> Upload ZIP to Restore
-      </button>
-      <input type="file" id="upload-zip" accept=".zip" style="display:none;" onchange="handleZipUpload(event)" />
-      
       <p style="font-size:0.6rem; color:#666; text-align:center; margin-top:4px;">
-        Download a ZIP with all your files, or upload one to restore everything!
+        Downloads everything: index.html, profile.json, and your assets folder!
       </p>
     </div>
 
@@ -589,6 +580,10 @@ function handleAudioFileUpload(event) {
 async function downloadFullProject() {
   const zip = new JSZip();
   
+  // Add index.html
+  const htmlContent = document.documentElement.outerHTML;
+  zip.file('index.html', htmlContent);
+  
   // Add profile.json
   const profileData = JSON.parse(JSON.stringify(state));
   profileData.pfpUrl = uploadedFiles.pfp ? '/assets/' + uploadedFiles.pfp.name : '/assets/avatar.png';
@@ -619,7 +614,7 @@ async function downloadFullProject() {
   const content = await zip.generateAsync({ type: 'blob' });
   saveAs(content, 'curbtree-profile.zip');
   
-  alert('✅ Full project downloaded!\n\nUnzip the folder and upload the contents to GitHub.\n\nThe folder contains:\n- profile.json\n- assets/ (with your files)');
+  alert('✅ Full project downloaded!\n\nUpload the extracted folder to GitHub.\n\nIncludes: index.html, profile.json, and assets/ with your files!');
 }
 
 function readFileAsArrayBuffer(file) {
@@ -629,123 +624,6 @@ function readFileAsArrayBuffer(file) {
     reader.onerror = reject;
     reader.readAsArrayBuffer(file);
   });
-}
-
-// ─── HANDLE ZIP UPLOAD ──────────────────────────────────────
-async function handleZipUpload(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  
-  try {
-    const btn = document.querySelector('#upload-zip').previousElementSibling;
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Extracting...';
-    btn.disabled = true;
-    
-    const zip = await JSZip.loadAsync(file);
-    
-    // Find profile.json
-    const profileFile = zip.file('profile.json');
-    if (!profileFile) {
-      alert('❌ No profile.json found in the ZIP file!');
-      btn.innerHTML = originalText;
-      btn.disabled = false;
-      return;
-    }
-    
-    const profileContent = await profileFile.async('text');
-    const profileData = JSON.parse(profileContent);
-    
-    // Update state
-    Object.keys(profileData).forEach(key => {
-      if (typeof profileData[key] === 'object' && profileData[key] !== null && !Array.isArray(profileData[key])) {
-        state[key] = { ...state[key], ...profileData[key] };
-      } else {
-        state[key] = profileData[key];
-      }
-    });
-    
-    // Extract assets folder
-    const assetsFolder = zip.folder('assets');
-    if (assetsFolder) {
-      const assetFiles = assetsFolder.file(/.*/);
-      for (const assetFile of assetFiles) {
-        if (!assetFile.dir) {
-          const blob = await assetFile.async('blob');
-          const url = URL.createObjectURL(blob);
-          const ext = assetFile.name.split('.').pop().toLowerCase();
-          
-          if (ext.match(/(png|jpg|jpeg|gif|svg|webp)/)) {
-            state.pfpUrl = '/assets/' + assetFile.name;
-            DOM.displayPfp.src = url;
-            uploadedFiles.pfp = blob;
-            document.getElementById('pfp-filename').textContent = assetFile.name;
-          } else if (ext.match(/(mp4|webm|mov)/)) {
-            state.bgUrl = '/assets/' + assetFile.name;
-            state.bgType = 'video';
-            document.getElementById('input-bg-type').value = 'video';
-            const video = DOM.bgVideo;
-            video.src = url;
-            video.style.display = 'block';
-            DOM.bgImage.style.display = 'none';
-            video.muted = true;
-            video.loop = true;
-            video.playsInline = true;
-            video.play().catch(() => {});
-            document.getElementById('bg-filename').textContent = assetFile.name;
-            uploadedFiles.bg = blob;
-          } else if (ext.match(/(mp3|wav|ogg|m4a)/)) {
-            state.audioUrl = '/assets/' + assetFile.name;
-            state.musicDisplayName = assetFile.name.replace(/\.[^/.]+$/, '');
-            DOM.audioPlayer.src = url;
-            DOM.inlineMusic.style.display = 'flex';
-            DOM.inlineTrack.textContent = state.musicDisplayName;
-            document.getElementById('input-music-name').value = state.musicDisplayName;
-            document.getElementById('audio-filename').textContent = assetFile.name;
-            uploadedFiles.audio = blob;
-          }
-        }
-      }
-    }
-    
-    // Re-render everything
-    renderDisplaySocials();
-    renderBadges();
-    renderEditorSocials();
-    renderEditorBadges();
-    renderEditorBioLines();
-    restartTypewriter();
-    updateFrameStyle();
-    applyGlow();
-    applyTypography();
-    DOM.displayUsername.style.color = state.usernameColor;
-    DOM.displayBio.style.color = state.bioColor;
-    DOM.inlineTrack.style.color = state.musicColor;
-    DOM.volumeIcon.style.color = state.musicColor;
-    DOM.locationDisplay.innerText = state.location;
-    document.getElementById('view-count').innerText = Math.floor(Math.random() * 90000).toLocaleString();
-    document.getElementById('input-username').value = state.username;
-    document.getElementById('input-location').value = state.location;
-    document.getElementById('input-music-name').value = state.musicDisplayName;
-    
-    // Update editor fields
-    document.getElementById('input-pfp-url').value = state.pfpUrl;
-    document.getElementById('input-bg-url').value = state.bgUrl;
-    document.getElementById('input-audio-url').value = state.audioUrl;
-    document.getElementById('input-bg-type').value = state.bgType;
-    
-    btn.innerHTML = '✅ Restored!';
-    btn.disabled = false;
-    setTimeout(() => {
-      btn.innerHTML = originalText;
-    }, 3000);
-    
-    alert('✅ Profile restored successfully from ZIP!');
-    
-  } catch (error) {
-    console.error('ZIP upload error:', error);
-    alert('❌ Error reading ZIP file: ' + error.message);
-  }
 }
 
 // ─── ASSET UPDATE FUNCTIONS ──────────────────────────────
