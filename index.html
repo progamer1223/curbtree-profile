@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Poppins:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&family=Raleway:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; }
     body { margin:0; font-family:'Inter',sans-serif; background:#0b0b0b; color:white; overflow:hidden; height:100vh; }
@@ -45,9 +46,6 @@
     @media (min-width:640px) { .profile-pic-offset { margin-top:-4.5rem; } }
     .main-frame-tall { min-height:340px; display:flex; flex-direction:column; }
     @media (min-width:640px) { .main-frame-tall { min-height:400px; } }
-    .content-left { align-items:flex-start !important; text-align:left !important; }
-    .content-left .flex-wrap { justify-content:flex-start !important; }
-    .content-left .max-w-md { margin-left:0 !important; margin-right:0 !important; }
     .gap-vertical { gap:0.75rem; }
     @media (min-width:640px) { .gap-vertical { gap:1.25rem; } }
     .name-bio-expand { width:100%; max-width:100%; margin-top:1rem; }
@@ -130,7 +128,6 @@
     .font-dm-sans { font-family: 'DM Sans', sans-serif !important; }
     .font-space-grotesk { font-family: 'Space Grotesk', sans-serif !important; }
   </style>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Poppins:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&family=Raleway:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
 </head>
 <body>
 
@@ -238,25 +235,14 @@
       <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Assets (Files)</h3>
       <div class="space-y-2">
         <div>
-          <label class="block text-xs text-gray-400">Profile Picture</label>
-          <div class="flex gap-2">
-            <input type="file" id="input-pfp-file" accept="image/*" class="flex-1 bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white" onchange="handlePfpFileUpload(event)" />
-            <span id="pfp-filename" class="text-xs text-gray-500 flex items-center">No file</span>
-          </div>
+          <label class="block text-xs text-gray-400">Profile Picture URL</label>
+          <input type="text" id="input-pfp-url" value="" placeholder="/assets/avatar.gif" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" oninput="updatePfpUrl(this.value)" />
+          <p class="text-[0.5rem] text-gray-500 mt-1">Enter the path to your image (e.g., /assets/avatar.gif)</p>
         </div>
         <div>
-          <label class="block text-xs text-gray-400">Background (Image/Video)</label>
-          <div class="flex gap-2">
-            <input type="file" id="input-bg-file" accept="image/*,video/mp4,video/webm" class="flex-1 bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white" onchange="handleBgFileUpload(event)" />
-            <span id="bg-filename" class="text-xs text-gray-500 flex items-center">No file</span>
-          </div>
-        </div>
-        <div>
-          <label class="block text-xs text-gray-400">Music (MP3)</label>
-          <div class="flex gap-2">
-            <input type="file" id="input-audio-file" accept="audio/mpeg" class="flex-1 bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white" onchange="handleAudioFileUpload(event)" />
-            <span id="audio-filename" class="text-xs text-gray-500 flex items-center">No file</span>
-          </div>
+          <label class="block text-xs text-gray-400">Background URL</label>
+          <input type="text" id="input-bg-url" value="" placeholder="/assets/bg.mp4" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" oninput="updateBgUrl(this.value)" />
+          <p class="text-[0.5rem] text-gray-500 mt-1">Enter the path to your background (e.g., /assets/bg.mp4)</p>
         </div>
         <div>
           <label class="block text-xs text-gray-400">Background Type</label>
@@ -265,6 +251,11 @@
             <option value="image">Image</option>
             <option value="video">Video</option>
           </select>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-400">Music URL</label>
+          <input type="text" id="input-audio-url" value="" placeholder="/assets/song.mp3" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" oninput="updateAudioUrl(this.value)" />
+          <p class="text-[0.5rem] text-gray-500 mt-1">Enter the path to your music (e.g., /assets/song.mp3)</p>
         </div>
         <div>
           <label class="block text-xs text-gray-400">Music Display Name</label>
@@ -383,33 +374,25 @@
       <div id="editor-socials" class="space-y-2 mt-1"></div>
     </div>
 
-    <!-- ZIP Section -->
+    <!-- Save Section -->
     <div class="border-t border-white/5 pt-4 space-y-2">
-      <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Download / Upload</h3>
-      <button onclick="downloadFullProject()" class="w-full bg-blue-600/60 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
-        <i class="fas fa-cloud-download-alt"></i> Download Full Project (ZIP)
+      <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Save</h3>
+      <button onclick="saveAllSettings()" class="w-full bg-green-600/60 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
+        <i class="fas fa-save"></i> Save All Settings to profile.json
+      </button>
+      <button onclick="downloadProfileJSON()" class="w-full bg-blue-600/60 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
+        <i class="fas fa-download"></i> Download profile.json
       </button>
       <p style="font-size:0.6rem; color:#666; text-align:center; margin-top:4px;">
-        Downloads everything: index.html, profile.json, and your assets folder!
+        Save your settings, then download profile.json and upload to GitHub!
       </p>
-    </div>
-
-    <div class="border-t border-white/5 pt-4 space-y-2">
-      <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Backup</h3>
-      <button onclick="exportFullProfile()" class="w-full bg-green-600/60 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
-        <i class="fas fa-download"></i> Download Backup (JSON only)
-      </button>
-      <button onclick="document.getElementById('import-full').click()" class="w-full bg-yellow-600/60 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
-        <i class="fas fa-upload"></i> Restore Backup
-      </button>
-      <input type="file" id="import-full" accept=".json" style="display:none;" onchange="handleFullImport(event)" />
     </div>
 
   </div>
 </div>
 
 <script>
-// ─── EDIT MODE DETECTION ──────────────────────────────────
+// ─── EDIT MODE ──────────────────────────────────────────────
 const urlParams = new URLSearchParams(window.location.search);
 const isEditMode = urlParams.get('edit') === 'true';
 
@@ -420,7 +403,6 @@ if (isEditMode) {
   document.getElementById('edit-btn').style.display = 'none';
 }
 
-// ─── PASSWORD CHECK ──────────────────────────────────────
 const EDIT_PASSWORD = "curbtree";
 
 function unlockEditor() {
@@ -444,14 +426,7 @@ if (localStorage.getItem('curbtree_trusted') === 'true' && isEditMode) {
   document.getElementById('edit-btn').style.display = 'flex';
 }
 
-// ─── STORED FILES ──────────────────────────────────────────
-let uploadedFiles = {
-  pfp: null,
-  bg: null,
-  audio: null
-};
-
-// ─── STATE ────────────────────────────────────────────────
+// ─── STATE ──────────────────────────────────────────────────
 const state = {
   username: "@username",
   usernameColor: "#ffffff",
@@ -461,7 +436,7 @@ const state = {
   socialColor: "#ffffff",
   bioLines: ["Welcome to my profile.", "Creating cool things on Curbtree."],
   location: "Earth",
-  pfpUrl: "/assets/avatar.png",
+  pfpUrl: "/assets/avatar.gif",
   bgType: 'none',
   bgUrl: '',
   audioUrl: '',
@@ -497,163 +472,7 @@ const state = {
   socialWeight: 'font-weight-semibold'
 };
 
-// ─── LOAD PROFILE FROM JSON (GitHub) ─────────────────────
-async function loadProfileFromJSON() {
-  try {
-    const response = await fetch('/profile.json?t=' + Date.now());
-    if (response.ok) {
-      const data = await response.json();
-      Object.keys(data).forEach(key => {
-        if (typeof data[key] === 'object' && data[key] !== null && !Array.isArray(data[key])) {
-          state[key] = { ...state[key], ...data[key] };
-        } else {
-          state[key] = data[key];
-        }
-      });
-      console.log('✅ Profile loaded from JSON');
-      return true;
-    }
-  } catch (e) {
-    console.log('⚠️ No profile.json found, using defaults');
-  }
-  return false;
-}
-
-// ─── FILE HANDLING ──────────────────────────────────────────
-function handlePfpFileUpload(event) {
-  const file = event.target.files[0];
-  if (file) {
-    uploadedFiles.pfp = file;
-    document.getElementById('pfp-filename').textContent = file.name;
-    const url = URL.createObjectURL(file);
-    state.pfpUrl = '/assets/' + file.name;
-    DOM.displayPfp.src = url;
-  }
-}
-
-function handleBgFileUpload(event) {
-  const file = event.target.files[0];
-  if (file) {
-    uploadedFiles.bg = file;
-    document.getElementById('bg-filename').textContent = file.name;
-    const url = URL.createObjectURL(file);
-    state.bgUrl = '/assets/' + file.name;
-    
-    if (file.type.startsWith('video/')) {
-      state.bgType = 'video';
-      document.getElementById('input-bg-type').value = 'video';
-      const video = DOM.bgVideo;
-      video.src = url;
-      video.style.display = 'block';
-      DOM.bgImage.style.display = 'none';
-      video.muted = true;
-      video.loop = true;
-      video.playsInline = true;
-      video.play().catch(() => {});
-    } else {
-      state.bgType = 'image';
-      document.getElementById('input-bg-type').value = 'image';
-      DOM.bgImage.src = url;
-      DOM.bgImage.style.display = 'block';
-      DOM.bgVideo.style.display = 'none';
-      DOM.bgVideo.pause();
-    }
-  }
-}
-
-function handleAudioFileUpload(event) {
-  const file = event.target.files[0];
-  if (file) {
-    uploadedFiles.audio = file;
-    document.getElementById('audio-filename').textContent = file.name;
-    const url = URL.createObjectURL(file);
-    state.audioUrl = '/assets/' + file.name;
-    state.musicDisplayName = file.name.replace(/\.[^/.]+$/, '');
-    DOM.audioPlayer.src = url;
-    DOM.inlineMusic.style.display = 'flex';
-    DOM.inlineTrack.textContent = state.musicDisplayName;
-    document.getElementById('input-music-name').value = state.musicDisplayName;
-  }
-}
-
-// ─── DOWNLOAD FULL PROJECT AS ZIP ──────────────────────────
-async function downloadFullProject() {
-  const zip = new JSZip();
-  
-  // Add index.html
-  const htmlContent = document.documentElement.outerHTML;
-  zip.file('index.html', htmlContent);
-  
-  // Add profile.json
-  const profileData = JSON.parse(JSON.stringify(state));
-  profileData.pfpUrl = uploadedFiles.pfp ? '/assets/' + uploadedFiles.pfp.name : '/assets/avatar.png';
-  profileData.bgUrl = uploadedFiles.bg ? '/assets/' + uploadedFiles.bg.name : '';
-  profileData.audioUrl = uploadedFiles.audio ? '/assets/' + uploadedFiles.audio.name : '';
-  
-  const profileJson = JSON.stringify(profileData, null, 2);
-  zip.file('profile.json', profileJson);
-  
-  // Add assets folder
-  const assets = zip.folder('assets');
-  
-  if (uploadedFiles.pfp) {
-    const pfpData = await readFileAsArrayBuffer(uploadedFiles.pfp);
-    assets.file(uploadedFiles.pfp.name, pfpData);
-  }
-  
-  if (uploadedFiles.bg) {
-    const bgData = await readFileAsArrayBuffer(uploadedFiles.bg);
-    assets.file(uploadedFiles.bg.name, bgData);
-  }
-  
-  if (uploadedFiles.audio) {
-    const audioData = await readFileAsArrayBuffer(uploadedFiles.audio);
-    assets.file(uploadedFiles.audio.name, audioData);
-  }
-  
-  const content = await zip.generateAsync({ type: 'blob' });
-  saveAs(content, 'curbtree-profile.zip');
-  
-  alert('✅ Full project downloaded!\n\nUpload the extracted folder to GitHub.\n\nIncludes: index.html, profile.json, and assets/ with your files!');
-}
-
-function readFileAsArrayBuffer(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => resolve(e.target.result);
-    reader.onerror = reject;
-    reader.readAsArrayBuffer(file);
-  });
-}
-
-// ─── ASSET UPDATE FUNCTIONS ──────────────────────────────
-function updateBgType(val) {
-  state.bgType = val;
-  if (val === 'image' && state.bgUrl) {
-    DOM.bgImage.style.display = 'block';
-    DOM.bgVideo.style.display = 'none';
-    DOM.bgVideo.pause();
-  } else if (val === 'video' && state.bgUrl) {
-    const video = DOM.bgVideo;
-    video.style.display = 'block';
-    DOM.bgImage.style.display = 'none';
-    video.muted = true;
-    video.loop = true;
-    video.playsInline = true;
-    video.play().catch(() => {});
-  } else {
-    DOM.bgImage.style.display = 'none';
-    DOM.bgVideo.style.display = 'none';
-    DOM.bgVideo.pause();
-  }
-}
-
-function updateMusicName(val) {
-  state.musicDisplayName = val || 'track';
-  DOM.inlineTrack.textContent = val || 'track';
-}
-
-// ─── DOM refs ─────────────────────────────────────────────
+// ─── DOM REFS ──────────────────────────────────────────────
 const DOM = {
   enterScreen: document.getElementById('enter-screen'),
   mainContent: document.getElementById('main-content'),
@@ -681,10 +500,470 @@ const DOM = {
   statsBar: document.getElementById('stats-bar')
 };
 
-// ─── HELPERS ──────────────────────────────────────────────
-function genId() { return Math.random().toString(36).slice(2, 8); }
+// ─── CACHE-BUSTING HELPER ──────────────────────────────────
+function getAssetUrl(path) {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+  return path + '?v=' + Date.now();
+}
 
-// ─── BADGES ─────────────────────────────────────────────────
+// ─── LOAD PROFILE FROM JSON ─────────────────────────────────
+async function loadProfileFromJSON() {
+  try {
+    const response = await fetch('/profile.json?t=' + Date.now());
+    if (response.ok) {
+      const data = await response.json();
+      Object.keys(data).forEach(key => {
+        if (typeof data[key] === 'object' && data[key] !== null && !Array.isArray(data[key])) {
+          state[key] = { ...state[key], ...data[key] };
+        } else {
+          state[key] = data[key];
+        }
+      });
+      console.log('✅ Profile loaded from JSON');
+      return true;
+    }
+  } catch (e) {
+    console.log('⚠️ No profile.json found, using defaults');
+  }
+  return false;
+}
+
+// ─── SAVE ALL SETTINGS ──────────────────────────────────────
+function saveAllSettings() {
+  // Gather all settings from the UI
+  state.username = document.getElementById('input-username').value;
+  state.location = document.getElementById('input-location').value;
+  state.pfpUrl = document.getElementById('input-pfp-url').value || '/assets/avatar.gif';
+  state.bgUrl = document.getElementById('input-bg-url').value || '';
+  state.bgType = document.getElementById('input-bg-type').value;
+  state.audioUrl = document.getElementById('input-audio-url').value || '';
+  state.musicDisplayName = document.getElementById('input-music-name').value || 'track.mp3';
+  
+  state.usernameColor = document.getElementById('username-color').value;
+  state.bioColor = document.getElementById('bio-color').value;
+  state.musicColor = document.getElementById('music-color').value;
+  state.statsColor = document.getElementById('stats-color').value;
+  state.socialColor = document.getElementById('social-color').value;
+  
+  state.usernameFont = document.getElementById('username-font').value;
+  state.usernameWeight = document.getElementById('username-weight').value;
+  state.bioFont = document.getElementById('bio-font').value;
+  state.bioWeight = document.getElementById('bio-weight').value;
+  state.musicFont = document.getElementById('music-font').value;
+  state.musicWeight = document.getElementById('music-weight').value;
+  state.statsFont = document.getElementById('stats-font').value;
+  state.statsWeight = document.getElementById('stats-weight').value;
+  state.socialFont = document.getElementById('social-font').value;
+  state.socialWeight = document.getElementById('social-weight').value;
+  
+  state.typewriter.enabled = document.getElementById('tw-enabled').checked;
+  state.typewriter.applyUsername = document.getElementById('tw-apply-username').checked;
+  state.typewriter.cursor = document.getElementById('tw-cursor').checked;
+  state.typewriter.typeSpeed = parseInt(document.getElementById('tw-typeSpeed').value) || 50;
+  state.typewriter.deleteSpeed = parseInt(document.getElementById('tw-deleteSpeed').value) || 25;
+  state.typewriter.pauseTime = parseInt(document.getElementById('tw-pauseTime').value) || 1500;
+  state.typewriter.lineGap = parseInt(document.getElementById('tw-lineGap').value) || 300;
+  
+  state.glowEffect.enabled = document.getElementById('glow-enabled').checked;
+  state.glowEffect.intensity = parseFloat(document.getElementById('glow-intensity').value) || 4;
+  
+  state.tilt.enabled = document.getElementById('tilt-enabled').checked;
+  state.tilt.intensity = parseFloat(document.getElementById('tilt-intensity').value) || 8;
+  state.tilt.speed = parseFloat(document.getElementById('tilt-speed').value) || 0.15;
+  
+  state.frameBg = document.getElementById('frame-bg-color').value;
+  state.frameTransparency = parseInt(document.getElementById('frame-transparency').value) / 100;
+  state.frameOutline = parseInt(document.getElementById('frame-outline-opacity').value) / 100;
+  state.frameBlur = parseFloat(document.getElementById('frame-blur').value);
+  
+  // Save to localStorage
+  localStorage.setItem('curbtree_full_profile', JSON.stringify(state));
+  
+  alert('✅ All settings saved! Click "Download profile.json" to upload to GitHub.');
+  
+  // Apply changes immediately
+  applyAllSettings();
+}
+
+// ─── APPLY ALL SETTINGS ─────────────────────────────────────
+function applyAllSettings() {
+  // Username & Bio
+  DOM.displayUsername.textContent = state.username;
+  DOM.displayUsername.style.color = state.usernameColor;
+  DOM.displayBio.textContent = state.bioLines[0] || '';
+  DOM.displayBio.style.color = state.bioColor;
+  
+  // Location
+  DOM.locationDisplay.textContent = state.location;
+  
+  // Profile Picture
+  if (state.pfpUrl) {
+    DOM.displayPfp.src = getAssetUrl(state.pfpUrl);
+  }
+  
+  // Background
+  if (state.bgType === 'image' && state.bgUrl) {
+    DOM.bgImage.src = getAssetUrl(state.bgUrl);
+    DOM.bgImage.style.display = 'block';
+    DOM.bgVideo.style.display = 'none';
+  } else if (state.bgType === 'video' && state.bgUrl) {
+    DOM.bgVideo.src = getAssetUrl(state.bgUrl);
+    DOM.bgVideo.style.display = 'block';
+    DOM.bgImage.style.display = 'none';
+    DOM.bgVideo.muted = true;
+    DOM.bgVideo.loop = true;
+    DOM.bgVideo.playsInline = true;
+    DOM.bgVideo.play().catch(() => {});
+  } else {
+    DOM.bgImage.style.display = 'none';
+    DOM.bgVideo.style.display = 'none';
+  }
+  
+  // Music
+  if (state.audioUrl) {
+    DOM.audioPlayer.src = getAssetUrl(state.audioUrl);
+    DOM.inlineMusic.style.display = 'flex';
+    DOM.inlineTrack.textContent = state.musicDisplayName;
+    DOM.inlineTrack.style.color = state.musicColor;
+    DOM.volumeIcon.style.color = state.musicColor;
+  }
+  
+  // Stats Colors
+  const statItems = DOM.statsBar.querySelectorAll('.stat-item');
+  statItems.forEach(item => item.style.color = state.statsColor);
+  
+  // Typography
+  applyTypography();
+  
+  // Frame Styling
+  updateFrameStyle();
+  
+  // Glow
+  applyGlow();
+  
+  // Typewriter
+  restartTypewriter();
+}
+
+// ─── DOWNLOAD profile.json ──────────────────────────────────
+function downloadProfileJSON() {
+  const data = JSON.stringify(state, null, 2);
+  const blob = new Blob([data], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'profile.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  alert('✅ profile.json downloaded!\n\nUpload this to GitHub to update your profile for everyone.');
+}
+
+// ─── UPDATE FUNCTIONS ──────────────────────────────────────
+function updatePfpUrl(val) { state.pfpUrl = val; DOM.displayPfp.src = getAssetUrl(val); }
+function updateBgUrl(val) { state.bgUrl = val; }
+function updateBgType(val) { state.bgType = val; }
+function updateAudioUrl(val) { state.audioUrl = val; }
+function updateMusicName(val) { state.musicDisplayName = val; DOM.inlineTrack.textContent = val; }
+function updateLocation(val) { state.location = val; DOM.locationDisplay.textContent = val; }
+function updatePreview() { state.username = document.getElementById('input-username').value; DOM.displayUsername.textContent = state.username; }
+function updateUsernameColor(color) { state.usernameColor = color; DOM.displayUsername.style.color = color; }
+function updateBioColor(color) { state.bioColor = color; DOM.displayBio.style.color = color; }
+function updateMusicColor(color) { state.musicColor = color; DOM.inlineTrack.style.color = color; DOM.volumeIcon.style.color = color; }
+function updateStatsColor(color) { state.statsColor = color; const items = DOM.statsBar.querySelectorAll('.stat-item'); items.forEach(item => item.style.color = color); }
+function updateSocialColor(color) { state.socialColor = color; document.querySelectorAll('.social-tooltip').forEach(el => el.style.color = color); }
+
+// ─── FRAME STYLING ──────────────────────────────────────────
+function updateFrameStyle() {
+  const bg = state.frameBg;
+  const transparency = state.frameTransparency;
+  const outline = state.frameOutline;
+  const blur = state.frameBlur;
+  
+  const alpha = Math.round(transparency * 255).toString(16).padStart(2, '0');
+  const bgWithAlpha = bg + alpha;
+  const borderColor = `rgba(255,255,255,${outline * 0.8})`;
+  const blurValue = `blur(${blur}px)`;
+  
+  [DOM.mainFrame, DOM.bottomFrame].forEach(frame => {
+    if (frame) {
+      frame.style.background = bgWithAlpha;
+      frame.style.borderColor = borderColor;
+      frame.style.backdropFilter = blurValue;
+      frame.style.webkitBackdropFilter = blurValue;
+    }
+  });
+}
+
+// ─── TYPOGRAPHY ─────────────────────────────────────────────
+function applyTypography() {
+  DOM.displayUsername.className = DOM.displayUsername.className.split(' ').filter(c => !c.startsWith('font-')).join(' ');
+  DOM.displayUsername.classList.add(state.usernameFont || 'font-inter', state.usernameWeight || 'font-weight-extrabold');
+  
+  DOM.displayBio.className = DOM.displayBio.className.split(' ').filter(c => !c.startsWith('font-')).join(' ');
+  DOM.displayBio.classList.add(state.bioFont || 'font-inter', state.bioWeight || 'font-weight-normal');
+  
+  DOM.inlineTrack.className = DOM.inlineTrack.className.split(' ').filter(c => !c.startsWith('font-')).join(' ');
+  DOM.inlineTrack.classList.add(state.musicFont || 'font-inter', state.musicWeight || 'font-weight-normal');
+  
+  const statItems = DOM.statsBar.querySelectorAll('.stat-item');
+  statItems.forEach(item => {
+    item.className = item.className.split(' ').filter(c => !c.startsWith('font-')).join(' ');
+    item.classList.add(state.statsFont || 'font-inter', state.statsWeight || 'font-weight-normal');
+  });
+}
+
+// ─── GLOW ────────────────────────────────────────────────────
+function updateGlowSetting(key, val) { state.glowEffect[key] = val; applyGlow(); }
+
+function applyGlow() {
+  const els = [DOM.displayUsername, DOM.displayBio, DOM.inlineTrack, DOM.volumeIcon, DOM.inlinePlayIcon];
+  const on = state.glowEffect.enabled, g = parseFloat(state.glowEffect.intensity) || 0;
+  els.forEach(el => {
+    if (!el) return;
+    if (!on) { el.style.textShadow = ''; el.style.filter = ''; return; }
+    el.style.textShadow = `0 0 ${g*0.2}px currentColor, 0 0 ${g*0.6}px currentColor`;
+    el.style.filter = `drop-shadow(0 0 ${g*0.5}px currentColor)`;
+  });
+}
+
+// ─── TYPEWRITER ─────────────────────────────────────────────
+let usernameTimer = null, bioTimer = null;
+
+function updateTypewriterSetting(key, val) { state.typewriter[key] = val; restartTypewriter(); }
+
+function restartTypewriter() {
+  clearTimers();
+  if (!state.typewriter.enabled) {
+    DOM.displayUsername.textContent = state.username;
+    DOM.displayUsername.style.color = state.usernameColor;
+    DOM.displayBio.textContent = state.bioLines[0] || '';
+    DOM.displayBio.style.color = state.bioColor;
+    return;
+  }
+  runUsernameCycle();
+  runBioCycle();
+}
+
+function clearTimers() { clearTimeout(usernameTimer); clearTimeout(bioTimer); usernameTimer = null; bioTimer = null; }
+
+function runUsernameCycle() {
+  const text = state.username || '@username';
+  if (!state.typewriter.applyUsername) { DOM.displayUsername.textContent = text; DOM.displayUsername.style.color = state.usernameColor; return; }
+  let i = 0;
+  function type() { DOM.displayUsername.textContent = text.slice(0, i); if (i < text.length) { i++; usernameTimer = setTimeout(type, state.typewriter.typeSpeed); } else usernameTimer = setTimeout(erase, state.typewriter.pauseTime); }
+  function erase() { i--; DOM.displayUsername.textContent = text.slice(0, Math.max(i, 0)); if (i > 0) usernameTimer = setTimeout(erase, state.typewriter.deleteSpeed); else usernameTimer = setTimeout(type, state.typewriter.lineGap); }
+  type();
+}
+
+function runBioCycle() {
+  const lines = state.bioLines.length ? state.bioLines : [''];
+  let idx = 0;
+  function cycle() {
+    const txt = lines[idx];
+    let i = 0;
+    function type() { DOM.displayBio.textContent = txt.slice(0, i); if (i < txt.length) { i++; bioTimer = setTimeout(type, state.typewriter.typeSpeed); } else if (lines.length > 1) bioTimer = setTimeout(erase, state.typewriter.pauseTime); }
+    function erase() { i--; DOM.displayBio.textContent = txt.slice(0, Math.max(i, 0)); if (i > 0) bioTimer = setTimeout(erase, state.typewriter.deleteSpeed); else { idx = (idx + 1) % lines.length; bioTimer = setTimeout(cycle, state.typewriter.lineGap); } }
+    type();
+  }
+  cycle();
+}
+
+// ─── TILT ────────────────────────────────────────────────────
+let curRX = 0, curRY = 0, tarRX = 0, tarRY = 0, curS = 1, tarS = 1, tiltLoop = null;
+
+function updateTiltSetting(key, val) { state.tilt[key] = val; if (!state.tilt.enabled) { tarRX = 0; tarRY = 0; tarS = 1; } }
+
+function tiltLoopFn() {
+  if (!state.tilt.enabled) { tarRX = 0; tarRY = 0; tarS = 1; }
+  curRX += (tarRX - curRX) * state.tilt.speed;
+  curRY += (tarRY - curRY) * state.tilt.speed;
+  curS += (tarS - curS) * state.tilt.speed;
+  const g = DOM.tiltGroup;
+  if (g) {
+    g.style.transform = `perspective(1200px) rotateX(${curRX}deg) rotateY(${curRY}deg) scale3d(${curS},${curS},${curS})`;
+  }
+  tiltLoop = requestAnimationFrame(tiltLoopFn);
+}
+
+function initTilt() {
+  const g = DOM.tiltGroup;
+  if (!g || g._tilt) return;
+  g.addEventListener('mousemove', e => {
+    if (!state.tilt.enabled) return;
+    const r = g.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    tarRX = ((y - r.height / 2) / r.height * 2) * -state.tilt.intensity;
+    tarRY = ((x - r.width / 2) / r.width * 2) * state.tilt.intensity;
+    tarS = 1.015;
+  });
+  g.addEventListener('mouseleave', () => { tarRX = 0; tarRY = 0; tarS = 1; });
+  g._tilt = true;
+  if (!tiltLoop) tiltLoopFn();
+}
+
+// ─── EFFECTS ──────────────────────────────────────────────────
+let fxCanvas, ctx, fxParticles = [], fxAnimId = null;
+
+function initFxCanvas() {
+  fxCanvas = document.getElementById('fx-canvas');
+  if (!fxCanvas) return;
+  ctx = fxCanvas.getContext('2d');
+  resizeFxCanvas();
+  window.addEventListener('resize', resizeFxCanvas);
+  fxCanvas.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+}
+
+let mouseX = -999, mouseY = -999;
+
+function resizeFxCanvas() {
+  if (!fxCanvas) return;
+  fxCanvas.width = window.innerWidth;
+  fxCanvas.height = window.innerHeight;
+}
+
+function setEffect(type) {
+  state.fx = type;
+  if (fxAnimId) cancelAnimationFrame(fxAnimId);
+  fxParticles = [];
+  if (type === 'none') { if (ctx) ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height); return; }
+  let count = type === 'pixel' ? 150 : (type === 'rain' ? 200 : 220);
+  for (let i = 0; i < count; i++) {
+    fxParticles.push({
+      x: Math.random() * fxCanvas.width,
+      y: Math.random() * fxCanvas.height,
+      speed: type === 'rain' ? 6 + Math.random() * 10 : (type === 'pixel' ? 0.2 + Math.random() * 0.4 : 0.5 + Math.random() * 2.5),
+      size: type === 'pixel' ? 3 + Math.random() * 5 : (type === 'rain' ? 0.8 + Math.random() * 1.5 : 1.5 + Math.random() * 3),
+      length: type === 'rain' ? 15 + Math.random() * 30 : 0,
+      opacity: 0.5 + Math.random() * 0.4
+    });
+  }
+  drawFx();
+}
+
+function drawFx() {
+  if (!ctx || !fxCanvas) return;
+  if (state.fx === 'none') { ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height); return; }
+  ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+  const color = state.fxColor || '#ffffff';
+  const isSnow = state.fx === 'snow', isRain = state.fx === 'rain', isPixel = state.fx === 'pixel';
+
+  fxParticles.forEach(p => {
+    if (isSnow) {
+      const dx = mouseX - p.x, dy = mouseY - p.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const maxDist = 300;
+      if (dist < maxDist && dist > 1) {
+        const force = (1 - dist / maxDist) * 1.2;
+        p.x += (dx / dist) * force * p.speed * 0.12;
+        p.y += (dy / dist) * force * p.speed * 0.12;
+      }
+      p.x += 0.2 * p.speed * 0.4;
+      p.y += 0.8 * p.speed * 0.5;
+      if (p.x > fxCanvas.width) p.x = -5;
+      if (p.y > fxCanvas.height) { p.y = -5; p.x = Math.random() * fxCanvas.width; }
+      ctx.globalAlpha = p.opacity;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (isRain) {
+      const dx = mouseX - p.x, dy = mouseY - p.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const maxDist = 200;
+      if (dist < maxDist && dist > 1) {
+        const force = (1 - dist / maxDist) * 0.6;
+        p.x += (dx / dist) * force * 0.5;
+        p.y += (dy / dist) * force * 0.5;
+      }
+      p.x += 0.6 * p.speed * 0.25;
+      p.y += 2.8 * p.speed * 0.45;
+      if (p.x > fxCanvas.width + 30) p.x = -30;
+      if (p.y > fxCanvas.height + 30) { p.y = -30; p.x = Math.random() * fxCanvas.width; }
+      ctx.globalAlpha = p.opacity * 0.6;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = p.size * 0.6;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(p.x - p.speed * 0.3, p.y - p.length);
+      ctx.stroke();
+    } else if (isPixel) {
+      p.x += (Math.random() - 0.5) * 1.2;
+      p.y += (Math.random() - 0.5) * 1.2 + 0.2;
+      if (p.y > fxCanvas.height) { p.y = -10; p.x = Math.random() * fxCanvas.width; }
+      if (p.x < 0) p.x = 0;
+      if (p.x > fxCanvas.width) p.x = fxCanvas.width;
+      ctx.globalAlpha = p.opacity * 0.7;
+      ctx.fillStyle = color;
+      const sz = p.size;
+      ctx.fillRect(p.x, p.y, sz, sz);
+      if (Math.random() < 0.03) {
+        ctx.globalAlpha = 0.3;
+        ctx.fillStyle = color;
+        const glitchW = 20 + Math.random() * 60;
+        const glitchH = 1 + Math.random() * 3;
+        ctx.fillRect(p.x - glitchW / 2, p.y + Math.random() * 10 - 5, glitchW, glitchH);
+      }
+    }
+  });
+  fxAnimId = requestAnimationFrame(drawFx);
+}
+
+function updateFxColor() { state.fxColor = document.getElementById('fx-color').value; }
+
+// ─── AUDIO ────────────────────────────────────────────────────
+function toggleAudio(force) {
+  if (!state.audioUrl) return;
+  const icon = DOM.inlinePlayIcon;
+  if (state.audioPlaying && !force) {
+    DOM.audioPlayer.pause();
+    state.audioPlaying = false;
+    icon.className = 'fas fa-play';
+    DOM.inlineStatus.className = 'status-dot paused';
+  } else {
+    DOM.audioPlayer.play().then(() => {
+      state.audioPlaying = true;
+      icon.className = 'fas fa-pause';
+      DOM.inlineStatus.className = 'status-dot';
+    }).catch(() => {});
+  }
+}
+
+function updateVolume(val) { DOM.audioPlayer.volume = parseFloat(val); }
+
+// ─── START EXPERIENCE ──────────────────────────────────────
+function startExperience() {
+  DOM.enterScreen.style.opacity = '0';
+  setTimeout(() => {
+    DOM.enterScreen.style.display = 'none';
+    DOM.mainContent.classList.remove('opacity-0', 'pointer-events-none');
+    if (state.bgType === 'video' && DOM.bgVideo.src) {
+      DOM.bgVideo.muted = true;
+      DOM.bgVideo.loop = true;
+      DOM.bgVideo.playsInline = true;
+      DOM.bgVideo.play().catch(() => {});
+    }
+    if (state.audioUrl) toggleAudio(true);
+    restartTypewriter();
+  }, 500);
+}
+
+function toggleEditor() { document.getElementById('editor-sidebar').classList.toggle('open'); }
+
+// ─── SHARE LINK ──────────────────────────────────────────────
+function copyProfileLink() {
+  const url = window.location.href;
+  navigator.clipboard.writeText(url).then(() => {
+    const shareText = document.getElementById('share-text');
+    shareText.textContent = 'Copied!';
+    setTimeout(() => shareText.textContent = 'Share', 2000);
+  }).catch(() => {});
+}
+
+// ─── BADGES ──────────────────────────────────────────────────
 const badgeIconOptions = [
   "fa-solid fa-check-circle", "fa-solid fa-star", "fa-solid fa-bolt", "fa-solid fa-crown",
   "fa-solid fa-shield-halved", "fa-solid fa-award", "fa-solid fa-certificate", "fa-solid fa-medal",
@@ -709,7 +988,7 @@ function renderEditorBadges() {
   state.badges.forEach((b, i) => {
     const d = document.createElement('div');
     d.className = 'flex items-center gap-1 bg-[#222] p-1.5 rounded flex-wrap';
-    let opts = badgeIconOptions.map(ic => `<option value="${ic}" ${b.icon===ic?'selected':''}>${ic.split(' ')[1]||ic}</option>`).join('');
+    let opts = badgeIconOptions.map(ic => `<option value="${ic}" ${b.icon === ic ? 'selected' : ''}>${ic.split(' ')[1] || ic}</option>`).join('');
     d.innerHTML = `
       <input value="${b.label}" oninput="updateBadge('${b.id}','label',this.value)" class="bg-[#111] border border-[#333] rounded px-2 py-0.5 text-xs w-16 text-white" />
       <select onchange="updateBadge('${b.id}','icon',this.value)" class="bg-[#111] border border-[#333] rounded px-1 py-0.5 text-xs text-white">${opts}</select>
@@ -720,25 +999,13 @@ function renderEditorBadges() {
   });
 }
 
-function addBadge() { 
-  state.badges.push({ id: genId(), label: "New", icon: "fa-solid fa-bolt", color: "#a78bfa" }); 
-  renderEditorBadges(); 
-  renderBadges(); 
-}
-function removeBadge(id) { 
-  state.badges = state.badges.filter(b => b.id !== id); 
-  renderEditorBadges(); 
-  renderBadges(); 
-}
-function updateBadge(id, key, val) { 
-  const b = state.badges.find(x => x.id === id); 
-  if (b) { 
-    b[key] = val; 
-    renderBadges(); 
-  } 
-}
+function addBadge() { state.badges.push({ id: genId(), label: "New", icon: "fa-solid fa-bolt", color: "#a78bfa" }); renderEditorBadges(); renderBadges(); }
 
-// ─── BIO LINES ─────────────────────────────────────────────
+function removeBadge(id) { state.badges = state.badges.filter(b => b.id !== id); renderEditorBadges(); renderBadges(); }
+
+function updateBadge(id, key, val) { const b = state.badges.find(x => x.id === id); if (b) { b[key] = val; renderBadges(); } }
+
+// ─── BIO LINES ──────────────────────────────────────────────
 function renderEditorBioLines() {
   const c = DOM.editorBioLines;
   if (!c) return;
@@ -747,18 +1014,21 @@ function renderEditorBioLines() {
     const row = document.createElement('div');
     row.className = 'flex items-center gap-1';
     row.innerHTML = `
-      <input type="text" value="${line.replace(/"/g,'&quot;')}" oninput="updateBioLine(${i},this.value)" class="flex-1 bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
-      ${state.bioLines.length>1?`<button onclick="removeBioLine(${i})" class="text-red-400 text-xs"><i class="fas fa-times"></i></button>`:''}
+      <input type="text" value="${line.replace(/"/g, '&quot;')}" oninput="updateBioLine(${i},this.value)" class="flex-1 bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
+      ${state.bioLines.length > 1 ? `<button onclick="removeBioLine(${i})" class="text-red-400 text-xs"><i class="fas fa-times"></i></button>` : ''}
     `;
     c.appendChild(row);
   });
 }
+
 function addBioLine() { state.bioLines.push("New bio line"); renderEditorBioLines(); restartTypewriter(); }
-function removeBioLine(i) { if (state.bioLines.length < 2) return; state.bioLines.splice(i,1); renderEditorBioLines(); restartTypewriter(); }
-function updateBioLine(i,v) { state.bioLines[i]=v; restartTypewriter(); }
+
+function removeBioLine(i) { if (state.bioLines.length < 2) return; state.bioLines.splice(i, 1); renderEditorBioLines(); restartTypewriter(); }
+
+function updateBioLine(i, v) { state.bioLines[i] = v; restartTypewriter(); }
 
 // ─── SOCIAL LINKS ──────────────────────────────────────────
-const availableIcons = ["fa-brands fa-discord","fa-brands fa-github","fa-brands fa-twitter","fa-brands fa-instagram","fa-brands fa-youtube","fa-brands fa-twitch","fa-brands fa-spotify","fa-brands fa-steam","fa-brands fa-reddit","fa-brands fa-telegram","fa-brands fa-tiktok","fa-solid fa-globe","fa-solid fa-link"];
+const availableIcons = ["fa-brands fa-discord", "fa-brands fa-github", "fa-brands fa-twitter", "fa-brands fa-instagram", "fa-brands fa-youtube", "fa-brands fa-twitch", "fa-brands fa-spotify", "fa-brands fa-steam", "fa-brands fa-reddit", "fa-brands fa-telegram", "fa-brands fa-tiktok", "fa-solid fa-globe", "fa-solid fa-link"];
 
 function renderEditorSocials() {
   const c = DOM.editorSocials;
@@ -767,7 +1037,7 @@ function renderEditorSocials() {
   state.links.forEach(link => {
     const d = document.createElement('div');
     d.className = 'bg-[#222] p-2 rounded border border-[#333] relative text-xs';
-    let opts = availableIcons.map(ic => `<option value="${ic}" ${link.icon===ic?'selected':''}>${ic.split('-')[2]||ic}</option>`).join('');
+    let opts = availableIcons.map(ic => `<option value="${ic}" ${link.icon === ic ? 'selected' : ''}>${ic.split('-')[2] || ic}</option>`).join('');
     d.innerHTML = `
       <button onclick="removeSocialLink('${link.id}')" class="absolute top-1 right-1 text-red-400"><i class="fas fa-trash"></i></button>
       <div class="grid grid-cols-3 gap-1">
@@ -776,15 +1046,17 @@ function renderEditorSocials() {
         <input type="color" value="${link.color}" onchange="updateSocialLink('${link.id}','color',this.value)" class="w-5 h-5 p-0 border-0 bg-transparent" />
       </div>
       <input value="${link.url}" oninput="updateSocialLink('${link.id}','url',this.value)" placeholder="url or copy" class="w-full bg-[#111] border border-[#444] rounded px-1 py-0.5 mt-1 text-white" />
-      <label class="flex items-center gap-1 mt-1"><input type="checkbox" ${link.spin?'checked':''} onchange="updateSocialLink('${link.id}','spin',this.checked)" /> spin</label>
+      <label class="flex items-center gap-1 mt-1"><input type="checkbox" ${link.spin ? 'checked' : ''} onchange="updateSocialLink('${link.id}','spin',this.checked)" /> spin</label>
     `;
     c.appendChild(d);
   });
 }
 
-function addSocialLink() { state.links.push({ id:genId(), name:"Link", url:"https://", icon:"fa-solid fa-link", color:"#ffffff", spin:false }); renderEditorSocials(); renderDisplaySocials(); }
-function removeSocialLink(id) { state.links = state.links.filter(l=>l.id!==id); renderEditorSocials(); renderDisplaySocials(); }
-function updateSocialLink(id,key,val) { const l=state.links.find(x=>x.id===id); if(l){ l[key]=val; renderDisplaySocials(); } }
+function addSocialLink() { state.links.push({ id: genId(), name: "Link", url: "https://", icon: "fa-solid fa-link", color: "#ffffff", spin: false }); renderEditorSocials(); renderDisplaySocials(); }
+
+function removeSocialLink(id) { state.links = state.links.filter(l => l.id !== id); renderEditorSocials(); renderDisplaySocials(); }
+
+function updateSocialLink(id, key, val) { const l = state.links.find(x => x.id === id); if (l) { l[key] = val; renderDisplaySocials(); } }
 
 function renderDisplaySocials() {
   const c = DOM.displaySocials;
@@ -806,7 +1078,6 @@ function renderDisplaySocials() {
     c.appendChild(a);
   });
   applyGlow();
-  applyTypography();
 }
 
 function handleSocialClick(url, id) {
@@ -819,505 +1090,15 @@ function handleSocialClick(url, id) {
   document.body.removeChild(ta);
 }
 
-// ─── TYPOGRAPHY ────────────────────────────────────────────
-function applyTypography() {
-  const usernameFont = document.getElementById('username-font')?.value || 'font-inter';
-  const usernameWeight = document.getElementById('username-weight')?.value || 'font-weight-extrabold';
-  DOM.displayUsername.className = DOM.displayUsername.className.split(' ').filter(c => !c.startsWith('font-') && !c.startsWith('font-weight-')).join(' ');
-  DOM.displayUsername.classList.add(usernameFont, usernameWeight);
-  
-  const bioFont = document.getElementById('bio-font')?.value || 'font-inter';
-  const bioWeight = document.getElementById('bio-weight')?.value || 'font-weight-normal';
-  DOM.displayBio.className = DOM.displayBio.className.split(' ').filter(c => !c.startsWith('font-') && !c.startsWith('font-weight-')).join(' ');
-  DOM.displayBio.classList.add(bioFont, bioWeight);
-  
-  const musicFont = document.getElementById('music-font')?.value || 'font-inter';
-  const musicWeight = document.getElementById('music-weight')?.value || 'font-weight-normal';
-  DOM.inlineTrack.className = DOM.inlineTrack.className.split(' ').filter(c => !c.startsWith('font-') && !c.startsWith('font-weight-')).join(' ');
-  DOM.inlineTrack.classList.add(musicFont, musicWeight);
-  
-  const statsFont = document.getElementById('stats-font')?.value || 'font-inter';
-  const statsWeight = document.getElementById('stats-weight')?.value || 'font-weight-normal';
-  const statItems = DOM.statsBar?.querySelectorAll('.stat-item') || [];
-  statItems.forEach(item => {
-    item.className = item.className.split(' ').filter(c => !c.startsWith('font-') && !c.startsWith('font-weight-')).join(' ');
-    item.classList.add(statsFont, statsWeight);
-  });
-  
-  const socialFont = document.getElementById('social-font')?.value || 'font-inter';
-  const socialWeight = document.getElementById('social-weight')?.value || 'font-weight-semibold';
-  document.querySelectorAll('.social-tooltip').forEach(el => {
-    el.className = el.className.split(' ').filter(c => !c.startsWith('font-') && !c.startsWith('font-weight-')).join(' ');
-    el.classList.add(socialFont, socialWeight);
-  });
-}
+// ─── HELPERS ──────────────────────────────────────────────────
+function genId() { return Math.random().toString(36).slice(2, 8); }
 
-// ─── TEXT COLORS ──────────────────────────────────────────
-function updateUsernameColor(color) {
-  state.usernameColor = color;
-  DOM.displayUsername.style.color = color;
-}
-
-function updateBioColor(color) {
-  state.bioColor = color;
-  DOM.displayBio.style.color = color;
-}
-
-function updateMusicColor(color) {
-  state.musicColor = color;
-  DOM.inlineTrack.style.color = color;
-  DOM.volumeIcon.style.color = color;
-}
-
-function updateStatsColor(color) {
-  state.statsColor = color;
-  const statItems = DOM.statsBar?.querySelectorAll('.stat-item') || [];
-  statItems.forEach(item => {
-    item.style.color = color;
-  });
-}
-
-function updateSocialColor(color) {
-  state.socialColor = color;
-  document.querySelectorAll('.social-tooltip').forEach(el => {
-    el.style.color = color;
-  });
-}
-
-// ─── LOCATION ─────────────────────────────────────────────
-function updateLocation(val) {
-  state.location = val || 'Earth';
-  DOM.locationDisplay.innerText = state.location;
-}
-
-// ─── FRAME STYLING ──────────────────────────────────────
-function updateFrameStyle() {
-  const bg = document.getElementById('frame-bg-color')?.value || '#141414';
-  const transparency = parseInt(document.getElementById('frame-transparency')?.value || '55') / 100;
-  const outline = parseInt(document.getElementById('frame-outline-opacity')?.value || '8') / 100;
-  const blur = parseFloat(document.getElementById('frame-blur')?.value || '10');
-  
-  state.frameBg = bg;
-  state.frameTransparency = transparency;
-  state.frameOutline = outline;
-  state.frameBlur = blur;
-  
-  const transparencyLabel = document.getElementById('transparency-label');
-  const outlineLabel = document.getElementById('outline-label');
-  const blurLabel = document.getElementById('blur-label');
-  if (transparencyLabel) transparencyLabel.textContent = Math.round(transparency * 100) + '%';
-  if (outlineLabel) outlineLabel.textContent = Math.round(outline * 100) + '%';
-  if (blurLabel) blurLabel.textContent = blur + 'px';
-  
-  const alpha = Math.round(transparency * 255).toString(16).padStart(2, '0');
-  const bgWithAlpha = bg + alpha;
-  const borderColor = `rgba(255,255,255,${outline * 0.8})`;
-  const blurValue = `blur(${blur}px)`;
-  
-  const frames = [DOM.mainFrame, DOM.bottomFrame];
-  frames.forEach(frame => {
-    if (frame) {
-      frame.style.background = bgWithAlpha;
-      frame.style.borderColor = borderColor;
-      frame.style.backdropFilter = blurValue;
-      frame.style.webkitBackdropFilter = blurValue;
-    }
-  });
-}
-
-// ─── GLOW ──────────────────────────────────────────────────
-function updateGlowSetting(key,val) { state.glowEffect[key]=val; applyGlow(); }
-
-function applyGlow() {
-  const els = [
-    DOM.displayUsername, DOM.displayBio, 
-    ...(DOM.displaySocials?.querySelectorAll('i') || []),
-    ...(DOM.displaySocials?.querySelectorAll('.social-tooltip') || []),
-    DOM.inlineTrack, DOM.volumeIcon, DOM.inlinePlayIcon,
-    ...(DOM.statsBar?.querySelectorAll('.stat-item') || [])
-  ].filter(el => el);
-  const on = state.glowEffect.enabled, g = parseFloat(state.glowEffect.intensity)||0;
-  els.forEach(el => { 
-    if(!el)return; 
-    if(!on){ el.style.textShadow=''; el.style.filter=''; return; } 
-    el.style.textShadow=`0 0 ${g*0.2}px currentColor, 0 0 ${g*0.6}px currentColor`; 
-    el.style.filter=`drop-shadow(0 0 ${g*0.5}px currentColor)`; 
-  });
-}
-
-// ─── TYPEWRITER ────────────────────────────────────────────
-let usernameTimer=null, bioTimer=null;
-function clearTimers() { clearTimeout(usernameTimer); clearTimeout(bioTimer); usernameTimer=null; bioTimer=null; }
-function restartTypewriter() {
-  clearTimers(); applyCursorClasses();
-  if (!state.typewriter.enabled) {
-    DOM.displayUsername.innerText = state.username;
-    DOM.displayUsername.style.color = state.usernameColor;
-    DOM.displayBio.innerText = state.bioLines[0]||'';
-    DOM.displayBio.style.color = state.bioColor;
-    return;
-  }
-  runUsernameCycle(); runBioCycle();
-}
-function runUsernameCycle() {
-  const text = state.username || '@username';
-  if (!state.typewriter.applyUsername) {
-    DOM.displayUsername.innerText = text;
-    DOM.displayUsername.style.color = state.usernameColor;
-    return;
-  }
-  let i=0;
-  function type() {
-    DOM.displayUsername.innerText = text.slice(0,i);
-    DOM.displayUsername.style.color = state.usernameColor;
-    if(i<text.length){ i++; usernameTimer=setTimeout(type, state.typewriter.typeSpeed); }
-    else usernameTimer=setTimeout(erase, state.typewriter.pauseTime);
-  }
-  function erase() {
-    i--;
-    DOM.displayUsername.innerText = text.slice(0,Math.max(i,0));
-    DOM.displayUsername.style.color = state.usernameColor;
-    if(i>0) usernameTimer=setTimeout(erase, state.typewriter.deleteSpeed);
-    else usernameTimer=setTimeout(type, state.typewriter.lineGap);
-  }
-  type();
-}
-function runBioCycle() {
-  const lines = state.bioLines.length ? state.bioLines : [''];
-  if (!state.typewriter.enabled) {
-    DOM.displayBio.innerText = lines[0];
-    DOM.displayBio.style.color = state.bioColor;
-    return;
-  }
-  let idx=0;
-  function cycle() {
-    const txt = lines[idx]; let i=0;
-    function type() {
-      DOM.displayBio.innerText = txt.slice(0,i);
-      DOM.displayBio.style.color = state.bioColor;
-      if(i<txt.length){ i++; bioTimer=setTimeout(type, state.typewriter.typeSpeed); }
-      else if(lines.length>1) bioTimer=setTimeout(erase, state.typewriter.pauseTime);
-    }
-    function erase() {
-      i--;
-      DOM.displayBio.innerText = txt.slice(0,Math.max(i,0));
-      DOM.displayBio.style.color = state.bioColor;
-      if(i>0) bioTimer=setTimeout(erase, state.typewriter.deleteSpeed);
-      else { idx=(idx+1)%lines.length; bioTimer=setTimeout(cycle, state.typewriter.lineGap); }
-    }
-    type();
-  }
-  cycle();
-}
-function applyCursorClasses() { const c = state.typewriter.enabled && state.typewriter.cursor; DOM.displayBio.classList.toggle('typewriter-cursor', c); DOM.displayUsername.classList.toggle('typewriter-cursor', c && state.typewriter.applyUsername); }
-function updateTypewriterSetting(key,val) { state.typewriter[key]=val; applyCursorClasses(); restartTypewriter(); }
-
-// ─── TILT ──────────────────────────────────────────────────
-let curRX=0,curRY=0,tarRX=0,tarRY=0,curS=1,tarS=1,tiltLoop=null;
-
-function updateTiltSetting(key,val) { 
-  state.tilt[key]=val; 
-  if(!state.tilt.enabled){ tarRX=0; tarRY=0; tarS=1; } 
-}
-
-function tiltLoopFn() {
-  if(!state.tilt.enabled){ tarRX=0; tarRY=0; tarS=1; }
-  curRX += (tarRX-curRX)*state.tilt.speed; 
-  curRY += (tarRY-curRY)*state.tilt.speed; 
-  curS += (tarS-curS)*state.tilt.speed;
-  const g = DOM.tiltGroup; 
-  if(g) {
-    const diffX = Math.abs(tarRX - curRX);
-    const diffY = Math.abs(tarRY - curRY);
-    const diffScale = Math.abs(tarS - curS);
-    if (diffX > 0.001 || diffY > 0.001 || diffScale > 0.001) {
-      g.style.transform = `perspective(1200px) rotateX(${curRX}deg) rotateY(${curRY}deg) scale3d(${curS},${curS},${curS})`;
-    } else {
-      g.style.transform = `perspective(1200px) rotateX(${tarRX}deg) rotateY(${tarRY}deg) scale3d(${tarS},${tarS},${tarS})`;
-      curRX = tarRX;
-      curRY = tarRY;
-      curS = tarS;
-    }
-  }
-  tiltLoop = requestAnimationFrame(tiltLoopFn);
-}
-
-function initTilt() {
-  const g = DOM.tiltGroup;
-  if(!g || g._tilt) return;
-  
-  g.addEventListener('mousemove', e => { 
-    if(!state.tilt.enabled) return; 
-    const r = g.getBoundingClientRect(); 
-    const x = e.clientX - r.left, y = e.clientY - r.top; 
-    tarRX = ((y - r.height/2) / r.height * 2) * -state.tilt.intensity; 
-    tarRY = ((x - r.width/2) / r.width * 2) * state.tilt.intensity; 
-    tarS = 1.015; 
-  });
-  
-  g.addEventListener('mouseleave', ()=>{ 
-    tarRX = 0; 
-    tarRY = 0; 
-    tarS = 1; 
-  });
-  
-  g._tilt = true;
-  if(!tiltLoop) tiltLoopFn();
-}
-
-// ─── EFFECTS ──────────────────────────────────────────────
-let fxCanvas, ctx, fxParticles=[], fxAnimId=null;
-function initFxCanvas() { 
-  fxCanvas = document.getElementById('fx-canvas'); 
-  if (!fxCanvas) return;
-  ctx = fxCanvas.getContext('2d'); 
-  resizeFxCanvas(); 
-  window.addEventListener('resize', resizeFxCanvas); 
-  fxCanvas.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; }); 
-}
-let mouseX = -999, mouseY = -999;
-function resizeFxCanvas() { 
-  if (!fxCanvas) return;
-  fxCanvas.width = window.innerWidth; 
-  fxCanvas.height = window.innerHeight; 
-}
-
-function setEffect(type) {
-  state.fx = type;
-  if(fxAnimId) cancelAnimationFrame(fxAnimId);
-  fxParticles = [];
-  if(type === 'none'){ 
-    if (ctx) ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height); 
-    return; 
-  }
-  let count = type === 'pixel' ? 150 : (type === 'rain' ? 200 : 220);
-  for(let i = 0; i < count; i++){
-    let p = {
-      x: Math.random() * fxCanvas.width,
-      y: Math.random() * fxCanvas.height,
-      speed: type === 'rain' ? 6 + Math.random() * 10 : (type === 'pixel' ? 0.2 + Math.random() * 0.4 : 0.5 + Math.random() * 2.5),
-      size: type === 'pixel' ? 3 + Math.random() * 5 : (type === 'rain' ? 0.8 + Math.random() * 1.5 : 1.5 + Math.random() * 3),
-      length: type === 'rain' ? 15 + Math.random() * 30 : 0,
-      opacity: 0.5 + Math.random() * 0.4,
-      angle: type === 'rain' ? (Math.random() - 0.5) * 0.3 : 0
-    };
-    fxParticles.push(p);
-  }
-  drawFx();
-}
-
-function drawFx() {
-  if (!ctx || !fxCanvas) return;
-  if(state.fx === 'none'){ ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height); return; }
-  ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
-  const color = state.fxColor || '#ffffff';
-  const isSnow = state.fx === 'snow', isRain = state.fx === 'rain', isPixel = state.fx === 'pixel';
-  
-  fxParticles.forEach(p => {
-    if(isSnow){
-      const dx = mouseX - p.x, dy = mouseY - p.y; 
-      const dist = Math.sqrt(dx * dx + dy * dy); 
-      const maxDist = 300;
-      if(dist < maxDist && dist > 1){ 
-        const force = (1 - dist / maxDist) * 1.2; 
-        p.x += (dx / dist) * force * p.speed * 0.12; 
-        p.y += (dy / dist) * force * p.speed * 0.12; 
-      }
-      p.x += 0.2 * p.speed * 0.4; 
-      p.y += 0.8 * p.speed * 0.5;
-      if(p.x > fxCanvas.width) p.x = -5; 
-      if(p.y > fxCanvas.height){ p.y = -5; p.x = Math.random() * fxCanvas.width; }
-      ctx.globalAlpha = p.opacity; 
-      ctx.fillStyle = color; 
-      ctx.beginPath(); 
-      ctx.arc(p.x, p.y, p.size * 0.4, 0, Math.PI * 2); 
-      ctx.fill();
-    }
-    else if(isRain){
-      const dx = mouseX - p.x, dy = mouseY - p.y; 
-      const dist = Math.sqrt(dx * dx + dy * dy); 
-      const maxDist = 200;
-      if(dist < maxDist && dist > 1){ 
-        const force = (1 - dist / maxDist) * 0.6; 
-        p.x += (dx / dist) * force * 0.5; 
-        p.y += (dy / dist) * force * 0.5; 
-      }
-      p.x += 0.6 * p.speed * 0.25; 
-      p.y += 2.8 * p.speed * 0.45;
-      if(p.x > fxCanvas.width + 30) p.x = -30; 
-      if(p.y > fxCanvas.height + 30){ p.y = -30; p.x = Math.random() * fxCanvas.width; }
-      ctx.globalAlpha = p.opacity * 0.6; 
-      ctx.strokeStyle = color; 
-      ctx.lineWidth = p.size * 0.6; 
-      ctx.lineCap = 'round';
-      ctx.beginPath(); 
-      ctx.moveTo(p.x, p.y); 
-      ctx.lineTo(p.x - p.speed * 0.3, p.y - p.length); 
-      ctx.stroke();
-      if(p.opacity > 0.6){
-        ctx.globalAlpha = p.opacity * 0.15;
-        ctx.lineWidth = p.size * 1.2;
-        ctx.beginPath();
-        ctx.moveTo(p.x, p.y);
-        ctx.lineTo(p.x - p.speed * 0.15, p.y - p.length * 0.5);
-        ctx.stroke();
-      }
-    }
-    else if(isPixel){
-      p.x += (Math.random() - 0.5) * 1.2; 
-      p.y += (Math.random() - 0.5) * 1.2 + 0.2;
-      if(p.y > fxCanvas.height){ p.y = -10; p.x = Math.random() * fxCanvas.width; }
-      if(p.x < 0) p.x = 0; 
-      if(p.x > fxCanvas.width) p.x = fxCanvas.width;
-      
-      ctx.globalAlpha = p.opacity * 0.7; 
-      ctx.fillStyle = color; 
-      const sz = p.size;
-      ctx.fillRect(p.x, p.y, sz, sz);
-      
-      if(Math.random() < 0.03){
-        ctx.globalAlpha = 0.3;
-        ctx.fillStyle = color;
-        const glitchW = 20 + Math.random() * 60;
-        const glitchH = 1 + Math.random() * 3;
-        ctx.fillRect(p.x - glitchW/2, p.y + Math.random() * 10 - 5, glitchW, glitchH);
-      }
-      
-      if(Math.random() < 0.01){
-        ctx.globalAlpha = 0.08;
-        ctx.fillStyle = 'white';
-        const lineY = p.y + Math.random() * 20 - 10;
-        ctx.fillRect(0, lineY, fxCanvas.width, 1 + Math.random() * 2);
-      }
-    }
-  });
-  fxAnimId = requestAnimationFrame(drawFx);
-}
-
-function updateFxColor() { state.fxColor = document.getElementById('fx-color').value; }
-
-// ─── AUDIO ──────────────────────────────────────────────────
-function toggleAudio(force) {
-  if(!state.audioUrl) return;
-  const icon = DOM.inlinePlayIcon;
-  if(state.audioPlaying && !force) {
-    DOM.audioPlayer.pause(); 
-    state.audioPlaying = false;
-    icon.className = 'fas fa-play';
-    DOM.inlineStatus.className = 'status-dot paused';
-  } else {
-    DOM.audioPlayer.play().then(() => {
-      state.audioPlaying = true;
-      icon.className = 'fas fa-pause';
-      DOM.inlineStatus.className = 'status-dot';
-    }).catch(() => {});
-  }
-}
-
-function updateVolume(val) { DOM.audioPlayer.volume = parseFloat(val); }
-
-// ─── UPDATE PREVIEW ──────────────────────────────────────
-function updatePreview() {
-  state.username = document.getElementById('input-username').value;
-  restartTypewriter();
-}
-
-// ─── SHARE / COPY LINK ──────────────────────────────────
-function copyProfileLink() {
-  const url = window.location.href;
-  navigator.clipboard.writeText(url).then(() => {
-    const shareText = document.getElementById('share-text');
-    shareText.textContent = 'Copied!';
-    setTimeout(() => shareText.textContent = 'Share', 2000);
-  }).catch(() => {
-    const shareText = document.getElementById('share-text');
-    shareText.textContent = 'Copy URL';
-    setTimeout(() => shareText.textContent = 'Share', 2000);
-  });
-}
-
-// ─── BACKUP / EXPORT ──────────────────────────────────────
-function exportFullProfile() {
-  const data = {
-    version: '1.0',
-    date: new Date().toISOString(),
-    profile: JSON.parse(JSON.stringify(state))
-  };
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `curbtree-backup-${new Date().toISOString().split('T')[0]}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function handleFullImport(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const data = JSON.parse(e.target.result);
-      if (data.profile) {
-        Object.assign(state, data.profile);
-        renderDisplaySocials();
-        renderBadges();
-        renderEditorSocials();
-        renderEditorBadges();
-        renderEditorBioLines();
-        restartTypewriter();
-        updateFrameStyle();
-        applyGlow();
-        applyTypography();
-        DOM.displayUsername.style.color = state.usernameColor;
-        DOM.displayBio.style.color = state.bioColor;
-        DOM.inlineTrack.style.color = state.musicColor;
-        DOM.volumeIcon.style.color = state.musicColor;
-        DOM.locationDisplay.innerText = state.location;
-        DOM.displayPfp.src = state.pfpUrl;
-        document.getElementById('view-count').innerText = Math.floor(Math.random() * 90000).toLocaleString();
-        document.getElementById('input-username').value = state.username;
-        document.getElementById('input-location').value = state.location;
-        document.getElementById('input-music-name').value = state.musicDisplayName;
-        alert('✅ Profile restored successfully!');
-      }
-    } catch (error) {
-      alert('❌ Invalid file: ' + error.message);
-    }
-  };
-  reader.readAsText(file);
-  event.target.value = '';
-}
-
-// ─── START ──────────────────────────────────────────────────
-function startExperience() {
-  DOM.enterScreen.style.opacity = '0';
-  setTimeout(() => {
-    DOM.enterScreen.style.display = 'none';
-    DOM.mainContent.classList.remove('opacity-0', 'pointer-events-none');
-    
-    if (state.bgType === 'video' && DOM.bgVideo.src) {
-      const video = DOM.bgVideo;
-      video.muted = true;
-      video.loop = true;
-      video.playsInline = true;
-      video.play().catch(() => {});
-    }
-    
-    if (state.audioUrl) toggleAudio(true);
-    restartTypewriter();
-  }, 500);
-}
-
-function toggleEditor() { 
-  document.getElementById('editor-sidebar').classList.toggle('open'); 
-}
-
-// ─── INIT ──────────────────────────────────────────────────
+// ─── INIT ────────────────────────────────────────────────────
 async function init() {
+  // Load from JSON
   await loadProfileFromJSON();
   
+  // Load from localStorage backup
   try {
     const saved = localStorage.getItem('curbtree_full_profile');
     if (saved) {
@@ -1329,38 +1110,43 @@ async function init() {
           state[key] = data[key];
         }
       });
+      console.log('✅ Local backup loaded');
     }
-  } catch(e) {}
+  } catch (e) {}
   
+  // Render everything
   renderEditorSocials();
   renderDisplaySocials();
   renderEditorBioLines();
   renderEditorBadges();
   renderBadges();
+  
+  // Apply all settings
+  applyAllSettings();
+  
+  // Initialize effects
   initTilt();
   initFxCanvas();
-  applyGlow();
   
+  // UI Setup
   document.getElementById('view-count').innerText = Math.floor(Math.random() * 90000).toLocaleString();
-  document.getElementById('fx-color').value = '#ffffff';
+  document.getElementById('fx-color').value = state.fxColor;
   document.getElementById('bg-overlay').style.opacity = 0.55;
-  document.getElementById('input-music-name').value = state.musicDisplayName;
+  
+  // Set editor values
+  document.getElementById('input-username').value = state.username;
   document.getElementById('input-location').value = state.location;
-  DOM.locationDisplay.innerText = state.location;
+  document.getElementById('input-pfp-url').value = state.pfpUrl;
+  document.getElementById('input-bg-url').value = state.bgUrl;
+  document.getElementById('input-bg-type').value = state.bgType;
+  document.getElementById('input-audio-url').value = state.audioUrl;
+  document.getElementById('input-music-name').value = state.musicDisplayName;
   
   document.getElementById('username-color').value = state.usernameColor;
   document.getElementById('bio-color').value = state.bioColor;
   document.getElementById('music-color').value = state.musicColor;
   document.getElementById('stats-color').value = state.statsColor;
   document.getElementById('social-color').value = state.socialColor;
-  
-  DOM.displayUsername.style.color = state.usernameColor;
-  DOM.displayBio.style.color = state.bioColor;
-  DOM.inlineTrack.style.color = state.musicColor;
-  DOM.volumeIcon.style.color = state.musicColor;
-  
-  const statItems = DOM.statsBar.querySelectorAll('.stat-item');
-  statItems.forEach(item => item.style.color = state.statsColor);
   
   document.getElementById('username-font').value = state.usernameFont || 'font-inter';
   document.getElementById('username-weight').value = state.usernameWeight || 'font-weight-extrabold';
@@ -1373,13 +1159,10 @@ async function init() {
   document.getElementById('social-font').value = state.socialFont || 'font-inter';
   document.getElementById('social-weight').value = state.socialWeight || 'font-weight-semibold';
   
-  applyTypography();
-  
   document.getElementById('frame-bg-color').value = state.frameBg || '#141414';
   document.getElementById('frame-transparency').value = Math.round((state.frameTransparency || 0.55) * 100);
   document.getElementById('frame-outline-opacity').value = Math.round((state.frameOutline || 0.08) * 100);
   document.getElementById('frame-blur').value = state.frameBlur || 10;
-  updateFrameStyle();
   
   document.getElementById('tilt-enabled').checked = state.tilt.enabled;
   document.getElementById('tilt-intensity').value = state.tilt.intensity;
@@ -1392,15 +1175,18 @@ async function init() {
   document.querySelectorAll('input[name="fx"]').forEach(el => {
     el.checked = el.value === state.fx;
   });
+  
   if (state.fx !== 'none') setEffect(state.fx);
   
+  // Auto-save to localStorage
   setInterval(() => {
     try {
       localStorage.setItem('curbtree_full_profile', JSON.stringify(state));
-    } catch(e) {}
+    } catch (e) {}
   }, 10000);
 }
 
+// ─── START ────────────────────────────────────────────────────
 init();
 </script>
 </body>
