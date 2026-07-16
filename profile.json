@@ -1,5 +1,5 @@
 {
-  "username": "Curbi_",
+  "username": "Curbie",
   "usernameColor": "#ffffff",
   "bioColor": "#ffffff",
   "musicColor": "#ffffff",
@@ -13,30 +13,51 @@
   "pfpUrl": "/assets/avatar.png",
   "bgType": "video",
   "bgUrl": "https://res.cloudinary.com/agrc4zdb/video/upload/v1784136136/326a94bd-295d-4ef2-ac19-b54f4b5ac28f_kxhep4.mp4",
-  "audioUrl": "/assets/song.mp3",
+  "songs": [
+    {
+      "id": "d8wdh5",
+      "url": "/assets/XXXTENTACION - bad vibes forever (Official Video) (feat. PnB Rock & Trippie Redd) - XXXTENTACION (128k).mp3",
+      "name": "Bad Vibes Forever - XXXTENTACION"
+    },
+    {
+      "id": "q4tv5o",
+      "url": "/assets/song.mp3",
+      "name": "Almost Back - Lucki"
+    }
+  ],
+  "currentSongIndex": 0,
   "audioPlaying": true,
-  "musicDisplayName": "Almost Back - Lucki",
   "frameBg": "#000000",
-  "frameTransparency": 0.34,
-  "frameOutline": 0.32,
-  "frameBlur": 3,
+  "frameTransparency": 0.1,
+  "frameOutline": 0.2,
+  "frameBlur": 7,
+  "frameWidth": 696,
+  "frameHeight": 366,
   "typewriter": {
     "enabled": true,
     "applyUsername": true,
     "cursor": true,
     "typeSpeed": 50,
-    "deleteSpeed": 69,
+    "deleteSpeed": 25,
     "pauseTime": 1500,
     "lineGap": 300
   },
   "glowEffect": {
     "enabled": false,
-    "intensity": 1
+    "intensity": 1,
+    "targets": {
+      "username": true,
+      "bio": true,
+      "music": true,
+      "social": true,
+      "badges": true,
+      "stats": false
+    }
   },
   "tilt": {
     "enabled": true,
-    "intensity": 3,
-    "speed": 0.15
+    "intensity": 9,
+    "speed": 0.05
   },
   "links": [
     {
@@ -53,7 +74,15 @@
       "url": "_curbie_",
       "icon": "fa-brands fa-discord",
       "color": "#ffffff",
-      "spin": true
+      "spin": false
+    },
+    {
+      "id": "d5b95m",
+      "name": "Tiktok",
+      "url": "https://www.tiktok.com/@__curbi",
+      "icon": "fa-brands fa-tiktok",
+      "color": "#ffffff",
+      "spin": false
     }
   ],
   "badges": [
@@ -70,9 +99,9 @@
       "color": "#ff7070"
     }
   ],
-  "fx": "snow",
+  "fx": "rain",
   "fxColor": "#ffffff",
-  "usernameFont": "font-inter",
+  "usernameFont": "font-dm-sans",
   "usernameWeight": "font-weight-extrabold",
   "bioFont": "font-inter",
   "bioWeight": "font-weight-normal",
@@ -81,5 +110,7 @@
   "statsFont": "font-inter",
   "statsWeight": "font-weight-normal",
   "socialFont": "font-inter",
-  "socialWeight": "font-weight-semibold"
+  "socialWeight": "font-weight-semibold",
+  "audioUrl": "/assets/song.mp3",
+  "musicDisplayName": "Almost Back - Lucki"
 }
