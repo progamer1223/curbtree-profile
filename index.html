@@ -54,7 +54,7 @@
     @media (min-width:640px) { .social-icon-sm { font-size:2.6rem !important; } }
     .profile-pic-offset { margin-top:-3.5rem; }
     @media (min-width:640px) { .profile-pic-offset { margin-top:-4.5rem; } }
-    .main-frame-tall { min-height:340px; display:flex; flex-direction:column; }
+    .main-frame-tall { min-height:340px; display:flex; flex-direction:column; position:relative; }
     @media (min-width:640px) { .main-frame-tall { min-height:400px; } }
     .gap-vertical { gap:0.75rem; }
     @media (min-width:640px) { .gap-vertical { gap:1.25rem; } }
@@ -138,26 +138,21 @@
     .music-player-bar .vol-icon { color:#888; font-size:0.8rem; flex-shrink:0; transition: color 0.2s; }
 
     .top-frame-content { display:flex; flex-direction:column; width:100%; flex:1; }
-    .frame-common { transition: background 0.2s, border-color 0.2s, backdrop-filter 0.2s; }
+    .frame-common { transition: background 0.2s, border-color 0.2s, backdrop-filter 0.2s, border-width 0.2s; }
 
-    .stats-bar {
+    .stats-bar-inline {
       display:flex;
       align-items:center;
       gap:10px;
       font-size:0.65rem;
-      background:rgba(0,0,0,0.3);
-      backdrop-filter:blur(6px);
-      padding:4px 14px 4px 12px;
-      border-radius:30px;
-      border:1px solid rgba(255,255,255,0.06);
       position:absolute;
-      top:-38px;
-      right:0;
+      top:12px;
+      right:16px;
       z-index:5;
     }
-    .stats-bar .divider { width:1px; height:16px; background:rgba(255,255,255,0.1); }
-    .stats-bar .stat-item { display:flex; align-items:center; gap:5px; transition: color 0.2s; }
-    .stats-bar .stat-item i { font-size:0.7rem; opacity:0.7; }
+    .stats-bar-inline .divider { width:1px; height:14px; background:rgba(255,255,255,0.15); }
+    .stats-bar-inline .stat-item { display:flex; align-items:center; gap:5px; transition: color 0.2s; }
+    .stats-bar-inline .stat-item i { font-size:0.65rem; opacity:0.7; }
 
     /* Neon glow marker class — intentionally holds NO fixed text-shadow/filter
        values. All visual intensity is driven purely by inline styles set in
@@ -322,26 +317,28 @@
         <i class="fas fa-up-right-and-down-left-from-center"></i> <span id="scale-mode-label">Resize: off</span>
       </div>
 
-      <div class="stats-bar" id="stats-bar">
-        <span class="stat-item" id="view-stat">
-          <i class="fas fa-eye"></i> <span id="view-count">1,337</span>
-        </span>
-        <span class="divider"></span>
-        <span class="stat-item" id="location-stat">
-          <i class="fas fa-location-dot"></i> <span id="location-display">Earth</span>
-        </span>
-        <span class="divider"></span>
-        <span class="stat-item" style="cursor:pointer;" onclick="copyProfileLink()">
-          <i class="fas fa-share-alt"></i> <span id="share-text">Share</span>
-        </span>
-      </div>
-
       <!-- TOP FRAME -->
       <div class="glass-card p-5 sm:p-8 main-frame-tall relative frame-common" id="main-frame">
         <div id="resize-dims-label">400 × 340</div>
         <div class="resize-handle corner corner-se" onmousedown="startResize(event,'se')"></div>
         <div class="resize-handle edge-e" onmousedown="startResize(event,'e')"></div>
         <div class="resize-handle edge-s" onmousedown="startResize(event,'s')"></div>
+        
+        <!-- Stats bar inside main frame -->
+        <div class="stats-bar-inline" id="stats-bar-inline">
+          <span class="stat-item" id="view-stat">
+            <i class="fas fa-eye"></i> <span id="view-count">1,337</span>
+          </span>
+          <span class="divider"></span>
+          <span class="stat-item" id="location-stat">
+            <i class="fas fa-location-dot"></i> <span id="location-display">Earth</span>
+          </span>
+          <span class="divider"></span>
+          <span class="stat-item" style="cursor:pointer;" onclick="copyProfileLink()">
+            <i class="fas fa-share-alt"></i> <span id="share-text">Share</span>
+          </span>
+        </div>
+
         <div class="top-frame-content">
           <div class="profile-pic-offset">
             <img id="display-pfp" src="https://placehold.co/140x140/222/FFF?text=Avatar" alt="profile" class="w-28 h-28 sm:w-36 sm:h-36 rounded-2xl object-cover border-2 border-white/10 shadow-2xl transition-transform hover:scale-105 duration-300" />
@@ -550,6 +547,19 @@
         <input type="range" id="frame-blur" min="0" max="20" step="0.5" value="10" oninput="updateFrameStyle()" class="w-32 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer" />
         <span id="blur-label" class="text-xs text-gray-500">10px</span>
       </div>
+      <div class="flex items-center gap-4">
+        <label class="text-xs text-gray-400">Shadow</label>
+        <input type="checkbox" id="frame-shadow" checked onchange="updateFrameStyle()" />
+      </div>
+      <div class="flex items-center gap-4">
+        <label class="text-xs text-gray-400">Border</label>
+        <input type="range" id="frame-border-width" min="0" max="8" value="1" oninput="updateFrameStyle()" class="w-32 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer" />
+        <span id="border-width-label" class="text-xs text-gray-500">1px</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <label class="text-xs text-gray-400">Border Color</label>
+        <input type="color" id="frame-border-color" value="#ffffff" onchange="updateFrameStyle()" class="w-7 h-7 p-0 border border-white/10 rounded bg-transparent cursor-pointer" />
+      </div>
     </div>
 
     <!-- FRAME DIMENSIONS SECTION -->
@@ -635,10 +645,6 @@ if (localStorage.getItem('curbtree_trusted') === 'true' && isEditMode) {
 }
 
 // ─── STATE ──────────────────────────────────────────────────
-// Every visible/adjustable setting in the editor lives in this object, and
-// this ENTIRE object is what gets written to profile.json on save and read
-// back on load — so nothing the user configures should ever live only in a
-// DOM element or a "local" variable outside of state.
 const state = {
   username: "@username",
   usernameColor: "#ffffff",
@@ -659,6 +665,9 @@ const state = {
   frameTransparency: 0.55,
   frameOutline: 0.08,
   frameBlur: 10,
+  frameShadow: true,
+  frameBorderWidth: 1,
+  frameBorderColor: '#ffffff',
   frameWidth: null,
   frameHeight: null,
   typewriter: { enabled: false, applyUsername: false, cursor: false, typeSpeed: 50, deleteSpeed: 25, pauseTime: 1500, lineGap: 300 },
@@ -724,7 +733,7 @@ const DOM = {
   inlineDurationTime: document.getElementById('inline-duration-time'),
   locationDisplay: document.getElementById('location-display'),
   volumeIcon: document.getElementById('volume-icon'),
-  statsBar: document.getElementById('stats-bar'),
+  statsBarInline: document.getElementById('stats-bar-inline'),
   scaleModeToggle: document.getElementById('scale-mode-toggle'),
   scaleModeLabel: document.getElementById('scale-mode-label'),
   resizeDimsLabel: document.getElementById('resize-dims-label')
@@ -793,12 +802,12 @@ function migrateLegacyMusic() {
   if (typeof state.currentSongIndex !== 'number' || state.currentSongIndex < 0) state.currentSongIndex = 0;
   if (state.songs.length && state.currentSongIndex >= state.songs.length) state.currentSongIndex = 0;
   if (typeof state.bgBrightness !== 'number') state.bgBrightness = 1;
+  if (typeof state.frameShadow !== 'boolean') state.frameShadow = true;
+  if (typeof state.frameBorderWidth !== 'number') state.frameBorderWidth = 1;
+  if (!state.frameBorderColor) state.frameBorderColor = '#ffffff';
 }
 
 // ─── SAVE ALL SETTINGS ──────────────────────────────────────
-// Pulls every live control's current value into `state` (most are already
-// kept in sync live by their own on-change handlers, this is a safety net so
-// NOTHING gets missed when we serialize state to profile.json below).
 async function saveAllSettings() {
   // Profile
   state.username = document.getElementById('input-username').value;
@@ -837,7 +846,7 @@ async function saveAllSettings() {
   state.typewriter.pauseTime = parseInt(document.getElementById('tw-pauseTime').value) || 1500;
   state.typewriter.lineGap = parseInt(document.getElementById('tw-lineGap').value) || 300;
 
-  // Glow (enabled/intensity + every per-target checkbox)
+  // Glow
   state.glowEffect.enabled = document.getElementById('glow-enabled').checked;
   state.glowEffect.intensity = parseFloat(document.getElementById('glow-intensity').value) || 4;
   if (!state.glowEffect.targets) state.glowEffect.targets = {};
@@ -856,11 +865,14 @@ async function saveAllSettings() {
   state.frameTransparency = parseInt(document.getElementById('frame-transparency').value) / 100;
   state.frameOutline = parseInt(document.getElementById('frame-outline-opacity').value) / 100;
   state.frameBlur = parseFloat(document.getElementById('frame-blur').value);
+  state.frameShadow = document.getElementById('frame-shadow').checked;
+  state.frameBorderWidth = parseInt(document.getElementById('frame-border-width').value);
+  state.frameBorderColor = document.getElementById('frame-border-color').value;
 
   // Frame dimensions
   updateFrameDimsFromInputs(true);
 
-  // Background effects (brightness + fx type + fx color)
+  // Background effects
   const brightnessEl = document.getElementById('bg-brightness');
   if (brightnessEl) state.bgBrightness = parseFloat(brightnessEl.value);
   document.querySelectorAll('input[name="fx"]').forEach(el => {
@@ -904,16 +916,6 @@ function triggerBlobDownload(blob, filename) {
 }
 
 // ─── ASSETS ZIP PACKAGE ──────────────────────────────────────
-// Bundles a COMPLETE assets/ folder into the zip:
-//  1. Any file picked via the file inputs THIS session (freshest version,
-//     always wins on a filename collision).
-//  2. Every other asset the current profile still references by a relative
-//     "/assets/..." path, fetched straight from wherever this page is
-//     currently being served, so old assets from previous sessions are
-//     included too — not just what changed today.
-// http(s):// URLs (externally hosted, e.g. Cloudinary) are left alone since
-// there's nothing local to bundle for those.
-// Returns { newFileCount, fetchedCount, failedFetches }.
 async function downloadAssetsPackage() {
   if (typeof JSZip === 'undefined') {
     throw new Error('JSZip failed to load (check your internet connection / ad blocker)');
@@ -932,12 +934,10 @@ async function downloadAssetsPackage() {
     return true;
   }
 
-  // 1. This session's freshly-picked files
   if (addLocalFile(assetFiles.pfp)) newFileCount++;
   if (addLocalFile(assetFiles.bg)) newFileCount++;
   Object.values(assetFiles.songs).forEach(file => { if (addLocalFile(file)) newFileCount++; });
 
-  // 2. Every other asset still referenced by the profile, fetched live
   const referencedUrls = [];
   if (state.pfpUrl) referencedUrls.push(state.pfpUrl);
   if (state.bgUrl) referencedUrls.push(state.bgUrl);
@@ -1012,39 +1012,66 @@ function updateFrameStyle() {
   const transparency = parseInt(document.getElementById('frame-transparency').value) / 100;
   const outline = parseInt(document.getElementById('frame-outline-opacity').value) / 100;
   const blur = parseFloat(document.getElementById('frame-blur').value);
+  const shadow = document.getElementById('frame-shadow').checked;
+  const borderWidth = parseInt(document.getElementById('frame-border-width').value);
+  const borderColor = document.getElementById('frame-border-color').value;
 
   state.frameBg = bg;
   state.frameTransparency = transparency;
   state.frameOutline = outline;
   state.frameBlur = blur;
+  state.frameShadow = shadow;
+  state.frameBorderWidth = borderWidth;
+  state.frameBorderColor = borderColor;
 
   document.getElementById('transparency-label').textContent = Math.round(transparency * 100) + '%';
   document.getElementById('outline-label').textContent = Math.round(outline * 100) + '%';
   document.getElementById('blur-label').textContent = blur + 'px';
+  document.getElementById('border-width-label').textContent = borderWidth + 'px';
 
-  applyFrameStyles(bg, transparency, outline, blur);
+  applyFrameStyles(bg, transparency, outline, blur, shadow, borderWidth, borderColor);
   persistState();
 }
 
-function applyFrameStyles(bg, transparency, outline, blur) {
+function applyFrameStyles(bg, transparency, outline, blur, shadow, borderWidth, borderColor) {
   const alpha = Math.round(transparency * 255).toString(16).padStart(2, '0');
   const bgWithAlpha = bg + alpha;
-  const borderColor = `rgba(255,255,255,${outline * 0.8})`;
   const blurValue = `blur(${blur}px)`;
+  
+  // Convert hex border color to rgba with outline opacity
+  const hexToRgb = (hex) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : { r: 255, g: 255, b: 255 };
+  };
+  
+  const rgb = hexToRgb(borderColor);
+  const borderOpacity = Math.max(0.05, outline); // Keep some minimum visibility
+  const borderColorRgba = `rgba(${rgb.r},${rgb.g},${rgb.b},${borderOpacity})`;
+  
+  const shadowValue = shadow ? '0 8px 32px rgba(0,0,0,0.5)' : 'none';
 
   [DOM.mainFrame, DOM.bottomFrame].forEach(frame => {
     if (frame) {
       frame.style.background = bgWithAlpha;
-      frame.style.borderColor = borderColor;
+      frame.style.borderColor = borderColorRgba;
+      frame.style.borderWidth = borderWidth + 'px';
       frame.style.backdropFilter = blurValue;
       frame.style.webkitBackdropFilter = blurValue;
+      frame.style.boxShadow = shadowValue;
     }
   });
+  
   document.querySelectorAll('.glass-card').forEach(el => {
     el.style.background = bgWithAlpha;
-    el.style.borderColor = borderColor;
+    el.style.borderColor = borderColorRgba;
+    el.style.borderWidth = borderWidth + 'px';
     el.style.backdropFilter = blurValue;
     el.style.webkitBackdropFilter = blurValue;
+    el.style.boxShadow = shadowValue;
   });
 }
 
@@ -1192,9 +1219,6 @@ function stopResize() {
 }
 
 // ─── BACKGROUND BRIGHTNESS ────────────────────────────────────
-// Was previously just an inline oninput that touched the DOM directly and
-// never wrote to state, so it was lost on save/reload. Now it's a normal
-// state-backed setting like everything else.
 function updateBgBrightness(val) {
   const v = parseFloat(val);
   state.bgBrightness = v;
@@ -1247,12 +1271,20 @@ function applyAllSettings() {
   if (DOM.inlineDurationTime) DOM.inlineDurationTime.style.color = state.musicColor;
   applyMusicThumbColor();
 
-  // Stats
-  const statItems = DOM.statsBar.querySelectorAll('.stat-item');
+  // Stats (now inline)
+  const statItems = DOM.statsBarInline.querySelectorAll('.stat-item');
   statItems.forEach(item => item.style.color = state.statsColor);
 
   // Frame
-  applyFrameStyles(state.frameBg, state.frameTransparency, state.frameOutline, state.frameBlur);
+  applyFrameStyles(
+    state.frameBg, 
+    state.frameTransparency, 
+    state.frameOutline, 
+    state.frameBlur, 
+    state.frameShadow, 
+    state.frameBorderWidth, 
+    state.frameBorderColor
+  );
   applyFrameDimensions();
 
   // Typography
@@ -1299,7 +1331,7 @@ function updatePreview() { state.username = document.getElementById('input-usern
 function updateUsernameColor(color) { state.usernameColor = color; DOM.displayUsername.style.color = color; persistState(); }
 function updateBioColor(color) { state.bioColor = color; DOM.displayBio.style.color = color; persistState(); }
 function updateMusicColor(color) { state.musicColor = color; DOM.inlineTrack.style.color = color; DOM.volumeIcon.style.color = color; if (DOM.inlineCurrentTime) DOM.inlineCurrentTime.style.color = color; if (DOM.inlineDurationTime) DOM.inlineDurationTime.style.color = color; applyMusicThumbColor(); persistState(); }
-function updateStatsColor(color) { state.statsColor = color; const items = DOM.statsBar.querySelectorAll('.stat-item'); items.forEach(item => item.style.color = color); persistState(); }
+function updateStatsColor(color) { state.statsColor = color; const items = DOM.statsBarInline.querySelectorAll('.stat-item'); items.forEach(item => item.style.color = color); persistState(); }
 function updateSocialColor(color) { state.socialColor = color; document.querySelectorAll('.social-tooltip').forEach(el => el.style.color = color); persistState(); }
 
 // ─── TYPOGRAPHY ─────────────────────────────────────────────
@@ -1333,7 +1365,7 @@ function applyTypography() {
   DOM.inlineTrack.classList.remove(...WEIGHT_CLASSES);
   DOM.inlineTrack.classList.add(state.musicWeight || 'font-weight-normal');
 
-  const statItems = DOM.statsBar.querySelectorAll('.stat-item');
+  const statItems = DOM.statsBarInline.querySelectorAll('.stat-item');
   statItems.forEach(item => {
     item.classList.remove(...FONT_CLASSES);
     item.classList.add(state.statsFont || 'font-inter');
@@ -1352,18 +1384,6 @@ function applyTypography() {
 }
 
 // ─── NEON GLOW (light-emission style, excludes stats by default) ──────
-// Rebuilt to actually look like the text/icons are EMITTING soft light,
-// instead of just getting bulkier/bolder. The old version stacked several
-// text-shadow layers all using solid `currentColor`, with the first layer at
-// a very tight radius — at low blur that reads as "reinforced edges" (i.e.
-// a bolder glyph), not glow. This version:
-//   - drops the tight/near-zero-blur layer entirely (that's what looked
-//     "bulky"), so nothing directly hugs the letterforms.
-//   - fades each successive, wider layer to a lower opacity via
-//     color-mix(), so brightness falls off the way real light bloom does
-//     instead of being solid all the way out.
-//   - removes the filter:drop-shadow() entirely — combined with text-shadow
-//     it was doubling up the thickening effect.
 function updateGlowSetting(key, val) { state.glowEffect[key] = val; applyGlow(); persistState(); }
 
 function updateGlowTarget(target, val) {
@@ -1383,7 +1403,7 @@ function applyGlow() {
     music: [DOM.inlineTrack, DOM.volumeIcon, DOM.inlinePlayIcon, DOM.inlinePrevBtn, DOM.inlineNextBtn, document.getElementById('inline-audio-toggle')],
     social: Array.from(document.querySelectorAll('#display-socials i')),
     badges: Array.from(document.querySelectorAll('.badge-pill')),
-    stats: Array.from(DOM.statsBar.querySelectorAll('.stat-item'))
+    stats: Array.from(DOM.statsBarInline.querySelectorAll('.stat-item'))
   };
 
   Object.keys(groups).forEach(groupKey => {
@@ -1397,9 +1417,6 @@ function applyGlow() {
         return;
       }
       el.classList.add('neon-text');
-      // Soft bloom: fewer, wider, progressively fainter layers. Starts at a
-      // moderate blur (not 0) so it never looks like a bold outline, and
-      // each layer's alpha fades with distance the way actual glow does.
       el.style.textShadow = [
         `0 0 ${g * 0.5}px color-mix(in srgb, currentColor 75%, transparent)`,
         `0 0 ${g * 1.4}px color-mix(in srgb, currentColor 45%, transparent)`,
@@ -1912,16 +1929,7 @@ function handleSongFileSelect(e, id) {
 }
 
 // ─── VERCEL ANALYTICS VIEW COUNT ──────────────────────────
-// Pulls the REAL "Page Views" total from Vercel Web Analytics via a small
-// serverless proxy at /api/views (see api/views.js) — that route holds your
-// Vercel access token server-side and calls Vercel's Web Analytics API,
-// which can't be called safely straight from client-side JS (it would leak
-// the token). If that route isn't set up yet (e.g. you haven't deployed the
-// function, or haven't added the required env vars), this quietly falls
-// back to the old local, per-browser counter so the stat never just breaks.
 async function getViewCount() {
-  // Still fire this so Vercel Analytics itself keeps recording the visit;
-  // separate from the number we go on to *display* below.
   try {
     const hasVisited = sessionStorage.getItem('curbtree_visited');
     if (!hasVisited) {
@@ -1946,8 +1954,6 @@ async function getViewCount() {
     console.warn('⚠️ Could not reach /api/views (is it deployed + configured?), falling back to local counter.', e);
   }
 
-  // Fallback: old per-browser localStorage counter, only used if the real
-  // analytics endpoint above isn't reachable/configured.
   try {
     let count = parseInt(localStorage.getItem('curbtree_views')) || 0;
     const hasVisited = sessionStorage.getItem('curbtree_visited_local');
@@ -2161,6 +2167,9 @@ async function init() {
   document.getElementById('frame-transparency').value = Math.round((state.frameTransparency || 0.55) * 100);
   document.getElementById('frame-outline-opacity').value = Math.round((state.frameOutline || 0.08) * 100);
   document.getElementById('frame-blur').value = state.frameBlur || 10;
+  document.getElementById('frame-shadow').checked = state.frameShadow !== false;
+  document.getElementById('frame-border-width').value = state.frameBorderWidth || 1;
+  document.getElementById('frame-border-color').value = state.frameBorderColor || '#ffffff';
 
   document.getElementById('input-frame-width').value = state.frameWidth || '';
   document.getElementById('input-frame-height').value = state.frameHeight || '';
