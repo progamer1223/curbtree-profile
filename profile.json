@@ -9,7 +9,7 @@
     "Love yourself.",
     "The sky is the limit."
   ],
-  "location": "Canada",
+  "location": "Wherever The Wind Flows",
   "pfpUrl": "/assets/avatar.gif",
   "pfpSize": 218,
   "badgeScale": 1.5,
@@ -28,7 +28,7 @@
       "name": "Almost Back - Lucki"
     }
   ],
-  "currentSongIndex": 0,
+  "currentSongIndex": 1,
   "audioPlaying": true,
   "frameBg": "#8f8f8f",
   "frameTransparency": 0.34,
