@@ -1912,17 +1912,49 @@ function handleSongFileSelect(e, id) {
 }
 
 // ─── VERCEL ANALYTICS VIEW COUNT ──────────────────────────
+// Pulls the REAL "Page Views" total from Vercel Web Analytics via a small
+// serverless proxy at /api/views (see api/views.js) — that route holds your
+// Vercel access token server-side and calls Vercel's Web Analytics API,
+// which can't be called safely straight from client-side JS (it would leak
+// the token). If that route isn't set up yet (e.g. you haven't deployed the
+// function, or haven't added the required env vars), this quietly falls
+// back to the old local, per-browser counter so the stat never just breaks.
 async function getViewCount() {
+  // Still fire this so Vercel Analytics itself keeps recording the visit;
+  // separate from the number we go on to *display* below.
   try {
-    let count = parseInt(localStorage.getItem('curbtree_views')) || 0;
     const hasVisited = sessionStorage.getItem('curbtree_visited');
     if (!hasVisited) {
-      count += 1;
-      localStorage.setItem('curbtree_views', count.toString());
       sessionStorage.setItem('curbtree_visited', 'true');
       if (typeof window.va !== 'undefined') {
         window.va('event', 'page_view', { params: { page: window.location.pathname, timestamp: Date.now() } });
       }
+    }
+  } catch (e) { /* ignore */ }
+
+  try {
+    const res = await fetch('/api/views?path=' + encodeURIComponent(window.location.pathname));
+    if (res.ok) {
+      const data = await res.json();
+      if (typeof data.pageviews === 'number') {
+        document.getElementById('view-count').textContent = data.pageviews.toLocaleString();
+        return data.pageviews;
+      }
+    }
+    console.warn('⚠️ /api/views did not return a usable pageviews number, falling back to local counter.');
+  } catch (e) {
+    console.warn('⚠️ Could not reach /api/views (is it deployed + configured?), falling back to local counter.', e);
+  }
+
+  // Fallback: old per-browser localStorage counter, only used if the real
+  // analytics endpoint above isn't reachable/configured.
+  try {
+    let count = parseInt(localStorage.getItem('curbtree_views')) || 0;
+    const hasVisited = sessionStorage.getItem('curbtree_visited_local');
+    if (!hasVisited) {
+      count += 1;
+      localStorage.setItem('curbtree_views', count.toString());
+      sessionStorage.setItem('curbtree_visited_local', 'true');
     }
     document.getElementById('view-count').textContent = count.toLocaleString();
     return count;
