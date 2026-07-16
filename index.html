@@ -16,7 +16,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
   <style>
-    * { box-sizing: border-box; }
+    * { 
+      box-sizing: border-box; 
+      cursor: none !important; /* Hide default cursor everywhere */
+    }
     body { 
       margin:0; 
       font-family:'Inter',sans-serif; 
@@ -27,6 +30,13 @@
       cursor: none;
     }
     
+    /* Ensure all interactive elements hide their default cursor */
+    button, a, input, select, textarea, [onclick], [role="button"], 
+    input[type="range"], input[type="color"], input[type="file"],
+    input[type="checkbox"], input[type="radio"], .resize-handle {
+      cursor: none !important;
+    }
+    
     .custom-cursor {
       width: 8px;
       height: 8px;
@@ -35,16 +45,17 @@
       position: fixed;
       pointer-events: none;
       z-index: 10000;
-      transition: width 0.15s, height 0.15s, background 0.15s, border 0.15s, opacity 0.15s;
+      transition: opacity 0.15s;
       transform: translate(-50%, -50%);
       border: 2px solid rgba(255,255,255,0.4);
     }
     
+    /* Override hover state - keep dot looking the same */
     .custom-cursor.hover {
-      width: 14px;
-      height: 14px;
-      background: rgba(255, 255, 255, 0.4);
-      border-width: 3px;
+      width: 8px !important;
+      height: 8px !important;
+      background: #ffffff !important;
+      border-width: 2px !important;
     }
     
     #bg-container { position:fixed; inset:0; z-index:0; background:#111; }
@@ -257,7 +268,7 @@
       border-radius: 4px;
       z-index: 20;
       display: none;
-      cursor: none;
+      cursor: none !important;
     }
     #tilt-group.resize-mode .resize-handle { display: block; }
     .resize-handle.corner { width: 14px; height: 14px; }
@@ -307,8 +318,8 @@
 <div id="lock-screen" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); backdrop-filter:blur(12px); z-index:9999; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:20px; padding:20px;">
   <h2 style="color:white; font-size:2rem; font-weight:700;">🔒 Edit Mode</h2>
   <p style="color:#888; font-size:0.9rem;">Enter your password to edit this profile</p>
-  <input type="password" id="lock-password" placeholder="Enter password..." style="padding:14px 24px; border-radius:14px; border:1px solid #333; background:#1a1a1a; color:white; font-size:1.2rem; width:320px; max-width:90%; outline:none;" onkeypress="if(event.key==='Enter') unlockEditor()" />
-  <button class="lock-btn" style="padding:14px 48px; background:#3b82f6; border:none; border-radius:14px; color:white; font-size:1.1rem; font-weight:600; cursor:pointer;" onclick="unlockEditor()">Unlock Editor</button>
+  <input type="password" id="lock-password" placeholder="Enter password..." style="padding:14px 24px; border-radius:14px; border:1px solid #333; background:#1a1a1a; color:white; font-size:1.2rem; width:320px; max-width:90%; outline:none; cursor:none;" onkeypress="if(event.key==='Enter') unlockEditor()" />
+  <button class="lock-btn" style="padding:14px 48px; background:#3b82f6; border:none; border-radius:14px; color:white; font-size:1.1rem; font-weight:600; cursor:none;" onclick="unlockEditor()">Unlock Editor</button>
   <div class="lock-error" id="lock-error" style="color:#ef4444; font-size:0.9rem; display:none;">❌ Wrong password!</div>
 </div>
 
@@ -332,7 +343,7 @@
 
 <div id="main-content" class="w-full h-screen flex flex-col items-center justify-center relative z-10 px-4 opacity-0 pointer-events-none transition-opacity duration-700">
 
-  <button id="edit-btn" class="absolute top-5 right-5 bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-full backdrop-blur-md border border-white/15 transition shadow-lg flex items-center gap-2 text-sm" onclick="toggleEditor()" style="display:none;">
+  <button id="edit-btn" class="absolute top-5 right-5 bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-full backdrop-blur-md border border-white/15 transition shadow-lg flex items-center gap-2 text-sm cursor-none" onclick="toggleEditor()" style="display:none;">
     <i class="fas fa-sliders-h"></i> Edit
   </button>
 
@@ -358,7 +369,7 @@
             <i class="fas fa-location-dot"></i> <span id="location-display">Earth</span>
           </span>
           <span class="divider"></span>
-          <span class="stat-item" style="cursor:pointer;" onclick="copyProfileLink()">
+          <span class="stat-item" style="cursor:none;" onclick="copyProfileLink()">
             <i class="fas fa-share-alt"></i> <span id="share-text">Share</span>
           </span>
         </div>
@@ -412,18 +423,18 @@
 <div id="editor-sidebar" class="editor-modal fixed top-0 right-0 w-full sm:w-[420px] h-full shadow-2xl flex flex-col">
   <div class="p-5 border-b border-white/10 flex justify-between items-center bg-[#141414]">
     <h2 class="text-lg font-bold"><i class="fas fa-pen-fancy mr-2"></i> Curbtree Pro</h2>
-    <button onclick="toggleEditor()" class="text-gray-400 hover:text-white bg-white/5 w-8 h-8 rounded-full flex items-center justify-center"><i class="fas fa-times"></i></button>
+    <button onclick="toggleEditor()" class="text-gray-400 hover:text-white bg-white/5 w-8 h-8 rounded-full flex items-center justify-center cursor-none"><i class="fas fa-times"></i></button>
   </div>
   <div class="flex-1 overflow-y-auto p-5 space-y-6 custom-scroll bg-[#161616]">
 
     <div class="space-y-3">
       <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Profile</h3>
-      <div><label class="block text-xs text-gray-400">Username</label><input type="text" id="input-username" value="@username" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" oninput="updatePreview()" /></div>
-      <div><label class="block text-xs text-gray-400">Bio lines</label><button onclick="addBioLine()" class="ml-2 text-xs bg-blue-600/70 px-2 py-0.5 rounded">+</button>
+      <div><label class="block text-xs text-gray-400">Username</label><input type="text" id="input-username" value="@username" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500 cursor-none" oninput="updatePreview()" /></div>
+      <div><label class="block text-xs text-gray-400">Bio lines</label><button onclick="addBioLine()" class="ml-2 text-xs bg-blue-600/70 px-2 py-0.5 rounded cursor-none">+</button>
         <div id="editor-bio-lines" class="space-y-1.5 mt-1"></div>
       </div>
       <div><label class="block text-xs text-gray-400">Location</label>
-        <input type="text" id="input-location" value="Earth" oninput="updateLocation(this.value)" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" />
+        <input type="text" id="input-location" value="Earth" oninput="updateLocation(this.value)" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500 cursor-none" />
       </div>
     </div>
 
@@ -432,31 +443,31 @@
       <div class="space-y-2">
         <div>
           <label class="block text-xs text-gray-400">Profile Picture URL</label>
-          <input type="text" id="input-pfp-url" value="" placeholder="/assets/avatar.gif" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" oninput="updatePfpUrl(this.value)" />
-          <input type="file" id="input-pfp-file" accept="image/*" onchange="handleFileSelect(event,'pfp')" class="w-full text-[0.65rem] text-gray-400 mt-1 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-blue-600/60 file:text-white" />
+          <input type="text" id="input-pfp-url" value="" placeholder="/assets/avatar.gif" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500 cursor-none" oninput="updatePfpUrl(this.value)" />
+          <input type="file" id="input-pfp-file" accept="image/*" onchange="handleFileSelect(event,'pfp')" class="w-full text-[0.65rem] text-gray-400 mt-1 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-blue-600/60 file:text-white cursor-none" />
         </div>
         <div>
           <label class="block text-xs text-gray-400">Profile Picture Size (px)</label>
           <div class="flex items-center gap-2">
-            <input type="range" id="pfp-size" min="60" max="300" value="140" oninput="updatePfpSize(this.value)" class="flex-1" />
+            <input type="range" id="pfp-size" min="60" max="300" value="140" oninput="updatePfpSize(this.value)" class="flex-1 cursor-none" />
             <span id="pfp-size-label" class="text-xs text-gray-500">140px</span>
           </div>
         </div>
         <div>
           <label class="block text-xs text-gray-400">Badge Scale</label>
           <div class="flex items-center gap-2">
-            <input type="range" id="badge-scale" min="0.5" max="3" step="0.1" value="1" oninput="updateBadgeScale(this.value)" class="flex-1" />
+            <input type="range" id="badge-scale" min="0.5" max="3" step="0.1" value="1" oninput="updateBadgeScale(this.value)" class="flex-1 cursor-none" />
             <span id="badge-scale-label" class="text-xs text-gray-500">1x</span>
           </div>
         </div>
         <div>
           <label class="block text-xs text-gray-400">Background URL</label>
-          <input type="text" id="input-bg-url" value="" placeholder="/assets/bg.mp4 or Cloudinary URL" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" oninput="updateBgUrl(this.value)" />
-          <input type="file" id="input-bg-file" accept="image/*,video/*" onchange="handleFileSelect(event,'bg')" class="w-full text-[0.65rem] text-gray-400 mt-1 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-blue-600/60 file:text-white" />
+          <input type="text" id="input-bg-url" value="" placeholder="/assets/bg.mp4 or Cloudinary URL" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500 cursor-none" oninput="updateBgUrl(this.value)" />
+          <input type="file" id="input-bg-file" accept="image/*,video/*" onchange="handleFileSelect(event,'bg')" class="w-full text-[0.65rem] text-gray-400 mt-1 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-blue-600/60 file:text-white cursor-none" />
         </div>
         <div>
           <label class="block text-xs text-gray-400">Background Type</label>
-          <select id="input-bg-type" onchange="updateBgType(this.value)" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white">
+          <select id="input-bg-type" onchange="updateBgType(this.value)" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white cursor-none">
             <option value="none">None</option>
             <option value="image">Image</option>
             <option value="video">Video</option>
@@ -472,32 +483,32 @@
       <div class="space-y-2">
         <div class="flex items-center gap-2">
           <label class="text-xs text-gray-400 w-24">Dot Color</label>
-          <input type="color" id="cursor-color" value="#ffffff" onchange="updateCursorStyle()" class="w-7 h-7 p-0 border border-white/10 rounded bg-transparent cursor-pointer" />
+          <input type="color" id="cursor-color" value="#ffffff" onchange="updateCursorStyle()" class="w-7 h-7 p-0 border border-white/10 rounded bg-transparent cursor-none" />
         </div>
         <div class="flex items-center gap-2">
           <label class="text-xs text-gray-400 w-24">Dot Opacity</label>
-          <input type="range" id="cursor-opacity" min="0.1" max="1" step="0.05" value="1" oninput="updateCursorStyle()" class="flex-1" />
+          <input type="range" id="cursor-opacity" min="0.1" max="1" step="0.05" value="1" oninput="updateCursorStyle()" class="flex-1 cursor-none" />
           <span id="cursor-opacity-label" class="text-xs text-gray-500 w-8">100%</span>
         </div>
         <div class="flex items-center gap-2">
           <label class="text-xs text-gray-400 w-24">Dot Size</label>
-          <input type="range" id="cursor-size" min="4" max="20" step="1" value="8" oninput="updateCursorStyle()" class="flex-1" />
+          <input type="range" id="cursor-size" min="4" max="20" step="1" value="8" oninput="updateCursorStyle()" class="flex-1 cursor-none" />
           <span id="cursor-size-label" class="text-xs text-gray-500 w-8">8px</span>
         </div>
         <div class="border-t border-white/5 pt-2 mt-2">
           <label class="text-xs text-gray-400 mb-2 block">Outline Settings</label>
           <div class="flex items-center gap-2">
             <label class="text-xs text-gray-400 w-24">Outline Color</label>
-            <input type="color" id="cursor-outline-color" value="#ffffff" onchange="updateCursorStyle()" class="w-7 h-7 p-0 border border-white/10 rounded bg-transparent cursor-pointer" />
+            <input type="color" id="cursor-outline-color" value="#ffffff" onchange="updateCursorStyle()" class="w-7 h-7 p-0 border border-white/10 rounded bg-transparent cursor-none" />
           </div>
           <div class="flex items-center gap-2 mt-1">
             <label class="text-xs text-gray-400 w-24">Outline Opacity</label>
-            <input type="range" id="cursor-outline-opacity" min="0" max="1" step="0.05" value="0.4" oninput="updateCursorStyle()" class="flex-1" />
+            <input type="range" id="cursor-outline-opacity" min="0" max="1" step="0.05" value="0.4" oninput="updateCursorStyle()" class="flex-1 cursor-none" />
             <span id="cursor-outline-opacity-label" class="text-xs text-gray-500 w-8">40%</span>
           </div>
           <div class="flex items-center gap-2 mt-1">
             <label class="text-xs text-gray-400 w-24">Outline Width</label>
-            <input type="range" id="cursor-outline-width" min="0" max="6" step="0.5" value="2" oninput="updateCursorStyle()" class="flex-1" />
+            <input type="range" id="cursor-outline-width" min="0" max="6" step="0.5" value="2" oninput="updateCursorStyle()" class="flex-1 cursor-none" />
             <span id="cursor-outline-width-label" class="text-xs text-gray-500 w-8">2px</span>
           </div>
         </div>
@@ -505,12 +516,12 @@
           <label class="text-xs text-gray-400 mb-2 block">Hover Settings</label>
           <div class="flex items-center gap-2">
             <label class="text-xs text-gray-400 w-24">Hover Size</label>
-            <input type="range" id="cursor-hover-size" min="8" max="30" step="1" value="14" oninput="updateCursorStyle()" class="flex-1" />
+            <input type="range" id="cursor-hover-size" min="8" max="30" step="1" value="14" oninput="updateCursorStyle()" class="flex-1 cursor-none" />
             <span id="cursor-hover-size-label" class="text-xs text-gray-500 w-8">14px</span>
           </div>
           <div class="flex items-center gap-2 mt-1">
             <label class="text-xs text-gray-400 w-24">Hover Opacity</label>
-            <input type="range" id="cursor-hover-opacity" min="0.1" max="1" step="0.05" value="0.4" oninput="updateCursorStyle()" class="flex-1" />
+            <input type="range" id="cursor-hover-opacity" min="0.1" max="1" step="0.05" value="0.4" oninput="updateCursorStyle()" class="flex-1 cursor-none" />
             <span id="cursor-hover-opacity-label" class="text-xs text-gray-500 w-8">40%</span>
           </div>
         </div>
@@ -521,7 +532,7 @@
     <div class="border-t border-white/5 pt-4 space-y-3">
       <div class="flex justify-between items-center">
         <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Playlist</h3>
-        <button onclick="addSong()" class="text-xs bg-blue-600/70 px-2 py-0.5 rounded"><i class="fas fa-plus"></i> Add song</button>
+        <button onclick="addSong()" class="text-xs bg-blue-600/70 px-2 py-0.5 rounded cursor-none"><i class="fas fa-plus"></i> Add song</button>
       </div>
       <p style="font-size:0.6rem; color:#666;">Order here is play order. Use the arrows to reorder. Each song can have its own file and display name.</p>
       <div id="editor-songs" class="space-y-2"></div>
@@ -532,37 +543,37 @@
       <div class="space-y-1">
         <label class="text-xs text-gray-400">Username</label>
         <div class="flex items-center gap-2 flex-wrap">
-          <select id="username-font" onchange="applyTypography()" class="bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white"><option value="font-inter">Inter</option><option value="font-roboto">Roboto</option><option value="font-poppins">Poppins</option><option value="font-montserrat">Montserrat</option><option value="font-playfair">Playfair</option><option value="font-raleway">Raleway</option><option value="font-dm-sans">DM Sans</option><option value="font-space-grotesk">Space Grotesk</option></select>
-          <select id="username-weight" onchange="applyTypography()" class="bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white"><option value="font-weight-normal">Normal</option><option value="font-weight-medium">Medium</option><option value="font-weight-semibold">Semibold</option><option value="font-weight-bold" selected>Bold</option><option value="font-weight-extrabold">Extra Bold</option></select>
-          <input type="color" id="username-color" value="#ffffff" onchange="updateUsernameColor(this.value)" class="w-6 h-6 p-0 border border-white/10 rounded bg-transparent cursor-pointer" />
+          <select id="username-font" onchange="applyTypography()" class="bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white cursor-none"><option value="font-inter">Inter</option><option value="font-roboto">Roboto</option><option value="font-poppins">Poppins</option><option value="font-montserrat">Montserrat</option><option value="font-playfair">Playfair</option><option value="font-raleway">Raleway</option><option value="font-dm-sans">DM Sans</option><option value="font-space-grotesk">Space Grotesk</option></select>
+          <select id="username-weight" onchange="applyTypography()" class="bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white cursor-none"><option value="font-weight-normal">Normal</option><option value="font-weight-medium">Medium</option><option value="font-weight-semibold">Semibold</option><option value="font-weight-bold" selected>Bold</option><option value="font-weight-extrabold">Extra Bold</option></select>
+          <input type="color" id="username-color" value="#ffffff" onchange="updateUsernameColor(this.value)" class="w-6 h-6 p-0 border border-white/10 rounded bg-transparent cursor-none" />
         </div>
       </div>
       <div class="space-y-1">
         <label class="text-xs text-gray-400">Bio</label>
         <div class="flex items-center gap-2 flex-wrap">
-          <select id="bio-font" onchange="applyTypography()" class="bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white"><option value="font-inter">Inter</option><option value="font-roboto">Roboto</option><option value="font-poppins">Poppins</option><option value="font-montserrat">Montserrat</option><option value="font-playfair">Playfair</option><option value="font-raleway">Raleway</option><option value="font-dm-sans">DM Sans</option><option value="font-space-grotesk">Space Grotesk</option></select>
-          <select id="bio-weight" onchange="applyTypography()" class="bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white"><option value="font-weight-normal" selected>Normal</option><option value="font-weight-medium">Medium</option><option value="font-weight-semibold">Semibold</option><option value="font-weight-bold">Bold</option><option value="font-weight-extrabold">Extra Bold</option></select>
-          <input type="color" id="bio-color" value="#d1d5db" onchange="updateBioColor(this.value)" class="w-6 h-6 p-0 border border-white/10 rounded bg-transparent cursor-pointer" />
+          <select id="bio-font" onchange="applyTypography()" class="bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white cursor-none"><option value="font-inter">Inter</option><option value="font-roboto">Roboto</option><option value="font-poppins">Poppins</option><option value="font-montserrat">Montserrat</option><option value="font-playfair">Playfair</option><option value="font-raleway">Raleway</option><option value="font-dm-sans">DM Sans</option><option value="font-space-grotesk">Space Grotesk</option></select>
+          <select id="bio-weight" onchange="applyTypography()" class="bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white cursor-none"><option value="font-weight-normal" selected>Normal</option><option value="font-weight-medium">Medium</option><option value="font-weight-semibold">Semibold</option><option value="font-weight-bold">Bold</option><option value="font-weight-extrabold">Extra Bold</option></select>
+          <input type="color" id="bio-color" value="#d1d5db" onchange="updateBioColor(this.value)" class="w-6 h-6 p-0 border border-white/10 rounded bg-transparent cursor-none" />
         </div>
       </div>
       <div class="space-y-1">
         <label class="text-xs text-gray-400">Music Text</label>
         <div class="flex items-center gap-2 flex-wrap">
-          <select id="music-font" onchange="applyTypography()" class="bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white"><option value="font-inter">Inter</option><option value="font-roboto">Roboto</option><option value="font-poppins">Poppins</option><option value="font-montserrat">Montserrat</option><option value="font-playfair">Playfair</option><option value="font-raleway">Raleway</option><option value="font-dm-sans">DM Sans</option><option value="font-space-grotesk">Space Grotesk</option></select>
-          <select id="music-weight" onchange="applyTypography()" class="bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white"><option value="font-weight-normal" selected>Normal</option><option value="font-weight-medium">Medium</option><option value="font-weight-semibold">Semibold</option><option value="font-weight-bold">Bold</option><option value="font-weight-extrabold">Extra Bold</option></select>
-          <input type="color" id="music-color" value="#bbbbbb" onchange="updateMusicColor(this.value)" class="w-6 h-6 p-0 border border-white/10 rounded bg-transparent cursor-pointer" />
+          <select id="music-font" onchange="applyTypography()" class="bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white cursor-none"><option value="font-inter">Inter</option><option value="font-roboto">Roboto</option><option value="font-poppins">Poppins</option><option value="font-montserrat">Montserrat</option><option value="font-playfair">Playfair</option><option value="font-raleway">Raleway</option><option value="font-dm-sans">DM Sans</option><option value="font-space-grotesk">Space Grotesk</option></select>
+          <select id="music-weight" onchange="applyTypography()" class="bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white cursor-none"><option value="font-weight-normal" selected>Normal</option><option value="font-weight-medium">Medium</option><option value="font-weight-semibold">Semibold</option><option value="font-weight-bold">Bold</option><option value="font-weight-extrabold">Extra Bold</option></select>
+          <input type="color" id="music-color" value="#bbbbbb" onchange="updateMusicColor(this.value)" class="w-6 h-6 p-0 border border-white/10 rounded bg-transparent cursor-none" />
         </div>
       </div>
       <div class="space-y-1">
         <label class="text-xs text-gray-400">Stats Color</label>
-        <input type="color" id="stats-color" value="#999999" onchange="updateStatsColor(this.value)" class="w-6 h-6 p-0 border border-white/10 rounded bg-transparent cursor-pointer" />
+        <input type="color" id="stats-color" value="#999999" onchange="updateStatsColor(this.value)" class="w-6 h-6 p-0 border border-white/10 rounded bg-transparent cursor-none" />
       </div>
       <div class="space-y-1">
         <label class="text-xs text-gray-400">Social Tooltips</label>
         <div class="flex items-center gap-2 flex-wrap">
-          <select id="social-font" onchange="applyTypography()" class="bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white"><option value="font-inter">Inter</option><option value="font-roboto">Roboto</option><option value="font-poppins">Poppins</option><option value="font-montserrat">Montserrat</option><option value="font-playfair">Playfair</option><option value="font-raleway">Raleway</option><option value="font-dm-sans">DM Sans</option><option value="font-space-grotesk">Space Grotesk</option></select>
-          <select id="social-weight" onchange="applyTypography()" class="bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white"><option value="font-weight-normal">Normal</option><option value="font-weight-medium">Medium</option><option value="font-weight-semibold" selected>Semibold</option><option value="font-weight-bold">Bold</option><option value="font-weight-extrabold">Extra Bold</option></select>
-          <input type="color" id="social-color" value="#ffffff" onchange="updateSocialColor(this.value)" class="w-6 h-6 p-0 border border-white/10 rounded bg-transparent cursor-pointer" />
+          <select id="social-font" onchange="applyTypography()" class="bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white cursor-none"><option value="font-inter">Inter</option><option value="font-roboto">Roboto</option><option value="font-poppins">Poppins</option><option value="font-montserrat">Montserrat</option><option value="font-playfair">Playfair</option><option value="font-raleway">Raleway</option><option value="font-dm-sans">DM Sans</option><option value="font-space-grotesk">Space Grotesk</option></select>
+          <select id="social-weight" onchange="applyTypography()" class="bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white cursor-none"><option value="font-weight-normal">Normal</option><option value="font-weight-medium">Medium</option><option value="font-weight-semibold" selected>Semibold</option><option value="font-weight-bold">Bold</option><option value="font-weight-extrabold">Extra Bold</option></select>
+          <input type="color" id="social-color" value="#ffffff" onchange="updateSocialColor(this.value)" class="w-6 h-6 p-0 border border-white/10 rounded bg-transparent cursor-none" />
         </div>
       </div>
     </div>
@@ -570,81 +581,81 @@
     <div class="space-y-2 border-t border-white/5 pt-4">
       <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Typewriter</h3>
       <div class="flex flex-wrap gap-3 text-xs">
-        <label><input type="checkbox" id="tw-enabled" onchange="updateTypewriterSetting('enabled',this.checked)" /> Enable</label>
-        <label><input type="checkbox" id="tw-apply-username" onchange="updateTypewriterSetting('applyUsername',this.checked)" /> Username</label>
-        <label><input type="checkbox" id="tw-cursor" onchange="updateTypewriterSetting('cursor',this.checked)" /> Cursor</label>
+        <label><input type="checkbox" id="tw-enabled" onchange="updateTypewriterSetting('enabled',this.checked)" class="cursor-none" /> Enable</label>
+        <label><input type="checkbox" id="tw-apply-username" onchange="updateTypewriterSetting('applyUsername',this.checked)" class="cursor-none" /> Username</label>
+        <label><input type="checkbox" id="tw-cursor" onchange="updateTypewriterSetting('cursor',this.checked)" class="cursor-none" /> Cursor</label>
       </div>
       <div class="grid grid-cols-2 gap-2 text-xs">
-        <div>Speed <input type="range" id="tw-typeSpeed" min="10" max="200" value="50" class="w-full" oninput="updateTypewriterSetting('typeSpeed',parseInt(this.value))" /></div>
-        <div>Delete <input type="range" id="tw-deleteSpeed" min="5" max="150" value="25" class="w-full" oninput="updateTypewriterSetting('deleteSpeed',parseInt(this.value))" /></div>
-        <div>Pause <input type="range" id="tw-pauseTime" min="200" max="5000" value="1500" class="w-full" oninput="updateTypewriterSetting('pauseTime',parseInt(this.value))" /></div>
-        <div>Gap <input type="range" id="tw-lineGap" min="0" max="2000" value="300" class="w-full" oninput="updateTypewriterSetting('lineGap',parseInt(this.value))" /></div>
+        <div>Speed <input type="range" id="tw-typeSpeed" min="10" max="200" value="50" class="w-full cursor-none" oninput="updateTypewriterSetting('typeSpeed',parseInt(this.value))" /></div>
+        <div>Delete <input type="range" id="tw-deleteSpeed" min="5" max="150" value="25" class="w-full cursor-none" oninput="updateTypewriterSetting('deleteSpeed',parseInt(this.value))" /></div>
+        <div>Pause <input type="range" id="tw-pauseTime" min="200" max="5000" value="1500" class="w-full cursor-none" oninput="updateTypewriterSetting('pauseTime',parseInt(this.value))" /></div>
+        <div>Gap <input type="range" id="tw-lineGap" min="0" max="2000" value="300" class="w-full cursor-none" oninput="updateTypewriterSetting('lineGap',parseInt(this.value))" /></div>
       </div>
     </div>
 
     <div class="grid grid-cols-2 gap-4 border-t border-white/5 pt-4">
       <div><h4 class="text-xs text-gray-400">Neon Glow</h4>
-        <label><input type="checkbox" id="glow-enabled" onchange="updateGlowSetting('enabled',this.checked)" /> On</label>
-        <div>Intensity <input type="range" id="glow-intensity" min="0.5" max="15" step="0.5" value="4" class="w-full" oninput="updateGlowSetting('intensity',parseFloat(this.value))" /></div>
+        <label><input type="checkbox" id="glow-enabled" onchange="updateGlowSetting('enabled',this.checked)" class="cursor-none" /> On</label>
+        <div>Intensity <input type="range" id="glow-intensity" min="0.5" max="15" step="0.5" value="4" class="w-full cursor-none" oninput="updateGlowSetting('intensity',parseFloat(this.value))" /></div>
         <div class="grid grid-cols-2 gap-x-2 gap-y-1 mt-2 text-[0.65rem]">
-          <label><input type="checkbox" id="glow-target-username" checked onchange="updateGlowTarget('username',this.checked)" /> Username</label>
-          <label><input type="checkbox" id="glow-target-bio" checked onchange="updateGlowTarget('bio',this.checked)" /> Bio</label>
-          <label><input type="checkbox" id="glow-target-music" checked onchange="updateGlowTarget('music',this.checked)" /> Music text</label>
-          <label><input type="checkbox" id="glow-target-social" checked onchange="updateGlowTarget('social',this.checked)" /> Social icons</label>
-          <label><input type="checkbox" id="glow-target-badges" checked onchange="updateGlowTarget('badges',this.checked)" /> Badges</label>
-          <label><input type="checkbox" id="glow-target-stats" onchange="updateGlowTarget('stats',this.checked)" /> Stats</label>
+          <label><input type="checkbox" id="glow-target-username" checked onchange="updateGlowTarget('username',this.checked)" class="cursor-none" /> Username</label>
+          <label><input type="checkbox" id="glow-target-bio" checked onchange="updateGlowTarget('bio',this.checked)" class="cursor-none" /> Bio</label>
+          <label><input type="checkbox" id="glow-target-music" checked onchange="updateGlowTarget('music',this.checked)" class="cursor-none" /> Music text</label>
+          <label><input type="checkbox" id="glow-target-social" checked onchange="updateGlowTarget('social',this.checked)" class="cursor-none" /> Social icons</label>
+          <label><input type="checkbox" id="glow-target-badges" checked onchange="updateGlowTarget('badges',this.checked)" class="cursor-none" /> Badges</label>
+          <label><input type="checkbox" id="glow-target-stats" onchange="updateGlowTarget('stats',this.checked)" class="cursor-none" /> Stats</label>
         </div>
       </div>
       <div><h4 class="text-xs text-gray-400">Tilt</h4>
-        <label><input type="checkbox" id="tilt-enabled" checked onchange="updateTiltSetting('enabled',this.checked)" /> On</label>
-        <div>Intensity <input type="range" id="tilt-intensity" min="0" max="30" value="8" class="w-full" oninput="updateTiltSetting('intensity',parseFloat(this.value))" /></div>
-        <div>Smooth <input type="range" id="tilt-speed" min="0.01" max="1" step="0.01" value="0.15" class="w-full" oninput="updateTiltSetting('speed',parseFloat(this.value))" /></div>
+        <label><input type="checkbox" id="tilt-enabled" checked onchange="updateTiltSetting('enabled',this.checked)" class="cursor-none" /> On</label>
+        <div>Intensity <input type="range" id="tilt-intensity" min="0" max="30" value="8" class="w-full cursor-none" oninput="updateTiltSetting('intensity',parseFloat(this.value))" /></div>
+        <div>Smooth <input type="range" id="tilt-speed" min="0.01" max="1" step="0.01" value="0.15" class="w-full cursor-none" oninput="updateTiltSetting('speed',parseFloat(this.value))" /></div>
       </div>
     </div>
 
     <div class="border-t border-white/5 pt-4 space-y-2">
       <h3 class="text-xs font-semibold text-gray-400 uppercase">Background Effects</h3>
-      <div><label class="text-xs text-gray-400">Brightness</label><input type="range" id="bg-brightness" min="0.2" max="1.8" step="0.05" value="1" oninput="updateBgBrightness(this.value)" class="w-full" /></div>
+      <div><label class="text-xs text-gray-400">Brightness</label><input type="range" id="bg-brightness" min="0.2" max="1.8" step="0.05" value="1" oninput="updateBgBrightness(this.value)" class="w-full cursor-none" /></div>
       <div class="flex flex-wrap gap-3 text-xs">
-        <label><input type="radio" name="fx" value="none" checked onchange="setEffect('none')" /> None</label>
-        <label><input type="radio" name="fx" value="snow" onchange="setEffect('snow')" /> Snow</label>
-        <label><input type="radio" name="fx" value="rain" onchange="setEffect('rain')" /> Rain</label>
-        <label><input type="radio" name="fx" value="pixel" onchange="setEffect('pixel')" /> Old TV (Pixel)</label>
+        <label><input type="radio" name="fx" value="none" checked onchange="setEffect('none')" class="cursor-none" /> None</label>
+        <label><input type="radio" name="fx" value="snow" onchange="setEffect('snow')" class="cursor-none" /> Snow</label>
+        <label><input type="radio" name="fx" value="rain" onchange="setEffect('rain')" class="cursor-none" /> Rain</label>
+        <label><input type="radio" name="fx" value="pixel" onchange="setEffect('pixel')" class="cursor-none" /> Old TV (Pixel)</label>
       </div>
-      <div class="flex items-center gap-2"><label class="text-xs text-gray-400">FX Color</label><input type="color" id="fx-color" value="#ffffff" onchange="updateFxColor()" class="w-6 h-6 p-0 border-0 bg-transparent" /></div>
+      <div class="flex items-center gap-2"><label class="text-xs text-gray-400">FX Color</label><input type="color" id="fx-color" value="#ffffff" onchange="updateFxColor()" class="w-6 h-6 p-0 border-0 bg-transparent cursor-none" /></div>
     </div>
 
     <div class="border-t border-white/5 pt-4 space-y-3" id="frame-styling-section">
       <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Frame Styling</h3>
       <div class="flex items-center gap-4">
         <label class="text-xs text-gray-400">Background</label>
-        <input type="color" id="frame-bg-color" value="#141414" onchange="updateFrameStyle()" class="w-7 h-7 p-0 border border-white/10 rounded bg-transparent cursor-pointer" />
+        <input type="color" id="frame-bg-color" value="#141414" onchange="updateFrameStyle()" class="w-7 h-7 p-0 border border-white/10 rounded bg-transparent cursor-none" />
         <label class="text-xs text-gray-400 ml-2">Transparency</label>
-        <input type="range" id="frame-transparency" min="0" max="100" value="55" oninput="updateFrameStyle()" class="w-24 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer" />
+        <input type="range" id="frame-transparency" min="0" max="100" value="55" oninput="updateFrameStyle()" class="w-24 h-1 bg-white/20 rounded-lg appearance-none cursor-none" />
         <span id="transparency-label" class="text-xs text-gray-500">55%</span>
       </div>
       <div class="flex items-center gap-4">
         <label class="text-xs text-gray-400">Outline Opacity</label>
-        <input type="range" id="frame-outline-opacity" min="0" max="100" value="8" oninput="updateFrameStyle()" class="w-32 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer" />
+        <input type="range" id="frame-outline-opacity" min="0" max="100" value="8" oninput="updateFrameStyle()" class="w-32 h-1 bg-white/20 rounded-lg appearance-none cursor-none" />
         <span id="outline-label" class="text-xs text-gray-500">8%</span>
       </div>
       <div class="flex items-center gap-4">
         <label class="text-xs text-gray-400">Blur</label>
-        <input type="range" id="frame-blur" min="0" max="20" step="0.5" value="10" oninput="updateFrameStyle()" class="w-32 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer" />
+        <input type="range" id="frame-blur" min="0" max="20" step="0.5" value="10" oninput="updateFrameStyle()" class="w-32 h-1 bg-white/20 rounded-lg appearance-none cursor-none" />
         <span id="blur-label" class="text-xs text-gray-500">10px</span>
       </div>
       <div class="flex items-center gap-4">
         <label class="text-xs text-gray-400">Shadow</label>
-        <input type="checkbox" id="frame-shadow" checked onchange="updateFrameStyle()" />
+        <input type="checkbox" id="frame-shadow" checked onchange="updateFrameStyle()" class="cursor-none" />
       </div>
       <div class="flex items-center gap-4">
         <label class="text-xs text-gray-400">Border</label>
-        <input type="range" id="frame-border-width" min="0" max="8" value="1" oninput="updateFrameStyle()" class="w-32 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer" />
+        <input type="range" id="frame-border-width" min="0" max="8" value="1" oninput="updateFrameStyle()" class="w-32 h-1 bg-white/20 rounded-lg appearance-none cursor-none" />
         <span id="border-width-label" class="text-xs text-gray-500">1px</span>
       </div>
       <div class="flex items-center gap-4">
         <label class="text-xs text-gray-400">Border Color</label>
-        <input type="color" id="frame-border-color" value="#ffffff" onchange="updateFrameStyle()" class="w-7 h-7 p-0 border border-white/10 rounded bg-transparent cursor-pointer" />
+        <input type="color" id="frame-border-color" value="#ffffff" onchange="updateFrameStyle()" class="w-7 h-7 p-0 border border-white/10 rounded bg-transparent cursor-none" />
       </div>
     </div>
 
@@ -653,33 +664,33 @@
       <p style="font-size:0.6rem; color:#666;">Drag the handles on the main frame (top-left toggle "Resize"), or type exact numbers here. Everything inside scales to fit.</p>
       <div class="flex items-center gap-3">
         <label class="text-xs text-gray-400 w-14">Width</label>
-        <input type="number" id="input-frame-width" min="280" max="1400" step="1" placeholder="auto" class="w-24 bg-[#222] border border-[#333] rounded-lg px-2 py-1 text-xs text-white" onchange="updateFrameDimsFromInputs()" />
+        <input type="number" id="input-frame-width" min="280" max="1400" step="1" placeholder="auto" class="w-24 bg-[#222] border border-[#333] rounded-lg px-2 py-1 text-xs text-white cursor-none" onchange="updateFrameDimsFromInputs()" />
         <span class="text-xs text-gray-500">px</span>
       </div>
       <div class="flex items-center gap-3">
         <label class="text-xs text-gray-400 w-14">Height</label>
-        <input type="number" id="input-frame-height" min="220" max="1400" step="1" placeholder="auto" class="w-24 bg-[#222] border border-[#333] rounded-lg px-2 py-1 text-xs text-white" onchange="updateFrameDimsFromInputs()" />
+        <input type="number" id="input-frame-height" min="220" max="1400" step="1" placeholder="auto" class="w-24 bg-[#222] border border-[#333] rounded-lg px-2 py-1 text-xs text-white cursor-none" onchange="updateFrameDimsFromInputs()" />
         <span class="text-xs text-gray-500">px</span>
       </div>
-      <button onclick="resetFrameDims()" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1 rounded"><i class="fas fa-rotate-left"></i> Reset to default size</button>
+      <button onclick="resetFrameDims()" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1 rounded cursor-none"><i class="fas fa-rotate-left"></i> Reset to default size</button>
     </div>
 
     <div class="border-t border-white/5 pt-4 space-y-2">
-      <div class="flex justify-between"><h3 class="text-xs font-semibold text-gray-400">Badges</h3><button onclick="addBadge()" class="text-xs bg-blue-600/60 px-2 py-0.5 rounded">+</button></div>
+      <div class="flex justify-between"><h3 class="text-xs font-semibold text-gray-400">Badges</h3><button onclick="addBadge()" class="text-xs bg-blue-600/60 px-2 py-0.5 rounded cursor-none">+</button></div>
       <div id="editor-badges" class="space-y-1.5"></div>
     </div>
 
     <div class="border-t border-white/5 pt-4">
-      <div class="flex justify-between"><h3 class="text-xs font-semibold text-gray-400">Social links</h3><button onclick="addSocialLink()" class="text-xs bg-blue-600/60 px-2 py-0.5 rounded">+</button></div>
+      <div class="flex justify-between"><h3 class="text-xs font-semibold text-gray-400">Social links</h3><button onclick="addSocialLink()" class="text-xs bg-blue-600/60 px-2 py-0.5 rounded cursor-none">+</button></div>
       <div id="editor-socials" class="space-y-2 mt-1"></div>
     </div>
 
     <div class="border-t border-white/5 pt-4 space-y-2">
       <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Save</h3>
-      <button onclick="saveAllSettings()" class="w-full bg-green-600/60 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
+      <button onclick="saveAllSettings()" class="w-full bg-green-600/60 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm cursor-none">
         <i class="fas fa-save"></i> Save & Download Package
       </button>
-      <button onclick="downloadProfileJSON()" class="w-full bg-blue-600/60 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
+      <button onclick="downloadProfileJSON()" class="w-full bg-blue-600/60 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm cursor-none">
         <i class="fas fa-download"></i> Download profile.json only
       </button>
       <p style="font-size:0.6rem; color:#666; text-align:center; margin-top:4px;">
@@ -695,9 +706,7 @@
 const customCursor = document.getElementById('custom-cursor');
 let cursorVisible = true;
 
-// Track hover state
-let isHovering = false;
-
+// Simplified mousemove - just track position, no hover detection
 document.addEventListener('mousemove', (e) => {
   if (customCursor) {
     customCursor.style.left = e.clientX + 'px';
@@ -706,19 +715,8 @@ document.addEventListener('mousemove', (e) => {
       customCursor.style.opacity = '1';
       cursorVisible = true;
     }
-    
-    // Check if hovering over interactive element
-    const target = document.elementFromPoint(e.clientX, e.clientY);
-    if (target) {
-      const interactive = target.closest('button, a, input, select, textarea, .stat-item[style*="cursor:pointer"], #enter-screen, #scale-mode-toggle, .resize-handle, [onclick]');
-      if (interactive && !isHovering) {
-        isHovering = true;
-        customCursor.classList.add('hover');
-      } else if (!interactive && isHovering) {
-        isHovering = false;
-        customCursor.classList.remove('hover');
-      }
-    }
+    // Always keep the same appearance - no hover class
+    customCursor.classList.remove('hover');
   }
 });
 
@@ -726,7 +724,6 @@ document.addEventListener('mouseleave', () => {
   if (customCursor) {
     customCursor.style.opacity = '0';
     cursorVisible = false;
-    isHovering = false;
     customCursor.classList.remove('hover');
   }
 });
@@ -746,8 +743,6 @@ function updateCursorStyle() {
   const outlineColor = document.getElementById('cursor-outline-color').value;
   const outlineOpacity = parseFloat(document.getElementById('cursor-outline-opacity').value);
   const outlineWidth = parseFloat(document.getElementById('cursor-outline-width').value);
-  const hoverSize = parseInt(document.getElementById('cursor-hover-size').value);
-  const hoverOpacity = parseFloat(document.getElementById('cursor-hover-opacity').value);
 
   // Convert hex to rgba
   function hexToRgba(hex, alpha) {
@@ -760,24 +755,19 @@ function updateCursorStyle() {
   const dotColor = hexToRgba(color, opacity);
   const borderColor = hexToRgba(outlineColor, outlineOpacity);
 
+  // Apply styles to cursor
   customCursor.style.width = size + 'px';
   customCursor.style.height = size + 'px';
   customCursor.style.background = dotColor;
   customCursor.style.border = `${outlineWidth}px solid ${borderColor}`;
-
-  // Update hover styles via CSS custom properties or direct style
-  customCursor.style.setProperty('--hover-size', hoverSize + 'px');
-  customCursor.style.setProperty('--hover-bg', hexToRgba(color, hoverOpacity));
   
   // Update labels
   document.getElementById('cursor-opacity-label').textContent = Math.round(opacity * 100) + '%';
   document.getElementById('cursor-size-label').textContent = size + 'px';
   document.getElementById('cursor-outline-opacity-label').textContent = Math.round(outlineOpacity * 100) + '%';
   document.getElementById('cursor-outline-width-label').textContent = outlineWidth + 'px';
-  document.getElementById('cursor-hover-size-label').textContent = hoverSize + 'px';
-  document.getElementById('cursor-hover-opacity-label').textContent = Math.round(hoverOpacity * 100) + '%';
 
-  // Update hover class dynamically
+  // Update hover class to maintain same appearance
   const styleId = 'cursor-hover-style';
   let styleEl = document.getElementById(styleId);
   if (!styleEl) {
@@ -787,10 +777,10 @@ function updateCursorStyle() {
   }
   styleEl.textContent = `
     .custom-cursor.hover {
-      width: ${hoverSize}px !important;
-      height: ${hoverSize}px !important;
-      background: ${hexToRgba(color, hoverOpacity)} !important;
-      border-width: ${Math.max(outlineWidth, outlineWidth * 1.5)}px !important;
+      width: ${size}px !important;
+      height: ${size}px !important;
+      background: ${dotColor} !important;
+      border-width: ${outlineWidth}px !important;
     }
   `;
 
@@ -1772,15 +1762,31 @@ function tiltLoopFn() {
 function initTilt() {
   const g = DOM.tiltGroup;
   if (!g || g._tilt) return;
+  
+  // Track mouse position relative to the entire window for tilt
   g.addEventListener('mousemove', e => {
     if (!state.tilt.enabled || scaleModeOn) return;
     const r = g.getBoundingClientRect();
-    const x = e.clientX - r.left, y = e.clientY - r.top;
-    tarRX = ((y - r.height / 2) / r.height * 2) * -state.tilt.intensity;
-    tarRY = ((x - r.width / 2) / r.width * 2) * state.tilt.intensity;
+    const x = e.clientX - r.left;
+    const y = e.clientY - r.top;
+    
+    // Calculate rotation based on mouse position relative to center
+    // More natural tilt: moving mouse right tilts right, moving up tilts up
+    const centerX = r.width / 2;
+    const centerY = r.height / 2;
+    
+    // Invert Y so moving mouse up tilts the top toward you (positive rotateX)
+    tarRY = ((x - centerX) / centerX) * state.tilt.intensity;
+    tarRX = -((y - centerY) / centerY) * state.tilt.intensity;
     tarS = 1.015;
   });
-  g.addEventListener('mouseleave', () => { tarRX = 0; tarRY = 0; tarS = 1; });
+  
+  g.addEventListener('mouseleave', () => { 
+    tarRX = 0; 
+    tarRY = 0; 
+    tarS = 1; 
+  });
+  
   g._tilt = true;
   if (!tiltLoop) tiltLoopFn();
 }
@@ -2043,14 +2049,14 @@ function renderEditorSongs() {
     d.innerHTML = `
       <div class="flex items-center gap-1">
         <span class="text-gray-500 w-4">${i + 1}.</span>
-        <input value="${(song.name || '').replace(/"/g, '&quot;')}" oninput="updateSong('${song.id}','name',this.value)" placeholder="Song name" class="flex-1 bg-[#111] border border-[#444] rounded px-1 py-0.5 text-white" />
-        <button onclick="moveSong('${song.id}',-1)" class="text-gray-400 hover:text-white" title="Move up"><i class="fas fa-chevron-up"></i></button>
-        <button onclick="moveSong('${song.id}',1)" class="text-gray-400 hover:text-white" title="Move down"><i class="fas fa-chevron-down"></i></button>
-        <button onclick="playSongFromEditor('${song.id}')" class="text-green-400 hover:text-green-300" title="Play this song"><i class="fas fa-play"></i></button>
-        <button onclick="removeSong('${song.id}')" class="text-red-400" title="Remove"><i class="fas fa-trash"></i></button>
+        <input value="${(song.name || '').replace(/"/g, '&quot;')}" oninput="updateSong('${song.id}','name',this.value)" placeholder="Song name" class="flex-1 bg-[#111] border border-[#444] rounded px-1 py-0.5 text-white cursor-none" />
+        <button onclick="moveSong('${song.id}',-1)" class="text-gray-400 hover:text-white cursor-none" title="Move up"><i class="fas fa-chevron-up"></i></button>
+        <button onclick="moveSong('${song.id}',1)" class="text-gray-400 hover:text-white cursor-none" title="Move down"><i class="fas fa-chevron-down"></i></button>
+        <button onclick="playSongFromEditor('${song.id}')" class="text-green-400 hover:text-green-300 cursor-none" title="Play this song"><i class="fas fa-play"></i></button>
+        <button onclick="removeSong('${song.id}')" class="text-red-400 cursor-none" title="Remove"><i class="fas fa-trash"></i></button>
       </div>
-      <input value="${song.url || ''}" oninput="updateSong('${song.id}','url',this.value)" placeholder="/assets/song.mp3" class="w-full bg-[#111] border border-[#444] rounded px-1 py-0.5 text-white" />
-      <input type="file" accept="audio/*" onchange="handleSongFileSelect(event,'${song.id}')" class="w-full text-[0.6rem] text-gray-400 file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[0.6rem] file:bg-blue-600/60 file:text-white" />
+      <input value="${song.url || ''}" oninput="updateSong('${song.id}','url',this.value)" placeholder="/assets/song.mp3" class="w-full bg-[#111] border border-[#444] rounded px-1 py-0.5 text-white cursor-none" />
+      <input type="file" accept="audio/*" onchange="handleSongFileSelect(event,'${song.id}')" class="w-full text-[0.6rem] text-gray-400 file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[0.6rem] file:bg-blue-600/60 file:text-white cursor-none" />
       ${hasLocalPreview ? '<div class="text-[0.6rem] text-green-400"><i class="fas fa-circle-check"></i> Local file loaded</div>' : ''}
       ${isCurrent ? '<div class="text-[0.6rem] text-blue-400"><i class="fas fa-volume-high"></i> Now playing</div>' : ''}
     `;
@@ -2231,11 +2237,11 @@ function renderEditorBadges() {
     d.className = 'flex items-center gap-1 bg-[#222] p-1.5 rounded flex-wrap';
     let opts = badgeIconOptions.map(ic => `<option value="${ic}" ${b.icon === ic ? 'selected' : ''}>${ic.split(' ')[1] || ic}</option>`).join('');
     d.innerHTML = `
-      <input value="${b.label}" oninput="updateBadge('${b.id}','label',this.value)" class="bg-[#111] border border-[#333] rounded px-2 py-0.5 text-xs w-16 text-white" />
-      <select onchange="updateBadge('${b.id}','icon',this.value)" class="bg-[#111] border border-[#333] rounded px-1 py-0.5 text-xs text-white">${opts}</select>
-      <span class="flex items-center gap-0.5" title="Icon color"><i class="fas fa-circle-half-stroke text-[0.6rem] text-gray-500"></i><input type="color" value="${b.color}" onchange="updateBadge('${b.id}','color',this.value)" class="w-5 h-5 p-0 border-0 bg-transparent" /></span>
-      <span class="flex items-center gap-0.5" title="Text color"><i class="fas fa-font text-[0.6rem] text-gray-500"></i><input type="color" value="${b.textColor || '#dddddd'}" onchange="updateBadge('${b.id}','textColor',this.value)" class="w-5 h-5 p-0 border-0 bg-transparent" /></span>
-      <button onclick="removeBadge('${b.id}')" class="text-red-400 text-xs"><i class="fas fa-trash"></i></button>
+      <input value="${b.label}" oninput="updateBadge('${b.id}','label',this.value)" class="bg-[#111] border border-[#333] rounded px-2 py-0.5 text-xs w-16 text-white cursor-none" />
+      <select onchange="updateBadge('${b.id}','icon',this.value)" class="bg-[#111] border border-[#333] rounded px-1 py-0.5 text-xs text-white cursor-none">${opts}</select>
+      <span class="flex items-center gap-0.5" title="Icon color"><i class="fas fa-circle-half-stroke text-[0.6rem] text-gray-500"></i><input type="color" value="${b.color}" onchange="updateBadge('${b.id}','color',this.value)" class="w-5 h-5 p-0 border-0 bg-transparent cursor-none" /></span>
+      <span class="flex items-center gap-0.5" title="Text color"><i class="fas fa-font text-[0.6rem] text-gray-500"></i><input type="color" value="${b.textColor || '#dddddd'}" onchange="updateBadge('${b.id}','textColor',this.value)" class="w-5 h-5 p-0 border-0 bg-transparent cursor-none" /></span>
+      <button onclick="removeBadge('${b.id}')" class="text-red-400 text-xs cursor-none"><i class="fas fa-trash"></i></button>
     `;
     c.appendChild(d);
   });
@@ -2253,8 +2259,8 @@ function renderEditorBioLines() {
     const row = document.createElement('div');
     row.className = 'flex items-center gap-1';
     row.innerHTML = `
-      <input type="text" value="${line.replace(/"/g, '&quot;')}" oninput="updateBioLine(${i},this.value)" class="flex-1 bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
-      ${state.bioLines.length > 1 ? `<button onclick="removeBioLine(${i})" class="text-red-400 text-xs"><i class="fas fa-times"></i></button>` : ''}
+      <input type="text" value="${line.replace(/"/g, '&quot;')}" oninput="updateBioLine(${i},this.value)" class="flex-1 bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white cursor-none" />
+      ${state.bioLines.length > 1 ? `<button onclick="removeBioLine(${i})" class="text-red-400 text-xs cursor-none"><i class="fas fa-times"></i></button>` : ''}
     `;
     c.appendChild(row);
   });
@@ -2275,14 +2281,14 @@ function renderEditorSocials() {
     d.className = 'bg-[#222] p-2 rounded border border-[#333] relative text-xs';
     let opts = availableIcons.map(ic => `<option value="${ic}" ${link.icon === ic ? 'selected' : ''}>${ic.split('-')[2] || ic}</option>`).join('');
     d.innerHTML = `
-      <button onclick="removeSocialLink('${link.id}')" class="absolute top-1 right-1 text-red-400"><i class="fas fa-trash"></i></button>
+      <button onclick="removeSocialLink('${link.id}')" class="absolute top-1 right-1 text-red-400 cursor-none"><i class="fas fa-trash"></i></button>
       <div class="grid grid-cols-3 gap-1">
-        <input value="${link.name}" oninput="updateSocialLink('${link.id}','name',this.value)" placeholder="title" class="bg-[#111] border border-[#444] rounded px-1 py-0.5 text-white" />
-        <select onchange="updateSocialLink('${link.id}','icon',this.value)" class="bg-[#111] border border-[#444] rounded text-white">${opts}</select>
-        <input type="color" value="${link.color}" onchange="updateSocialLink('${link.id}','color',this.value)" class="w-5 h-5 p-0 border-0 bg-transparent" />
+        <input value="${link.name}" oninput="updateSocialLink('${link.id}','name',this.value)" placeholder="title" class="bg-[#111] border border-[#444] rounded px-1 py-0.5 text-white cursor-none" />
+        <select onchange="updateSocialLink('${link.id}','icon',this.value)" class="bg-[#111] border border-[#444] rounded text-white cursor-none">${opts}</select>
+        <input type="color" value="${link.color}" onchange="updateSocialLink('${link.id}','color',this.value)" class="w-5 h-5 p-0 border-0 bg-transparent cursor-none" />
       </div>
-      <input value="${link.url}" oninput="updateSocialLink('${link.id}','url',this.value)" placeholder="url or copy" class="w-full bg-[#111] border border-[#444] rounded px-1 py-0.5 mt-1 text-white" />
-      <label class="flex items-center gap-1 mt-1"><input type="checkbox" ${link.spin ? 'checked' : ''} onchange="updateSocialLink('${link.id}','spin',this.checked)" /> spin</label>
+      <input value="${link.url}" oninput="updateSocialLink('${link.id}','url',this.value)" placeholder="url or copy" class="w-full bg-[#111] border border-[#444] rounded px-1 py-0.5 mt-1 text-white cursor-none" />
+      <label class="flex items-center gap-1 mt-1"><input type="checkbox" ${link.spin ? 'checked' : ''} onchange="updateSocialLink('${link.id}','spin',this.checked)" class="cursor-none" /> spin</label>
     `;
     c.appendChild(d);
   });
