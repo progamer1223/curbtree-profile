@@ -8,13 +8,13 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Poppins:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&family=Raleway:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  
+
   <!-- Vercel Analytics -->
   <script>
     window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
   </script>
   <script defer src="/_vercel/insights/script.js"></script>
-  
+
   <style>
     * { box-sizing: border-box; }
     body { margin:0; font-family:'Inter',sans-serif; background:#0b0b0b; color:white; overflow:hidden; height:100vh; }
@@ -60,7 +60,7 @@
     @media (min-width:640px) { .name-bio-expand h1 { font-size:3.8rem; } }
     .name-bio-expand p { font-size:1.2rem; }
     @media (min-width:640px) { .name-bio-expand p { font-size:1.5rem; } }
-    
+
     .music-player-bar {
       display:flex;
       align-items:center;
@@ -98,10 +98,10 @@
     .music-player-bar .volume-slider::-moz-range-thumb { width:12px; height:12px; border-radius:50%; background:#8ab4f8; cursor:pointer; border:none; }
     .music-player-bar .spacer { flex:1; min-width:10px; }
     .music-player-bar .vol-icon { color:#888; font-size:0.8rem; flex-shrink:0; transition: color 0.2s; }
-    
+
     .top-frame-content { display:flex; flex-direction:column; width:100%; flex:1; }
     .frame-common { transition: background 0.2s, border-color 0.2s, backdrop-filter 0.2s; }
-    
+
     .stats-bar {
       display:flex;
       align-items:center;
@@ -120,7 +120,13 @@
     .stats-bar .divider { width:1px; height:16px; background:rgba(255,255,255,0.1); }
     .stats-bar .stat-item { display:flex; align-items:center; gap:5px; transition: color 0.2s; }
     .stats-bar .stat-item i { font-size:0.7rem; opacity:0.7; }
-    
+
+    /* Neon glow effect */
+    .neon-text {
+      text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 40px currentColor, 0 0 80px currentColor;
+      filter: drop-shadow(0 0 10px currentColor);
+    }
+
     .font-weight-normal { font-weight: 400 !important; }
     .font-weight-medium { font-weight: 500 !important; }
     .font-weight-semibold { font-weight: 600 !important; }
@@ -239,6 +245,18 @@
       </div>
     </div>
 
+    <!-- Discord PFP Auto-Fetch -->
+    <div class="border-t border-white/5 pt-4 space-y-2">
+      <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Discord PFP</h3>
+      <div class="flex gap-2">
+        <input type="text" id="input-discord-id" placeholder="Discord User ID" class="flex-1 bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" />
+        <button onclick="fetchDiscordPFP()" class="bg-blue-600/60 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm transition-colors">
+          <i class="fas fa-sync"></i> Fetch
+        </button>
+      </div>
+      <p class="text-[0.5rem] text-gray-500">Enter your Discord User ID and click Fetch to auto‑load your avatar.</p>
+    </div>
+
     <!-- Assets Section -->
     <div class="border-t border-white/5 pt-4 space-y-3">
       <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Assets (Files)</h3>
@@ -246,12 +264,10 @@
         <div>
           <label class="block text-xs text-gray-400">Profile Picture URL</label>
           <input type="text" id="input-pfp-url" value="" placeholder="/assets/avatar.gif" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" oninput="updatePfpUrl(this.value)" />
-          <p class="text-[0.5rem] text-gray-500 mt-1">Enter the path to your image (e.g., /assets/avatar.gif)</p>
         </div>
         <div>
           <label class="block text-xs text-gray-400">Background URL</label>
           <input type="text" id="input-bg-url" value="" placeholder="/assets/bg.mp4 or Cloudinary URL" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" oninput="updateBgUrl(this.value)" />
-          <p class="text-[0.5rem] text-gray-500 mt-1">Enter the path to your background (e.g., /assets/bg.mp4)</p>
         </div>
         <div>
           <label class="block text-xs text-gray-400">Background Type</label>
@@ -264,7 +280,6 @@
         <div>
           <label class="block text-xs text-gray-400">Music URL</label>
           <input type="text" id="input-audio-url" value="" placeholder="/assets/song.mp3" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" oninput="updateAudioUrl(this.value)" />
-          <p class="text-[0.5rem] text-gray-500 mt-1">Enter the path to your music (e.g., /assets/song.mp3)</p>
         </div>
         <div>
           <label class="block text-xs text-gray-400">Music Display Name</label>
@@ -329,7 +344,7 @@
     </div>
 
     <div class="grid grid-cols-2 gap-4 border-t border-white/5 pt-4">
-      <div><h4 class="text-xs text-gray-400">Glow</h4>
+      <div><h4 class="text-xs text-gray-400">Neon Glow</h4>
         <label><input type="checkbox" id="glow-enabled" onchange="updateGlowSetting('enabled',this.checked)" /> On</label>
         <div>Intensity <input type="range" id="glow-intensity" min="0.5" max="15" step="0.5" value="4" class="w-full" oninput="updateGlowSetting('intensity',parseFloat(this.value))" /></div>
       </div>
@@ -347,7 +362,7 @@
         <label><input type="radio" name="fx" value="none" checked onchange="setEffect('none')" /> None</label>
         <label><input type="radio" name="fx" value="snow" onchange="setEffect('snow')" /> Snow</label>
         <label><input type="radio" name="fx" value="rain" onchange="setEffect('rain')" /> Rain</label>
-        <label><input type="radio" name="fx" value="pixel" onchange="setEffect('pixel')" /> Old TV (Vibrant)</label>
+        <label><input type="radio" name="fx" value="pixel" onchange="setEffect('pixel')" /> Old TV (Grain)</label>
       </div>
       <div class="flex items-center gap-2"><label class="text-xs text-gray-400">FX Color</label><input type="color" id="fx-color" value="#ffffff" onchange="updateFxColor()" class="w-6 h-6 p-0 border-0 bg-transparent" /></div>
     </div>
@@ -418,7 +433,6 @@ const EDIT_PASSWORD = "curbtree";
 function unlockEditor() {
   const input = document.getElementById('lock-password');
   const error = document.getElementById('lock-error');
-  
   if (input.value === EDIT_PASSWORD) {
     localStorage.setItem('curbtree_trusted', 'true');
     document.getElementById('lock-screen').style.display = 'none';
@@ -434,6 +448,38 @@ function unlockEditor() {
 if (localStorage.getItem('curbtree_trusted') === 'true' && isEditMode) {
   document.getElementById('lock-screen').style.display = 'none';
   document.getElementById('edit-btn').style.display = 'flex';
+}
+
+// ─── DISCORD PFP FETCHER ──────────────────────────────────
+async function fetchDiscordPFP() {
+  const uid = document.getElementById('input-discord-id').value.trim();
+  if (!uid) { alert('Please enter your Discord User ID.'); return; }
+  try {
+    const res = await fetch(`https://api.webtop.gg/v1/users/${uid}/avatar`);
+    if (!res.ok) throw new Error('User not found');
+    const url = await res.text(); // direct image URL
+    document.getElementById('input-pfp-url').value = url;
+    state.pfpUrl = url;
+    DOM.displayPfp.src = getAssetUrl(url);
+    alert('✅ Discord avatar loaded! Click Save All Settings to keep it.');
+  } catch {
+    // fallback: try grux API
+    try {
+      const fallbackRes = await fetch(`https://grux.audibert.dev/user/${uid}`);
+      if (!fallbackRes.ok) throw new Error('User not found');
+      const data = await fallbackRes.json();
+      if (data.avatar_image) {
+        document.getElementById('input-pfp-url').value = data.avatar_image;
+        state.pfpUrl = data.avatar_image;
+        DOM.displayPfp.src = getAssetUrl(data.avatar_image);
+        alert('✅ Discord avatar loaded! Click Save All Settings to keep it.');
+      } else {
+        alert('❌ Could not fetch avatar. Please try again.');
+      }
+    } catch {
+      alert('❌ Failed to fetch Discord avatar. Please check your User ID.');
+    }
+  }
 }
 
 // ─── STATE ──────────────────────────────────────────────────
@@ -546,21 +592,21 @@ function saveAllSettings() {
   // Profile
   state.username = document.getElementById('input-username').value;
   state.location = document.getElementById('input-location').value;
-  
+
   // Assets
   state.pfpUrl = document.getElementById('input-pfp-url').value || '/assets/avatar.gif';
   state.bgUrl = document.getElementById('input-bg-url').value || '';
   state.bgType = document.getElementById('input-bg-type').value;
   state.audioUrl = document.getElementById('input-audio-url').value || '';
   state.musicDisplayName = document.getElementById('input-music-name').value || 'track.mp3';
-  
+
   // Colors
   state.usernameColor = document.getElementById('username-color').value;
   state.bioColor = document.getElementById('bio-color').value;
   state.musicColor = document.getElementById('music-color').value;
   state.statsColor = document.getElementById('stats-color').value;
   state.socialColor = document.getElementById('social-color').value;
-  
+
   // Typography
   state.usernameFont = document.getElementById('username-font').value;
   state.usernameWeight = document.getElementById('username-weight').value;
@@ -572,7 +618,7 @@ function saveAllSettings() {
   state.statsWeight = document.getElementById('stats-weight').value;
   state.socialFont = document.getElementById('social-font').value;
   state.socialWeight = document.getElementById('social-weight').value;
-  
+
   // Typewriter
   state.typewriter.enabled = document.getElementById('tw-enabled').checked;
   state.typewriter.applyUsername = document.getElementById('tw-apply-username').checked;
@@ -581,34 +627,30 @@ function saveAllSettings() {
   state.typewriter.deleteSpeed = parseInt(document.getElementById('tw-deleteSpeed').value) || 25;
   state.typewriter.pauseTime = parseInt(document.getElementById('tw-pauseTime').value) || 1500;
   state.typewriter.lineGap = parseInt(document.getElementById('tw-lineGap').value) || 300;
-  
+
   // Glow
   state.glowEffect.enabled = document.getElementById('glow-enabled').checked;
   state.glowEffect.intensity = parseFloat(document.getElementById('glow-intensity').value) || 4;
-  
+
   // Tilt
   state.tilt.enabled = document.getElementById('tilt-enabled').checked;
   state.tilt.intensity = parseFloat(document.getElementById('tilt-intensity').value) || 8;
   state.tilt.speed = parseFloat(document.getElementById('tilt-speed').value) || 0.15;
-  
-  // Frame Styling
+
+  // Frame
   state.frameBg = document.getElementById('frame-bg-color').value;
   state.frameTransparency = parseInt(document.getElementById('frame-transparency').value) / 100;
   state.frameOutline = parseInt(document.getElementById('frame-outline-opacity').value) / 100;
   state.frameBlur = parseFloat(document.getElementById('frame-blur').value);
-  
-  // Background Effect
+
+  // Effects
   document.querySelectorAll('input[name="fx"]').forEach(el => {
     if (el.checked) state.fx = el.value;
   });
   state.fxColor = document.getElementById('fx-color').value;
-  
-  // Save to localStorage
+
   localStorage.setItem('curbtree_full_profile', JSON.stringify(state));
-  
   alert('✅ All settings saved!');
-  
-  // Apply immediately
   applyAllSettings();
 }
 
@@ -618,16 +660,16 @@ function updateFrameStyle() {
   const transparency = parseInt(document.getElementById('frame-transparency').value) / 100;
   const outline = parseInt(document.getElementById('frame-outline-opacity').value) / 100;
   const blur = parseFloat(document.getElementById('frame-blur').value);
-  
+
   state.frameBg = bg;
   state.frameTransparency = transparency;
   state.frameOutline = outline;
   state.frameBlur = blur;
-  
+
   document.getElementById('transparency-label').textContent = Math.round(transparency * 100) + '%';
   document.getElementById('outline-label').textContent = Math.round(outline * 100) + '%';
   document.getElementById('blur-label').textContent = blur + 'px';
-  
+
   applyFrameStyles(bg, transparency, outline, blur);
 }
 
@@ -636,7 +678,7 @@ function applyFrameStyles(bg, transparency, outline, blur) {
   const bgWithAlpha = bg + alpha;
   const borderColor = `rgba(255,255,255,${outline * 0.8})`;
   const blurValue = `blur(${blur}px)`;
-  
+
   [DOM.mainFrame, DOM.bottomFrame].forEach(frame => {
     if (frame) {
       frame.style.background = bgWithAlpha;
@@ -645,7 +687,6 @@ function applyFrameStyles(bg, transparency, outline, blur) {
       frame.style.webkitBackdropFilter = blurValue;
     }
   });
-  
   document.querySelectorAll('.glass-card').forEach(el => {
     el.style.background = bgWithAlpha;
     el.style.borderColor = borderColor;
@@ -662,12 +703,10 @@ function applyAllSettings() {
   DOM.displayBio.textContent = state.bioLines[0] || '';
   DOM.displayBio.style.color = state.bioColor;
   DOM.locationDisplay.textContent = state.location;
-  
+
   // Profile Picture
-  if (state.pfpUrl) {
-    DOM.displayPfp.src = getAssetUrl(state.pfpUrl);
-  }
-  
+  if (state.pfpUrl) DOM.displayPfp.src = getAssetUrl(state.pfpUrl);
+
   // Background
   if (state.bgType === 'image' && state.bgUrl) {
     DOM.bgImage.src = getAssetUrl(state.bgUrl);
@@ -686,7 +725,7 @@ function applyAllSettings() {
     DOM.bgImage.style.display = 'none';
     DOM.bgVideo.style.display = 'none';
   }
-  
+
   // Music
   if (state.audioUrl) {
     DOM.audioPlayer.src = getAssetUrl(state.audioUrl);
@@ -695,28 +734,26 @@ function applyAllSettings() {
     DOM.inlineTrack.style.color = state.musicColor;
     DOM.volumeIcon.style.color = state.musicColor;
   }
-  
+
   // Stats
   const statItems = DOM.statsBar.querySelectorAll('.stat-item');
   statItems.forEach(item => item.style.color = state.statsColor);
-  
+
   // Frame
   applyFrameStyles(state.frameBg, state.frameTransparency, state.frameOutline, state.frameBlur);
-  
+
   // Typography
   applyTypography();
-  
-  // Glow
+
+  // Glow (neon)
   applyGlow();
-  
+
   // Typewriter
   restartTypewriter();
   applyCursorClasses();
-  
+
   // Effects
-  if (state.fx && state.fx !== 'none') {
-    setEffect(state.fx);
-  }
+  if (state.fx && state.fx !== 'none') setEffect(state.fx);
 }
 
 // ─── DOWNLOAD profile.json ──────────────────────────────────
@@ -748,19 +785,15 @@ function updateSocialColor(color) { state.socialColor = color; document.querySel
 
 // ─── TYPOGRAPHY ─────────────────────────────────────────────
 function applyTypography() {
-  // Username
   DOM.displayUsername.className = DOM.displayUsername.className.split(' ').filter(c => !c.startsWith('font-')).join(' ');
   DOM.displayUsername.classList.add(state.usernameFont || 'font-inter', state.usernameWeight || 'font-weight-extrabold');
-  
-  // Bio
+
   DOM.displayBio.className = DOM.displayBio.className.split(' ').filter(c => !c.startsWith('font-')).join(' ');
   DOM.displayBio.classList.add(state.bioFont || 'font-inter', state.bioWeight || 'font-weight-normal');
-  
-  // Music
+
   DOM.inlineTrack.className = DOM.inlineTrack.className.split(' ').filter(c => !c.startsWith('font-')).join(' ');
   DOM.inlineTrack.classList.add(state.musicFont || 'font-inter', state.musicWeight || 'font-weight-normal');
-  
-  // Stats
+
   const statItems = DOM.statsBar.querySelectorAll('.stat-item');
   statItems.forEach(item => {
     item.className = item.className.split(' ').filter(c => !c.startsWith('font-')).join(' ');
@@ -768,27 +801,33 @@ function applyTypography() {
   });
 }
 
-// ─── GLOW ────────────────────────────────────────────────────
+// ─── NEON GLOW ────────────────────────────────────────────────────
 function updateGlowSetting(key, val) { state.glowEffect[key] = val; applyGlow(); }
 
 function applyGlow() {
   const els = [DOM.displayUsername, DOM.displayBio, DOM.inlineTrack, DOM.volumeIcon, DOM.inlinePlayIcon];
   document.querySelectorAll('.stat-item, .social-tooltip').forEach(el => els.push(el));
-  
-  const on = state.glowEffect.enabled, g = parseFloat(state.glowEffect.intensity) || 0;
+
+  const on = state.glowEffect.enabled, g = parseFloat(state.glowEffect.intensity) || 4;
   els.forEach(el => {
     if (!el) return;
-    if (!on) { el.style.textShadow = ''; el.style.filter = ''; return; }
-    el.style.textShadow = `0 0 ${g*0.2}px currentColor, 0 0 ${g*0.6}px currentColor`;
-    el.style.filter = `drop-shadow(0 0 ${g*0.5}px currentColor)`;
+    if (!on) {
+      el.classList.remove('neon-text');
+      el.style.textShadow = '';
+      el.style.filter = '';
+      return;
+    }
+    el.classList.add('neon-text');
+    el.style.textShadow = `0 0 ${g*0.2}px currentColor, 0 0 ${g*0.6}px currentColor, 0 0 ${g*1.2}px currentColor, 0 0 ${g*2.0}px currentColor`;
+    el.style.filter = `drop-shadow(0 0 ${g*0.3}px currentColor)`;
   });
 }
 
 // ─── TYPEWRITER ─────────────────────────────────────────────
 let usernameTimer = null, bioTimer = null;
 
-function updateTypewriterSetting(key, val) { 
-  state.typewriter[key] = val; 
+function updateTypewriterSetting(key, val) {
+  state.typewriter[key] = val;
   restartTypewriter();
   applyCursorClasses();
 }
@@ -808,28 +847,18 @@ function clearTimers() { clearTimeout(usernameTimer); clearTimeout(bioTimer); us
 
 function runUsernameCycle() {
   const text = state.username || '@username';
-  if (!state.typewriter.applyUsername) { 
-    DOM.displayUsername.textContent = text; 
-    return; 
-  }
+  if (!state.typewriter.applyUsername) { DOM.displayUsername.textContent = text; return; }
   let i = 0;
-  function type() { 
-    DOM.displayUsername.textContent = text.slice(0, i); 
-    if (i < text.length) { 
-      i++; 
-      usernameTimer = setTimeout(type, state.typewriter.typeSpeed); 
-    } else {
-      usernameTimer = setTimeout(erase, state.typewriter.pauseTime);
-    }
+  function type() {
+    DOM.displayUsername.textContent = text.slice(0, i);
+    if (i < text.length) { i++; usernameTimer = setTimeout(type, state.typewriter.typeSpeed); }
+    else usernameTimer = setTimeout(erase, state.typewriter.pauseTime);
   }
-  function erase() { 
-    i--; 
-    DOM.displayUsername.textContent = text.slice(0, Math.max(i, 0)); 
-    if (i > 0) {
-      usernameTimer = setTimeout(erase, state.typewriter.deleteSpeed);
-    } else {
-      usernameTimer = setTimeout(type, state.typewriter.lineGap);
-    }
+  function erase() {
+    i--;
+    DOM.displayUsername.textContent = text.slice(0, Math.max(i, 0));
+    if (i > 0) usernameTimer = setTimeout(erase, state.typewriter.deleteSpeed);
+    else usernameTimer = setTimeout(type, state.typewriter.lineGap);
   }
   type();
 }
@@ -840,24 +869,16 @@ function runBioCycle() {
   function cycle() {
     const txt = lines[idx];
     let i = 0;
-    function type() { 
-      DOM.displayBio.textContent = txt.slice(0, i); 
-      if (i < txt.length) { 
-        i++; 
-        bioTimer = setTimeout(type, state.typewriter.typeSpeed); 
-      } else if (lines.length > 1) {
-        bioTimer = setTimeout(erase, state.typewriter.pauseTime);
-      }
+    function type() {
+      DOM.displayBio.textContent = txt.slice(0, i);
+      if (i < txt.length) { i++; bioTimer = setTimeout(type, state.typewriter.typeSpeed); }
+      else if (lines.length > 1) bioTimer = setTimeout(erase, state.typewriter.pauseTime);
     }
-    function erase() { 
-      i--; 
-      DOM.displayBio.textContent = txt.slice(0, Math.max(i, 0)); 
-      if (i > 0) {
-        bioTimer = setTimeout(erase, state.typewriter.deleteSpeed);
-      } else { 
-        idx = (idx + 1) % lines.length; 
-        bioTimer = setTimeout(cycle, state.typewriter.lineGap); 
-      }
+    function erase() {
+      i--;
+      DOM.displayBio.textContent = txt.slice(0, Math.max(i, 0));
+      if (i > 0) bioTimer = setTimeout(erase, state.typewriter.deleteSpeed);
+      else { idx = (idx + 1) % lines.length; bioTimer = setTimeout(cycle, state.typewriter.lineGap); }
     }
     type();
   }
@@ -928,16 +949,16 @@ function setEffect(type) {
   if (fxAnimId) cancelAnimationFrame(fxAnimId);
   fxParticles = [];
   if (type === 'none') { if (ctx) ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height); return; }
-  
-  let count = type === 'pixel' ? 200 : (type === 'rain' ? 200 : 220);
+
+  let count = type === 'pixel' ? 150 : (type === 'rain' ? 200 : 220);
   for (let i = 0; i < count; i++) {
     fxParticles.push({
       x: Math.random() * fxCanvas.width,
       y: Math.random() * fxCanvas.height,
-      speed: type === 'rain' ? 6 + Math.random() * 10 : (type === 'pixel' ? 0.5 + Math.random() * 1.5 : 0.5 + Math.random() * 2.5),
-      size: type === 'pixel' ? 6 + Math.random() * 12 : (type === 'rain' ? 0.8 + Math.random() * 1.5 : 1.5 + Math.random() * 3),
+      speed: type === 'rain' ? 6 + Math.random() * 10 : (type === 'pixel' ? 0.4 + Math.random() * 0.6 : 0.5 + Math.random() * 2.5),
+      size: type === 'pixel' ? 4 + Math.random() * 8 : (type === 'rain' ? 0.8 + Math.random() * 1.5 : 1.5 + Math.random() * 3),
       length: type === 'rain' ? 15 + Math.random() * 30 : 0,
-      opacity: 0.5 + Math.random() * 0.4
+      opacity: 0.4 + Math.random() * 0.5
     });
   }
   drawFx();
@@ -950,60 +971,34 @@ function drawFx() {
   const color = state.fxColor || '#ffffff';
   const isSnow = state.fx === 'snow', isRain = state.fx === 'rain', isPixel = state.fx === 'pixel';
 
-  // Enhanced Old TV (Pixel) Effect with film grain and scanlines
   if (isPixel) {
-    // Film grain overlay
-    for (let i = 0; i < 300; i++) {
-      const grainX = Math.random() * fxCanvas.width;
-      const grainY = Math.random() * fxCanvas.height;
-      const grainSize = 1 + Math.random() * 3;
-      ctx.globalAlpha = 0.03 + Math.random() * 0.08;
+    // grain overlay – just noise, no scanlines or glitch
+    for (let i = 0; i < 250; i++) {
+      const gx = Math.random() * fxCanvas.width;
+      const gy = Math.random() * fxCanvas.height;
+      const gs = 1 + Math.random() * 3;
+      ctx.globalAlpha = 0.04 + Math.random() * 0.08;
       ctx.fillStyle = Math.random() > 0.5 ? '#ffffff' : '#000000';
-      ctx.fillRect(grainX, grainY, grainSize, grainSize);
+      ctx.fillRect(gx, gy, gs, gs);
     }
-    
-    // Scanlines
-    ctx.globalAlpha = 0.06;
-    for (let y = 0; y < fxCanvas.height; y += 3) {
-      ctx.fillStyle = '#000000';
-      ctx.fillRect(0, y, fxCanvas.width, 1);
-    }
-    
-    // Vibrant color pixelation
+    // subtle pixel drift
     fxParticles.forEach(p => {
-      p.x += (Math.random() - 0.5) * 1.2;
-      p.y += (Math.random() - 0.5) * 1.2 + 0.3;
+      p.x += (Math.random() - 0.5) * 0.8;
+      p.y += (Math.random() - 0.5) * 0.8 + 0.2;
       if (p.y > fxCanvas.height) { p.y = -10; p.x = Math.random() * fxCanvas.width; }
       if (p.x < 0) p.x = 0;
       if (p.x > fxCanvas.width) p.x = fxCanvas.width;
-      
-      const r = Math.floor(Math.random() * 30 + 200);
-      const g = Math.floor(Math.random() * 30 + 200);
-      const b = Math.floor(Math.random() * 30 + 200);
-      const vibrantColor = `rgb(${r}, ${g}, ${b})`;
-      
-      ctx.globalAlpha = p.opacity * 0.6;
-      ctx.fillStyle = vibrantColor;
-      const sz = 4 + p.size;
+      ctx.globalAlpha = p.opacity * 0.5;
+      ctx.fillStyle = color;
+      const sz = 2 + p.size * 0.5;
       ctx.fillRect(p.x, p.y, sz, sz);
     });
-    
-    // Extra glitch effect
-    if (Math.random() < 0.02) {
-      ctx.globalAlpha = 0.2;
-      const glitchY = Math.random() * fxCanvas.height;
-      const glitchH = 3 + Math.random() * 8;
-      ctx.fillStyle = '#00ffaa';
-      ctx.fillRect(0, glitchY, fxCanvas.width, glitchH);
-      ctx.fillStyle = '#ff00aa';
-      ctx.fillRect(0, glitchY + glitchH + 2, fxCanvas.width, glitchH);
-    }
     ctx.globalAlpha = 1;
     fxAnimId = requestAnimationFrame(drawFx);
     return;
   }
 
-  // Regular snow/rain effects
+  // Snow / Rain
   fxParticles.forEach(p => {
     if (isSnow) {
       const dx = mouseX - p.x, dy = mouseY - p.y;
@@ -1081,20 +1076,12 @@ async function getViewCount() {
       localStorage.setItem('curbtree_views', count.toString());
       sessionStorage.setItem('curbtree_visited', 'true');
       if (typeof window.va !== 'undefined') {
-        window.va('event', 'page_view', {
-          params: {
-            page: window.location.pathname,
-            timestamp: Date.now()
-          }
-        });
+        window.va('event', 'page_view', { params: { page: window.location.pathname, timestamp: Date.now() } });
       }
     }
     document.getElementById('view-count').textContent = count.toLocaleString();
     return count;
-  } catch (e) {
-    console.log('View count error:', e);
-    return 0;
-  }
+  } catch (e) { return 0; }
 }
 
 // ─── START EXPERIENCE ──────────────────────────────────────
@@ -1103,7 +1090,6 @@ function startExperience() {
   setTimeout(() => {
     DOM.enterScreen.style.display = 'none';
     DOM.mainContent.classList.remove('opacity-0', 'pointer-events-none');
-    
     if (state.bgType === 'video' && DOM.bgVideo.src) {
       DOM.bgVideo.muted = true;
       DOM.bgVideo.loop = true;
@@ -1151,7 +1137,7 @@ function renderEditorBadges() {
   const c = DOM.editorBadges;
   if (!c) return;
   c.innerHTML = '';
-  state.badges.forEach((b, i) => {
+  state.badges.forEach((b) => {
     const d = document.createElement('div');
     d.className = 'flex items-center gap-1 bg-[#222] p-1.5 rounded flex-wrap';
     let opts = badgeIconOptions.map(ic => `<option value="${ic}" ${b.icon === ic ? 'selected' : ''}>${ic.split(' ')[1] || ic}</option>`).join('');
@@ -1240,7 +1226,7 @@ function renderDisplaySocials() {
   applyGlow();
 }
 
-function handleSocialClick(url, id) {
+function handleSocialClick(url) {
   if (url.startsWith('http') || url.startsWith('mailto:')) { window.open(url, '_blank'); return; }
   const ta = document.createElement('textarea');
   ta.value = url;
@@ -1250,13 +1236,12 @@ function handleSocialClick(url, id) {
   document.body.removeChild(ta);
 }
 
-// ─── HELPERS ──────────────────────────────────────────────────
 function genId() { return Math.random().toString(36).slice(2, 8); }
 
 // ─── INIT ────────────────────────────────────────────────────
 async function init() {
   await loadProfileFromJSON();
-  
+
   try {
     const saved = localStorage.getItem('curbtree_full_profile');
     if (saved) {
@@ -1268,26 +1253,26 @@ async function init() {
           state[key] = data[key];
         }
       });
-      console.log('✅ Local backup loaded');
     }
   } catch (e) {}
-  
+
   renderEditorSocials();
   renderDisplaySocials();
   renderEditorBioLines();
   renderEditorBadges();
   renderBadges();
-  
-  applyAllSettings();
-  
-  initTilt();
+
+  // INIT CANVAS BEFORE applying effects
   initFxCanvas();
-  
-  // Set initial UI values
+
+  applyAllSettings();
+
+  initTilt();
+
+  // Populate UI fields
   document.getElementById('fx-color').value = state.fxColor;
   document.getElementById('bg-overlay').style.opacity = 0.55;
-  
-  // Populate all form fields
+
   document.getElementById('input-username').value = state.username;
   document.getElementById('input-location').value = state.location;
   document.getElementById('input-pfp-url').value = state.pfpUrl;
@@ -1295,13 +1280,13 @@ async function init() {
   document.getElementById('input-bg-type').value = state.bgType;
   document.getElementById('input-audio-url').value = state.audioUrl;
   document.getElementById('input-music-name').value = state.musicDisplayName;
-  
+
   document.getElementById('username-color').value = state.usernameColor;
   document.getElementById('bio-color').value = state.bioColor;
   document.getElementById('music-color').value = state.musicColor;
   document.getElementById('stats-color').value = state.statsColor;
   document.getElementById('social-color').value = state.socialColor;
-  
+
   document.getElementById('username-font').value = state.usernameFont || 'font-inter';
   document.getElementById('username-weight').value = state.usernameWeight || 'font-weight-extrabold';
   document.getElementById('bio-font').value = state.bioFont || 'font-inter';
@@ -1312,12 +1297,12 @@ async function init() {
   document.getElementById('stats-weight').value = state.statsWeight || 'font-weight-normal';
   document.getElementById('social-font').value = state.socialFont || 'font-inter';
   document.getElementById('social-weight').value = state.socialWeight || 'font-weight-semibold';
-  
+
   document.getElementById('frame-bg-color').value = state.frameBg || '#141414';
   document.getElementById('frame-transparency').value = Math.round((state.frameTransparency || 0.55) * 100);
   document.getElementById('frame-outline-opacity').value = Math.round((state.frameOutline || 0.08) * 100);
   document.getElementById('frame-blur').value = state.frameBlur || 10;
-  
+
   document.getElementById('tilt-enabled').checked = state.tilt.enabled;
   document.getElementById('tilt-intensity').value = state.tilt.intensity;
   document.getElementById('tilt-speed').value = state.tilt.speed;
@@ -1325,17 +1310,17 @@ async function init() {
   document.getElementById('tw-apply-username').checked = state.typewriter.applyUsername;
   document.getElementById('tw-cursor').checked = state.typewriter.cursor;
   document.getElementById('glow-enabled').checked = state.glowEffect.enabled;
-  
+  document.getElementById('glow-intensity').value = state.glowEffect.intensity;
+
   document.querySelectorAll('input[name="fx"]').forEach(el => {
     el.checked = el.value === state.fx;
   });
-  
+
   if (state.fx !== 'none') setEffect(state.fx);
-  
+
   const count = parseInt(localStorage.getItem('curbtree_views')) || 0;
   document.getElementById('view-count').textContent = count.toLocaleString();
-  
-  // Auto-save to localStorage every 30 seconds
+
   setInterval(() => {
     try {
       localStorage.setItem('curbtree_full_profile', JSON.stringify(state));
