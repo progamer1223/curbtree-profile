@@ -15,6 +15,9 @@
   </script>
   <script defer src="/_vercel/insights/script.js"></script>
 
+  <!-- JSZip: used to bundle newly-picked asset files + profile.json into one downloadable package -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
   <style>
     * { box-sizing: border-box; }
     body { margin:0; font-family:'Inter',sans-serif; background:#0b0b0b; color:white; overflow:hidden; height:100vh; }
@@ -426,7 +429,7 @@
             <option value="video">Video</option>
           </select>
         </div>
-        <p style="font-size:0.6rem; color:#666;">Choosing a file previews it instantly in this tab. Uploading it to your actual site still needs to happen separately (e.g. via GitHub) at the path shown in the URL field above.</p>
+        <p style="font-size:0.6rem; color:#666;">Choosing a file previews it instantly and gets bundled into a ready-to-upload zip when you hit "Save & Download Package".</p>
       </div>
     </div>
 
@@ -580,10 +583,13 @@
     <div class="border-t border-white/5 pt-4 space-y-2">
       <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Save</h3>
       <button onclick="saveAllSettings()" class="w-full bg-green-600/60 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
-        <i class="fas fa-download"></i> Save & Download profile.json
+        <i class="fas fa-save"></i> Save & Download Package
+      </button>
+      <button onclick="downloadProfileJSON()" class="w-full bg-blue-600/60 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
+        <i class="fas fa-download"></i> Download profile.json only
       </button>
       <p style="font-size:0.6rem; color:#666; text-align:center; margin-top:4px;">
-        This downloads profile.json with all your settings. Upload your song/image/video files separately (e.g. to GitHub) at the paths shown in the URL fields above, then upload profile.json alongside them.
+        "Save & Download Package" downloads curbtree-package.zip: profile.json plus an assets/ folder containing every new song/image/video file you picked this session. Unzip and upload the whole thing to your GitHub repo — next time the page loads, those files will be served from /assets/ and load automatically.
       </p>
     </div>
 
@@ -738,6 +744,14 @@ const DOM = {
 // playlist can have its own local preview file.
 const assetPreviewBlobs = { pfp: null, bg: null, songs: {} };
 
+// ─── SELECTED ASSET FILES (for zip export on Save) ──────────────────────
+// Holds the actual File objects picked via the file inputs. These only live
+// for the current tab session, but that's fine — they exist so "Save &
+// Download Package" can bundle them into a zip alongside profile.json. songs
+// is a map of songId -> File so every song in the playlist can carry its own
+// file into the package.
+const assetFiles = { pfp: null, bg: null, songs: {} };
+
 function getSongPlaybackSrc(song) {
   if (!song) return '';
   if (assetPreviewBlobs.songs[song.id]) return assetPreviewBlobs.songs[song.id];
@@ -805,7 +819,7 @@ function migrateLegacyMusic() {
 }
 
 // ─── SAVE ALL SETTINGS ──────────────────────────────────────
-function saveAllSettings() {
+async function saveAllSettings() {
   // Profile
   state.username = document.getElementById('input-username').value;
   state.location = document.getElementById('input-location').value;
@@ -871,8 +885,48 @@ function saveAllSettings() {
   });
   state.fxColor = document.getElementById('fx-color').value;
 
+  try {
+    await downloadAssetsPackage();
+    alert('✅ curbtree-package.zip downloaded! It contains profile.json plus an assets/ folder with every new song/image/video file you\'ve picked — unzip it and upload the contents to your GitHub repo. Next time the page loads, those files will load from /assets/ automatically.');
+  } catch (e) {
+    console.error('Zip build failed:', e);
+    downloadProfileJSON();
+    alert('⚠️ Could not build the assets zip, so just profile.json was downloaded. Upload your song/image/video files manually alongside it.');
+  }
   applyAllSettings();
-  downloadProfileJSON();
+}
+
+// ─── ASSETS ZIP PACKAGE ──────────────────────────────────────
+// Bundles whatever files were picked via the file inputs this session, under
+// an assets/ folder, together with profile.json, so the whole thing can be
+// dragged straight into a GitHub repo (or wherever the site is hosted).
+// Every song that has a locally-picked file gets included, not just the
+// currently-playing one. Files already referenced by a plain URL (http/https
+// or an existing /assets/... path with no local pick) are left alone — only
+// genuinely new local picks need bundling.
+async function downloadAssetsPackage() {
+  if (typeof JSZip === 'undefined') throw new Error('JSZip not available');
+  const zip = new JSZip();
+  const folder = zip.folder('assets');
+  let fileCount = 0;
+
+  if (assetFiles.pfp) { folder.file(assetFiles.pfp.name, assetFiles.pfp); fileCount++; }
+  if (assetFiles.bg) { folder.file(assetFiles.bg.name, assetFiles.bg); fileCount++; }
+  Object.keys(assetFiles.songs).forEach(songId => {
+    const file = assetFiles.songs[songId];
+    if (file) { folder.file(file.name, file); fileCount++; }
+  });
+
+  zip.file('profile.json', JSON.stringify(state, null, 2));
+
+  const blob = await zip.generateAsync({ type: 'blob' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'curbtree-package.zip';
+  a.click();
+  URL.revokeObjectURL(url);
+  return fileCount;
 }
 
 // ─── FILE PICKERS (avatar / background) ─────────────────────
@@ -891,11 +945,13 @@ function handleFileSelect(e, kind) {
 
   if (kind === 'pfp') {
     assetPreviewBlobs.pfp = blobUrl;
+    assetFiles.pfp = file;
     state.pfpUrl = suggestedPath;
     document.getElementById('input-pfp-url').value = suggestedPath;
     DOM.displayPfp.src = blobUrl;
   } else if (kind === 'bg') {
     assetPreviewBlobs.bg = blobUrl;
+    assetFiles.bg = file;
     state.bgUrl = suggestedPath;
     document.getElementById('input-bg-url').value = suggestedPath;
     const type = file.type.startsWith('video') ? 'video' : 'image';
@@ -1773,7 +1829,7 @@ function renderEditorSongs() {
       </div>
       <input value="${song.url || ''}" oninput="updateSong('${song.id}','url',this.value)" placeholder="/assets/song.mp3" class="w-full bg-[#111] border border-[#444] rounded px-1 py-0.5 text-white" />
       <input type="file" accept="audio/*" onchange="handleSongFileSelect(event,'${song.id}')" class="w-full text-[0.6rem] text-gray-400 file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[0.6rem] file:bg-blue-600/60 file:text-white" />
-      ${hasLocalPreview ? '<div class="text-[0.6rem] text-green-400"><i class="fas fa-circle-check"></i> Local file loaded — playable in this tab</div>' : ''}
+      ${hasLocalPreview ? '<div class="text-[0.6rem] text-green-400"><i class="fas fa-circle-check"></i> Local file loaded — playable now, included in next Save & Download Package</div>' : ''}
       ${isCurrent ? '<div class="text-[0.6rem] text-blue-400"><i class="fas fa-volume-high"></i> Now playing</div>' : ''}
     `;
     c.appendChild(d);
@@ -1792,6 +1848,7 @@ function removeSong(id) {
   if (idx === -1) return;
   state.songs.splice(idx, 1);
   delete assetPreviewBlobs.songs[id];
+  delete assetFiles.songs[id];
   if (state.currentSongIndex >= state.songs.length) {
     state.currentSongIndex = Math.max(0, state.songs.length - 1);
   }
@@ -1845,6 +1902,7 @@ function handleSongFileSelect(e, id) {
   const blobUrl = URL.createObjectURL(file);
   const suggestedPath = '/assets/' + file.name;
   assetPreviewBlobs.songs[id] = blobUrl;
+  assetFiles.songs[id] = file;
 
   const s = state.songs.find(x => x.id === id);
   if (s) {
