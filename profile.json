@@ -15,7 +15,7 @@
   "badgeScale": 1.5,
   "bgType": "video",
   "bgUrl": "https://res.cloudinary.com/agrc4zdb/video/upload/v1784136136/326a94bd-295d-4ef2-ac19-b54f4b5ac28f_kxhep4.mp4",
-  "bgBrightness": 1.8,
+  "bgBrightness": 0.75,
   "songs": [
     {
       "id": "d8wdh5",
@@ -28,14 +28,14 @@
       "name": "Almost Back - Lucki"
     }
   ],
-  "currentSongIndex": 0,
+  "currentSongIndex": 1,
   "audioPlaying": true,
-  "frameBg": "#ffffff",
-  "frameTransparency": 0.16,
-  "frameOutline": 0.27,
-  "frameBlur": 2,
+  "frameBg": "#000000",
+  "frameTransparency": 0.35,
+  "frameOutline": 0.09,
+  "frameBlur": 4.5,
   "frameShadow": true,
-  "frameBorderWidth": 3,
+  "frameBorderWidth": 1,
   "frameBorderColor": "#ffffff",
   "frameWidth": 717,
   "frameHeight": 361,
@@ -117,17 +117,17 @@
       "textColor": "#ff4242"
     }
   ],
-  "fx": "snow",
+  "fx": "rain",
   "fxColor": "#ff0000",
-  "usernameFont": "font-dm-sans",
+  "usernameFont": "font-space-grotesk",
   "usernameWeight": "font-weight-extrabold",
-  "bioFont": "font-inter",
+  "bioFont": "font-space-grotesk",
   "bioWeight": "font-weight-normal",
-  "musicFont": "font-inter",
+  "musicFont": "font-space-grotesk",
   "musicWeight": "font-weight-normal",
   "statsFont": "font-inter",
   "statsWeight": "font-weight-normal",
-  "socialFont": "font-inter",
+  "socialFont": "font-space-grotesk",
   "socialWeight": "font-weight-semibold",
   "audioUrl": "/assets/song.mp3",
   "musicDisplayName": "Almost Back - Lucki"
