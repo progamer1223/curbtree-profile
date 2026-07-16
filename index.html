@@ -121,12 +121,13 @@
     .stats-bar .stat-item { display:flex; align-items:center; gap:5px; transition: color 0.2s; }
     .stats-bar .stat-item i { font-size:0.7rem; opacity:0.7; }
 
-    /* Neon glow effect */
+    /* Neon glow class */
     .neon-text {
-      text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 40px currentColor, 0 0 80px currentColor;
-      filter: drop-shadow(0 0 10px currentColor);
+      text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 40px currentColor, 0 0 80px currentColor !important;
+      filter: drop-shadow(0 0 10px currentColor) !important;
     }
 
+    /* Font classes with !important to ensure override */
     .font-weight-normal { font-weight: 400 !important; }
     .font-weight-medium { font-weight: 500 !important; }
     .font-weight-semibold { font-weight: 600 !important; }
@@ -362,7 +363,7 @@
         <label><input type="radio" name="fx" value="none" checked onchange="setEffect('none')" /> None</label>
         <label><input type="radio" name="fx" value="snow" onchange="setEffect('snow')" /> Snow</label>
         <label><input type="radio" name="fx" value="rain" onchange="setEffect('rain')" /> Rain</label>
-        <label><input type="radio" name="fx" value="pixel" onchange="setEffect('pixel')" /> Old TV (Grain)</label>
+        <label><input type="radio" name="fx" value="pixel" onchange="setEffect('pixel')" /> Old TV (Pixel)</label>
       </div>
       <div class="flex items-center gap-2"><label class="text-xs text-gray-400">FX Color</label><input type="color" id="fx-color" value="#ffffff" onchange="updateFxColor()" class="w-6 h-6 p-0 border-0 bg-transparent" /></div>
     </div>
@@ -457,13 +458,12 @@ async function fetchDiscordPFP() {
   try {
     const res = await fetch(`https://api.webtop.gg/v1/users/${uid}/avatar`);
     if (!res.ok) throw new Error('User not found');
-    const url = await res.text(); // direct image URL
+    const url = await res.text();
     document.getElementById('input-pfp-url').value = url;
     state.pfpUrl = url;
     DOM.displayPfp.src = getAssetUrl(url);
     alert('✅ Discord avatar loaded! Click Save All Settings to keep it.');
   } catch {
-    // fallback: try grux API
     try {
       const fallbackRes = await fetch(`https://grux.audibert.dev/user/${uid}`);
       if (!fallbackRes.ok) throw new Error('User not found');
@@ -745,7 +745,7 @@ function applyAllSettings() {
   // Typography
   applyTypography();
 
-  // Glow (neon)
+  // Glow
   applyGlow();
 
   // Typewriter
@@ -785,19 +785,39 @@ function updateSocialColor(color) { state.socialColor = color; document.querySel
 
 // ─── TYPOGRAPHY ─────────────────────────────────────────────
 function applyTypography() {
-  DOM.displayUsername.className = DOM.displayUsername.className.split(' ').filter(c => !c.startsWith('font-')).join(' ');
-  DOM.displayUsername.classList.add(state.usernameFont || 'font-inter', state.usernameWeight || 'font-weight-extrabold');
+  // Username
+  DOM.displayUsername.classList.remove('font-inter', 'font-roboto', 'font-poppins', 'font-montserrat', 'font-playfair', 'font-raleway', 'font-dm-sans', 'font-space-grotesk');
+  DOM.displayUsername.classList.add(state.usernameFont || 'font-inter');
+  DOM.displayUsername.classList.remove('font-weight-normal', 'font-weight-medium', 'font-weight-semibold', 'font-weight-bold', 'font-weight-extrabold');
+  DOM.displayUsername.classList.add(state.usernameWeight || 'font-weight-extrabold');
 
-  DOM.displayBio.className = DOM.displayBio.className.split(' ').filter(c => !c.startsWith('font-')).join(' ');
-  DOM.displayBio.classList.add(state.bioFont || 'font-inter', state.bioWeight || 'font-weight-normal');
+  // Bio
+  DOM.displayBio.classList.remove('font-inter', 'font-roboto', 'font-poppins', 'font-montserrat', 'font-playfair', 'font-raleway', 'font-dm-sans', 'font-space-grotesk');
+  DOM.displayBio.classList.add(state.bioFont || 'font-inter');
+  DOM.displayBio.classList.remove('font-weight-normal', 'font-weight-medium', 'font-weight-semibold', 'font-weight-bold', 'font-weight-extrabold');
+  DOM.displayBio.classList.add(state.bioWeight || 'font-weight-normal');
 
-  DOM.inlineTrack.className = DOM.inlineTrack.className.split(' ').filter(c => !c.startsWith('font-')).join(' ');
-  DOM.inlineTrack.classList.add(state.musicFont || 'font-inter', state.musicWeight || 'font-weight-normal');
+  // Music
+  DOM.inlineTrack.classList.remove('font-inter', 'font-roboto', 'font-poppins', 'font-montserrat', 'font-playfair', 'font-raleway', 'font-dm-sans', 'font-space-grotesk');
+  DOM.inlineTrack.classList.add(state.musicFont || 'font-inter');
+  DOM.inlineTrack.classList.remove('font-weight-normal', 'font-weight-medium', 'font-weight-semibold', 'font-weight-bold', 'font-weight-extrabold');
+  DOM.inlineTrack.classList.add(state.musicWeight || 'font-weight-normal');
 
+  // Stats
   const statItems = DOM.statsBar.querySelectorAll('.stat-item');
   statItems.forEach(item => {
-    item.className = item.className.split(' ').filter(c => !c.startsWith('font-')).join(' ');
-    item.classList.add(state.statsFont || 'font-inter', state.statsWeight || 'font-weight-normal');
+    item.classList.remove('font-inter', 'font-roboto', 'font-poppins', 'font-montserrat', 'font-playfair', 'font-raleway', 'font-dm-sans', 'font-space-grotesk');
+    item.classList.add(state.statsFont || 'font-inter');
+    item.classList.remove('font-weight-normal', 'font-weight-medium', 'font-weight-semibold', 'font-weight-bold', 'font-weight-extrabold');
+    item.classList.add(state.statsWeight || 'font-weight-normal');
+  });
+
+  // Social tooltips (they are .social-tooltip class)
+  document.querySelectorAll('.social-tooltip').forEach(el => {
+    el.classList.remove('font-inter', 'font-roboto', 'font-poppins', 'font-montserrat', 'font-playfair', 'font-raleway', 'font-dm-sans', 'font-space-grotesk');
+    el.classList.add(state.socialFont || 'font-inter');
+    el.classList.remove('font-weight-normal', 'font-weight-medium', 'font-weight-semibold', 'font-weight-bold', 'font-weight-extrabold');
+    el.classList.add(state.socialWeight || 'font-weight-semibold');
   });
 }
 
@@ -950,13 +970,36 @@ function setEffect(type) {
   fxParticles = [];
   if (type === 'none') { if (ctx) ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height); return; }
 
-  let count = type === 'pixel' ? 150 : (type === 'rain' ? 200 : 220);
+  // Pixel (Old TV) effect: large blocky pixels with vibrant colors
+  if (type === 'pixel') {
+    // Create a grid of pixels that shift slowly
+    const cols = Math.floor(fxCanvas.width / 14);
+    const rows = Math.floor(fxCanvas.height / 14);
+    for (let i = 0; i < cols * rows; i++) {
+      fxParticles.push({
+        x: (i % cols) * 14 + Math.random() * 4 - 2,
+        y: Math.floor(i / cols) * 14 + Math.random() * 4 - 2,
+        w: 10 + Math.random() * 8,
+        h: 10 + Math.random() * 8,
+        r: 150 + Math.random() * 105,
+        g: 150 + Math.random() * 105,
+        b: 150 + Math.random() * 105,
+        speedX: (Math.random() - 0.5) * 0.4,
+        speedY: (Math.random() - 0.5) * 0.4
+      });
+    }
+    drawPixelEffect();
+    return;
+  }
+
+  // Snow or Rain
+  let count = type === 'rain' ? 200 : 220;
   for (let i = 0; i < count; i++) {
     fxParticles.push({
       x: Math.random() * fxCanvas.width,
       y: Math.random() * fxCanvas.height,
-      speed: type === 'rain' ? 6 + Math.random() * 10 : (type === 'pixel' ? 0.4 + Math.random() * 0.6 : 0.5 + Math.random() * 2.5),
-      size: type === 'pixel' ? 4 + Math.random() * 8 : (type === 'rain' ? 0.8 + Math.random() * 1.5 : 1.5 + Math.random() * 3),
+      speed: type === 'rain' ? 6 + Math.random() * 10 : 0.5 + Math.random() * 2.5,
+      size: type === 'rain' ? 0.8 + Math.random() * 1.5 : 1.5 + Math.random() * 3,
       length: type === 'rain' ? 15 + Math.random() * 30 : 0,
       opacity: 0.4 + Math.random() * 0.5
     });
@@ -964,41 +1007,48 @@ function setEffect(type) {
   drawFx();
 }
 
+function drawPixelEffect() {
+  if (!ctx || !fxCanvas) return;
+  ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+  const color = state.fxColor || '#ffffff';
+
+  fxParticles.forEach(p => {
+    // subtle movement
+    p.x += p.speedX * 0.1;
+    p.y += p.speedY * 0.1;
+    if (p.x < 0) p.x = fxCanvas.width;
+    if (p.x > fxCanvas.width) p.x = 0;
+    if (p.y < 0) p.y = fxCanvas.height;
+    if (p.y > fxCanvas.height) p.y = 0;
+
+    ctx.globalAlpha = 0.7;
+    // Use color from state or random vibrant
+    const col = color === '#ffffff' ? `rgb(${p.r},${p.g},${p.b})` : color;
+    ctx.fillStyle = col;
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+  });
+
+  // occasionally shift colors
+  if (Math.random() < 0.02) {
+    fxParticles.forEach(p => {
+      p.r = 150 + Math.random() * 105;
+      p.g = 150 + Math.random() * 105;
+      p.b = 150 + Math.random() * 105;
+    });
+  }
+
+  ctx.globalAlpha = 1;
+  fxAnimId = requestAnimationFrame(drawPixelEffect);
+}
+
 function drawFx() {
   if (!ctx || !fxCanvas) return;
   if (state.fx === 'none') { ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height); return; }
+  if (state.fx === 'pixel') return; // handled separately
   ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
   const color = state.fxColor || '#ffffff';
-  const isSnow = state.fx === 'snow', isRain = state.fx === 'rain', isPixel = state.fx === 'pixel';
+  const isSnow = state.fx === 'snow', isRain = state.fx === 'rain';
 
-  if (isPixel) {
-    // grain overlay – just noise, no scanlines or glitch
-    for (let i = 0; i < 250; i++) {
-      const gx = Math.random() * fxCanvas.width;
-      const gy = Math.random() * fxCanvas.height;
-      const gs = 1 + Math.random() * 3;
-      ctx.globalAlpha = 0.04 + Math.random() * 0.08;
-      ctx.fillStyle = Math.random() > 0.5 ? '#ffffff' : '#000000';
-      ctx.fillRect(gx, gy, gs, gs);
-    }
-    // subtle pixel drift
-    fxParticles.forEach(p => {
-      p.x += (Math.random() - 0.5) * 0.8;
-      p.y += (Math.random() - 0.5) * 0.8 + 0.2;
-      if (p.y > fxCanvas.height) { p.y = -10; p.x = Math.random() * fxCanvas.width; }
-      if (p.x < 0) p.x = 0;
-      if (p.x > fxCanvas.width) p.x = fxCanvas.width;
-      ctx.globalAlpha = p.opacity * 0.5;
-      ctx.fillStyle = color;
-      const sz = 2 + p.size * 0.5;
-      ctx.fillRect(p.x, p.y, sz, sz);
-    });
-    ctx.globalAlpha = 1;
-    fxAnimId = requestAnimationFrame(drawFx);
-    return;
-  }
-
-  // Snow / Rain
   fxParticles.forEach(p => {
     if (isSnow) {
       const dx = mouseX - p.x, dy = mouseY - p.y;
@@ -1262,7 +1312,6 @@ async function init() {
   renderEditorBadges();
   renderBadges();
 
-  // INIT CANVAS BEFORE applying effects
   initFxCanvas();
 
   applyAllSettings();
