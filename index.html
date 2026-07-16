@@ -108,8 +108,8 @@
       cursor:pointer;
       transition:0.2s;
     }
-    .music-player-bar .seek-slider::-webkit-slider-thumb { appearance:none; width:11px; height:11px; border-radius:50%; background:#8ab4f8; cursor:pointer; box-shadow:0 0 8px rgba(138,180,248,0.3); }
-    .music-player-bar .seek-slider::-moz-range-thumb { width:11px; height:11px; border-radius:50%; background:#8ab4f8; cursor:pointer; border:none; }
+    .music-player-bar .seek-slider::-webkit-slider-thumb { appearance:none; width:11px; height:11px; border-radius:50%; background:var(--music-thumb-color,#8ab4f8); cursor:pointer; box-shadow:0 0 8px color-mix(in srgb, var(--music-thumb-color,#8ab4f8) 30%, transparent); }
+    .music-player-bar .seek-slider::-moz-range-thumb { width:11px; height:11px; border-radius:50%; background:var(--music-thumb-color,#8ab4f8); cursor:pointer; border:none; }
     .music-player-bar .play-btn {
       background:transparent;
       border:none;
@@ -132,8 +132,8 @@
     .music-player-bar .status-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#4ade80; transition:0.2s; flex-shrink:0; }
     .music-player-bar .status-dot.paused { background:#facc15; }
     .music-player-bar .volume-slider { flex:1; min-width:60px; max-width:140px; height:3px; background:rgba(255,255,255,0.12); border-radius:4px; appearance:none; transition:0.2s; }
-    .music-player-bar .volume-slider::-webkit-slider-thumb { appearance:none; width:12px; height:12px; border-radius:50%; background:#8ab4f8; cursor:pointer; box-shadow:0 0 8px rgba(138,180,248,0.3); }
-    .music-player-bar .volume-slider::-moz-range-thumb { width:12px; height:12px; border-radius:50%; background:#8ab4f8; cursor:pointer; border:none; }
+    .music-player-bar .volume-slider::-webkit-slider-thumb { appearance:none; width:12px; height:12px; border-radius:50%; background:var(--music-thumb-color,#8ab4f8); cursor:pointer; box-shadow:0 0 8px color-mix(in srgb, var(--music-thumb-color,#8ab4f8) 30%, transparent); }
+    .music-player-bar .volume-slider::-moz-range-thumb { width:12px; height:12px; border-radius:50%; background:var(--music-thumb-color,#8ab4f8); cursor:pointer; border:none; }
     .music-player-bar .spacer { flex:1; min-width:10px; }
     .music-player-bar .vol-icon { color:#888; font-size:0.8rem; flex-shrink:0; transition: color 0.2s; }
 
@@ -223,6 +223,59 @@
     #scanlines.active {
       opacity: 0.55;
     }
+
+    /* ─── RESIZE HANDLES (edit mode only) ───────────────────── */
+    #tilt-group.resize-mode #main-frame {
+      outline: 1.5px dashed rgba(138,180,248,0.6);
+      outline-offset: 3px;
+    }
+    .resize-handle {
+      position: absolute;
+      background: #8ab4f8;
+      border: 2px solid #0b0b0b;
+      border-radius: 4px;
+      z-index: 20;
+      display: none;
+    }
+    #tilt-group.resize-mode .resize-handle { display: block; }
+    .resize-handle.corner { width: 14px; height: 14px; }
+    .resize-handle.edge-e { width: 8px; height: 40px; top: 50%; right: -4px; transform: translateY(-50%); cursor: ew-resize; border-radius: 6px; }
+    .resize-handle.edge-s { height: 8px; width: 40px; bottom: -4px; left: 50%; transform: translateX(-50%); cursor: ns-resize; border-radius: 6px; }
+    .resize-handle.corner-se { right: -7px; bottom: -7px; cursor: nwse-resize; }
+    #resize-dims-label {
+      position: absolute;
+      top: -34px;
+      left: 0;
+      background: rgba(0,0,0,0.75);
+      color: #8ab4f8;
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 8px;
+      display: none;
+      z-index: 21;
+      white-space: nowrap;
+    }
+    #tilt-group.resize-mode.actively-resizing #resize-dims-label { display: block; }
+    #scale-mode-toggle {
+      position: absolute;
+      top: -38px;
+      left: 0;
+      display: none;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0,0,0,0.3);
+      backdrop-filter: blur(6px);
+      padding: 4px 12px;
+      border-radius: 30px;
+      border: 1px solid rgba(255,255,255,0.06);
+      font-size: 0.65rem;
+      cursor: pointer;
+      color: #ccc;
+      user-select: none;
+      z-index: 6;
+    }
+    #scale-mode-toggle.on { color: #8ab4f8; border-color: rgba(138,180,248,0.4); }
   </style>
 </head>
 <body>
@@ -261,8 +314,12 @@
     <i class="fas fa-sliders-h"></i> Edit
   </button>
 
-  <div class="flex flex-col gap-4 w-full max-w-[1000px] animate-fade-in relative mt-8">
+  <div class="flex flex-col gap-4 w-full animate-fade-in relative mt-8" id="outer-wrap" style="max-width:1000px;">
     <div id="tilt-group" class="tilt-group flex flex-col gap-4 relative">
+
+      <div id="scale-mode-toggle" onclick="toggleScaleMode()">
+        <i class="fas fa-up-right-and-down-left-from-center"></i> <span id="scale-mode-label">Resize: off</span>
+      </div>
 
       <div class="stats-bar" id="stats-bar">
         <span class="stat-item" id="view-stat">
@@ -280,6 +337,10 @@
 
       <!-- TOP FRAME -->
       <div class="glass-card p-5 sm:p-8 main-frame-tall relative frame-common" id="main-frame">
+        <div id="resize-dims-label">400 × 340</div>
+        <div class="resize-handle corner corner-se" onmousedown="startResize(event,'se')"></div>
+        <div class="resize-handle edge-e" onmousedown="startResize(event,'e')"></div>
+        <div class="resize-handle edge-s" onmousedown="startResize(event,'s')"></div>
         <div class="top-frame-content">
           <div class="profile-pic-offset">
             <img id="display-pfp" src="https://placehold.co/140x140/222/FFF?text=Avatar" alt="profile" class="w-28 h-28 sm:w-36 sm:h-36 rounded-2xl object-cover border-2 border-white/10 shadow-2xl transition-transform hover:scale-105 duration-300" />
@@ -490,6 +551,23 @@
       </div>
     </div>
 
+    <!-- FRAME DIMENSIONS SECTION -->
+    <div class="border-t border-white/5 pt-4 space-y-3" id="frame-dimensions-section">
+      <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Frame Dimensions</h3>
+      <p style="font-size:0.6rem; color:#666;">Drag the handles on the main frame (top-left toggle "Resize"), or type exact numbers here. Everything inside scales to fit.</p>
+      <div class="flex items-center gap-3">
+        <label class="text-xs text-gray-400 w-14">Width</label>
+        <input type="number" id="input-frame-width" min="280" max="1400" step="1" placeholder="auto" class="w-24 bg-[#222] border border-[#333] rounded-lg px-2 py-1 text-xs text-white" onchange="updateFrameDimsFromInputs()" />
+        <span class="text-xs text-gray-500">px</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <label class="text-xs text-gray-400 w-14">Height</label>
+        <input type="number" id="input-frame-height" min="220" max="1400" step="1" placeholder="auto" class="w-24 bg-[#222] border border-[#333] rounded-lg px-2 py-1 text-xs text-white" onchange="updateFrameDimsFromInputs()" />
+        <span class="text-xs text-gray-500">px</span>
+      </div>
+      <button onclick="resetFrameDims()" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1 rounded"><i class="fas fa-rotate-left"></i> Reset to default size</button>
+    </div>
+
     <div class="border-t border-white/5 pt-4 space-y-2">
       <div class="flex justify-between"><h3 class="text-xs font-semibold text-gray-400">Badges</h3><button onclick="addBadge()" class="text-xs bg-blue-600/60 px-2 py-0.5 rounded">+</button></div>
       <div id="editor-badges" class="space-y-1.5"></div>
@@ -530,6 +608,7 @@ if (isEditMode) {
 }
 
 const EDIT_PASSWORD = "curbtree";
+let editorUnlocked = false;
 
 function unlockEditor() {
   const input = document.getElementById('lock-password');
@@ -539,6 +618,8 @@ function unlockEditor() {
     document.getElementById('lock-screen').style.display = 'none';
     document.getElementById('edit-btn').style.display = 'flex';
     error.style.display = 'none';
+    editorUnlocked = true;
+    updateScaleModeToggleVisibility();
   } else {
     error.style.display = 'block';
     input.value = '';
@@ -549,6 +630,7 @@ function unlockEditor() {
 if (localStorage.getItem('curbtree_trusted') === 'true' && isEditMode) {
   document.getElementById('lock-screen').style.display = 'none';
   document.getElementById('edit-btn').style.display = 'flex';
+  editorUnlocked = true;
 }
 
 // ─── STATE ──────────────────────────────────────────────────
@@ -574,6 +656,11 @@ const state = {
   frameTransparency: 0.55,
   frameOutline: 0.08,
   frameBlur: 10,
+  // Main frame dimensions in px. null = auto/default (matches original
+  // min-height:340/400 + intrinsic content width behavior). Once set, the
+  // frame is pinned to that exact size and internal content scales to match.
+  frameWidth: null,
+  frameHeight: null,
   typewriter: { enabled: false, applyUsername: false, cursor: false, typeSpeed: 50, deleteSpeed: 25, pauseTime: 1500, lineGap: 300 },
   glowEffect: {
     enabled: false,
@@ -622,6 +709,7 @@ const DOM = {
   editorBadges: document.getElementById('editor-badges'),
   editorSongs: document.getElementById('editor-songs'),
   tiltGroup: document.getElementById('tilt-group'),
+  outerWrap: document.getElementById('outer-wrap'),
   badgeContainer: document.getElementById('badge-container'),
   mainFrame: document.getElementById('main-frame'),
   bottomFrame: document.getElementById('bottom-frame'),
@@ -637,7 +725,10 @@ const DOM = {
   inlineDurationTime: document.getElementById('inline-duration-time'),
   locationDisplay: document.getElementById('location-display'),
   volumeIcon: document.getElementById('volume-icon'),
-  statsBar: document.getElementById('stats-bar')
+  statsBar: document.getElementById('stats-bar'),
+  scaleModeToggle: document.getElementById('scale-mode-toggle'),
+  scaleModeLabel: document.getElementById('scale-mode-label'),
+  resizeDimsLabel: document.getElementById('resize-dims-label')
 };
 
 // ─── SELECTED ASSET FILES (for live preview + zip export) ──
@@ -756,6 +847,10 @@ async function saveAllSettings() {
   state.frameTransparency = parseInt(document.getElementById('frame-transparency').value) / 100;
   state.frameOutline = parseInt(document.getElementById('frame-outline-opacity').value) / 100;
   state.frameBlur = parseFloat(document.getElementById('frame-blur').value);
+
+  // Frame dimensions (already kept live in state by updateFrameDimsFromInputs /
+  // drag handlers, re-read here for safety in case of stray edits)
+  updateFrameDimsFromInputs(true);
 
   // Effects
   document.querySelectorAll('input[name="fx"]').forEach(el => {
@@ -886,6 +981,166 @@ function applyFrameStyles(bg, transparency, outline, blur) {
   });
 }
 
+// ─── FRAME DIMENSIONS (resizable main frame, edit mode only) ──
+// The default/undeformed size is captured once on init from the frame's
+// natural rendered box (which itself responds to the responsive
+// .main-frame-tall min-heights + intrinsic content width). Once the user
+// sets an explicit width/height (via drag or the inputs), we pin the frame
+// to px dimensions and scale ALL of its inner content (via a transform
+// scale on the inner content wrapper) so everything — avatar, text, music
+// player — grows/shrinks together rather than just leaving empty space or
+// clipping.
+let defaultFrameSize = null; // {w,h} captured on first layout
+
+function captureDefaultFrameSize() {
+  if (defaultFrameSize) return;
+  const r = DOM.mainFrame.getBoundingClientRect();
+  defaultFrameSize = { w: Math.round(r.width), h: Math.round(r.height) };
+}
+
+function applyFrameDimensions() {
+  captureDefaultFrameSize();
+  const targetW = state.frameWidth || defaultFrameSize.w;
+  const targetH = state.frameHeight || defaultFrameSize.h;
+
+  if (state.frameWidth || state.frameHeight) {
+    DOM.mainFrame.style.width = targetW + 'px';
+    DOM.mainFrame.style.height = targetH + 'px';
+    DOM.mainFrame.style.minHeight = targetH + 'px';
+    DOM.mainFrame.style.flex = 'none';
+    DOM.outerWrap.style.maxWidth = 'none';
+    DOM.outerWrap.style.width = targetW + 'px';
+
+    // Scale inner content proportionally to how far we are from the
+    // captured default size, so text/avatar/player all grow together.
+    const scaleW = targetW / defaultFrameSize.w;
+    const scaleH = targetH / defaultFrameSize.h;
+    const scale = Math.max(0.5, Math.min(2.2, Math.min(scaleW, scaleH)));
+    const inner = DOM.mainFrame.querySelector('.top-frame-content');
+    if (inner) {
+      inner.style.transform = `scale(${scale})`;
+      inner.style.transformOrigin = 'top left';
+      // Compensate the layout box so scaled content doesn't overflow/clip
+      // and the flex column still sizes correctly.
+      inner.style.width = (100 / scale) + '%';
+    }
+  } else {
+    // Reset to default responsive behavior
+    DOM.mainFrame.style.width = '';
+    DOM.mainFrame.style.height = '';
+    DOM.mainFrame.style.minHeight = '';
+    DOM.mainFrame.style.flex = '';
+    DOM.outerWrap.style.width = '';
+    DOM.outerWrap.style.maxWidth = '1000px';
+    const inner = DOM.mainFrame.querySelector('.top-frame-content');
+    if (inner) {
+      inner.style.transform = '';
+      inner.style.width = '';
+    }
+  }
+
+  // Keep the number inputs and the drag label in sync
+  const wInput = document.getElementById('input-frame-width');
+  const hInput = document.getElementById('input-frame-height');
+  if (wInput) wInput.value = state.frameWidth || '';
+  if (hInput) hInput.value = state.frameHeight || '';
+  DOM.resizeDimsLabel.textContent = Math.round(targetW) + ' × ' + Math.round(targetH);
+}
+
+function updateFrameDimsFromInputs(silent) {
+  if (!isEditMode || !editorUnlocked) return;
+  const wInput = document.getElementById('input-frame-width');
+  const hInput = document.getElementById('input-frame-height');
+  if (!wInput || !hInput) return;
+  const w = parseInt(wInput.value);
+  const h = parseInt(hInput.value);
+  state.frameWidth = isFinite(w) && w > 0 ? Math.max(280, Math.min(1400, w)) : null;
+  state.frameHeight = isFinite(h) && h > 0 ? Math.max(220, Math.min(1400, h)) : null;
+  applyFrameDimensions();
+  if (!silent) persistState();
+}
+
+function resetFrameDims() {
+  if (!isEditMode || !editorUnlocked) return;
+  state.frameWidth = null;
+  state.frameHeight = null;
+  applyFrameDimensions();
+  persistState();
+}
+
+// ─── SCALE / RESIZE MODE (drag handles, edit mode only) ─────
+let scaleModeOn = false;
+let resizing = false;
+let resizeDir = null;
+let resizeStart = { x: 0, y: 0, w: 0, h: 0 };
+let tiltWasEnabledBeforeScaleMode = true;
+
+function updateScaleModeToggleVisibility() {
+  DOM.scaleModeToggle.style.display = (isEditMode && editorUnlocked) ? 'flex' : 'none';
+}
+
+function toggleScaleMode() {
+  if (!isEditMode || !editorUnlocked) return;
+  scaleModeOn = !scaleModeOn;
+  DOM.scaleModeToggle.classList.toggle('on', scaleModeOn);
+  DOM.scaleModeLabel.textContent = 'Resize: ' + (scaleModeOn ? 'on' : 'off');
+  DOM.tiltGroup.classList.toggle('resize-mode', scaleModeOn);
+
+  // Turning scale mode on disables tilt for the duration (and restores the
+  // user's saved tilt preference when turning it back off), so dragging to
+  // resize never fights the tilt transform on the same element.
+  if (scaleModeOn) {
+    tiltWasEnabledBeforeScaleMode = state.tilt.enabled;
+    state.tilt.enabled = false;
+    tarRX = 0; tarRY = 0; tarS = 1;
+  } else {
+    state.tilt.enabled = tiltWasEnabledBeforeScaleMode;
+  }
+  const tiltCheckbox = document.getElementById('tilt-enabled');
+  if (tiltCheckbox) {
+    tiltCheckbox.checked = state.tilt.enabled;
+    tiltCheckbox.disabled = scaleModeOn;
+  }
+}
+
+function startResize(e, dir) {
+  if (!isEditMode || !editorUnlocked || !scaleModeOn) return;
+  e.preventDefault();
+  e.stopPropagation();
+  resizing = true;
+  resizeDir = dir;
+  captureDefaultFrameSize();
+  const r = DOM.mainFrame.getBoundingClientRect();
+  resizeStart = { x: e.clientX, y: e.clientY, w: r.width, h: r.height };
+  DOM.tiltGroup.classList.add('actively-resizing');
+  document.addEventListener('mousemove', onResizeMove);
+  document.addEventListener('mouseup', stopResize);
+}
+
+function onResizeMove(e) {
+  if (!resizing) return;
+  const dx = e.clientX - resizeStart.x;
+  const dy = e.clientY - resizeStart.y;
+  let newW = resizeStart.w;
+  let newH = resizeStart.h;
+  if (resizeDir === 'e' || resizeDir === 'se') newW = resizeStart.w + dx;
+  if (resizeDir === 's' || resizeDir === 'se') newH = resizeStart.h + dy;
+  newW = Math.max(280, Math.min(1400, newW));
+  newH = Math.max(220, Math.min(1400, newH));
+  state.frameWidth = Math.round(newW);
+  state.frameHeight = Math.round(newH);
+  applyFrameDimensions();
+}
+
+function stopResize() {
+  resizing = false;
+  resizeDir = null;
+  DOM.tiltGroup.classList.remove('actively-resizing');
+  document.removeEventListener('mousemove', onResizeMove);
+  document.removeEventListener('mouseup', stopResize);
+  persistState();
+}
+
 // ─── APPLY ALL SETTINGS ─────────────────────────────────────
 function applyAllSettings() {
   // Profile
@@ -923,6 +1178,7 @@ function applyAllSettings() {
   DOM.volumeIcon.style.color = state.musicColor;
   if (DOM.inlineCurrentTime) DOM.inlineCurrentTime.style.color = state.musicColor;
   if (DOM.inlineDurationTime) DOM.inlineDurationTime.style.color = state.musicColor;
+  applyMusicThumbColor();
 
   // Stats
   const statItems = DOM.statsBar.querySelectorAll('.stat-item');
@@ -930,6 +1186,10 @@ function applyAllSettings() {
 
   // Frame
   applyFrameStyles(state.frameBg, state.frameTransparency, state.frameOutline, state.frameBlur);
+
+  // Frame dimensions (must run after frame is in the DOM/laid out so the
+  // default size capture reflects real rendered size)
+  applyFrameDimensions();
 
   // Typography
   applyTypography();
@@ -943,6 +1203,18 @@ function applyAllSettings() {
 
   // Effects
   if (state.fx && state.fx !== 'none') setEffect(state.fx);
+
+  updateScaleModeToggleVisibility();
+}
+
+// Volume + seek slider thumbs are tinted to match the music text color
+// (state.musicColor) via a CSS custom property, instead of the old
+// hardcoded #8ab4f8, so they visually match whatever color the user picks
+// for the music text/icons.
+function applyMusicThumbColor() {
+  if (DOM.inlineMusic) {
+    DOM.inlineMusic.style.setProperty('--music-thumb-color', state.musicColor || '#8ab4f8');
+  }
 }
 
 // ─── DOWNLOAD profile.json ──────────────────────────────────
@@ -966,7 +1238,7 @@ function updateLocation(val) { state.location = val; DOM.locationDisplay.textCon
 function updatePreview() { state.username = document.getElementById('input-username').value; DOM.displayUsername.textContent = state.username; persistState(); }
 function updateUsernameColor(color) { state.usernameColor = color; DOM.displayUsername.style.color = color; persistState(); }
 function updateBioColor(color) { state.bioColor = color; DOM.displayBio.style.color = color; persistState(); }
-function updateMusicColor(color) { state.musicColor = color; DOM.inlineTrack.style.color = color; DOM.volumeIcon.style.color = color; if (DOM.inlineCurrentTime) DOM.inlineCurrentTime.style.color = color; if (DOM.inlineDurationTime) DOM.inlineDurationTime.style.color = color; persistState(); }
+function updateMusicColor(color) { state.musicColor = color; DOM.inlineTrack.style.color = color; DOM.volumeIcon.style.color = color; if (DOM.inlineCurrentTime) DOM.inlineCurrentTime.style.color = color; if (DOM.inlineDurationTime) DOM.inlineDurationTime.style.color = color; applyMusicThumbColor(); persistState(); }
 function updateStatsColor(color) { state.statsColor = color; const items = DOM.statsBar.querySelectorAll('.stat-item'); items.forEach(item => item.style.color = color); persistState(); }
 function updateSocialColor(color) { state.socialColor = color; document.querySelectorAll('.social-tooltip').forEach(el => el.style.color = color); persistState(); }
 
@@ -1147,14 +1419,16 @@ function applyCursorClasses() {
   DOM.displayUsername.classList.toggle('typewriter-cursor', showCursor && state.typewriter.applyUsername);
 }
 
-// ─── TRACK NAME TYPEWRITER (song changes only) ───────────────
-// Independent of the username/bio typewriter toggle above — this always
-// plays whenever the active song changes (next/prev/auto-advance), erasing
-// the old track name then typing in the new one. Reuses the same
-// type/delete speed sliders from the Typewriter panel for consistency.
+// ─── TRACK NAME TYPEWRITER (song changes / replays) ──────────
+// Plays whenever the active song changes (next/prev/auto-advance) OR
+// restarts (looping back to itself), erasing the old track name then typing
+// in the new one. Reuses the same type/delete speed sliders from the
+// Typewriter panel for consistency. `force` lets callers replay the effect
+// even when newName is identical to what's already showing (e.g. a single
+// song looping back to itself).
 let trackNameTimer = null;
 
-function typewriterTrackName(newName) {
+function typewriterTrackName(newName, force) {
   clearTimeout(trackNameTimer);
   const el = DOM.inlineTrack;
   const oldText = el.textContent || '';
@@ -1171,6 +1445,12 @@ function typewriterTrackName(newName) {
 
   if (!oldText) { type(); return; }
 
+  if (oldText === newName && !force) {
+    // Same name and not forced: nothing to animate, just make sure it's set.
+    el.textContent = newName;
+    return;
+  }
+
   let i = oldText.length;
   (function erase() {
     i--;
@@ -1186,7 +1466,11 @@ let curRX = 0, curRY = 0, tarRX = 0, tarRY = 0, curS = 1, tarS = 1, tiltLoop = n
 function updateTiltSetting(key, val) { state.tilt[key] = val; if (!state.tilt.enabled) { tarRX = 0; tarRY = 0; tarS = 1; } persistState(); }
 
 function tiltLoopFn() {
-  if (!state.tilt.enabled) { tarRX = 0; tarRY = 0; tarS = 1; }
+  // Tilt is suppressed entirely while resize/scale mode is active, so
+  // dragging the resize handles never fights the tilt transform on the
+  // same #tilt-group element.
+  const tiltActive = state.tilt.enabled && !scaleModeOn;
+  if (!tiltActive) { tarRX = 0; tarRY = 0; tarS = 1; }
   curRX += (tarRX - curRX) * state.tilt.speed;
   curRY += (tarRY - curRY) * state.tilt.speed;
   curS += (tarS - curS) * state.tilt.speed;
@@ -1201,7 +1485,7 @@ function initTilt() {
   const g = DOM.tiltGroup;
   if (!g || g._tilt) return;
   g.addEventListener('mousemove', e => {
-    if (!state.tilt.enabled) return;
+    if (!state.tilt.enabled || scaleModeOn) return;
     const r = g.getBoundingClientRect();
     const x = e.clientX - r.left, y = e.clientY - r.top;
     tarRX = ((y - r.height / 2) / r.height * 2) * -state.tilt.intensity;
@@ -1375,8 +1659,10 @@ function refreshMusicDisplay() {
 }
 
 // Switches to the song at `index` (wrapping around), plays the track-name
-// typewriter transition, and optionally starts playback.
-function goToSong(index, shouldPlay) {
+// typewriter transition, and optionally starts playback. `forceTypewriter`
+// replays the typewriter effect even if landing on the same song (used when
+// a single-song playlist loops back to itself).
+function goToSong(index, shouldPlay, forceTypewriter) {
   if (!state.songs || !state.songs.length) return;
   const len = state.songs.length;
   index = ((index % len) + len) % len;
@@ -1385,7 +1671,7 @@ function goToSong(index, shouldPlay) {
   updateAudioLoopFlag();
 
   DOM.audioPlayer.src = getAssetUrl(song.url);
-  typewriterTrackName(song.name);
+  typewriterTrackName(song.name, forceTypewriter);
   resetSeekBar();
 
   if (shouldPlay) {
@@ -1797,6 +2083,9 @@ async function init() {
   document.getElementById('frame-outline-opacity').value = Math.round((state.frameOutline || 0.08) * 100);
   document.getElementById('frame-blur').value = state.frameBlur || 10;
 
+  document.getElementById('input-frame-width').value = state.frameWidth || '';
+  document.getElementById('input-frame-height').value = state.frameHeight || '';
+
   document.getElementById('tilt-enabled').checked = state.tilt.enabled;
   document.getElementById('tilt-intensity').value = state.tilt.intensity;
   document.getElementById('tilt-speed').value = state.tilt.speed;
@@ -1827,14 +2116,30 @@ async function init() {
 
   if (state.fx !== 'none') setEffect(state.fx);
 
-  // Advance to the next track automatically when one ends (only relevant
-  // once there are 2+ songs — updateAudioLoopFlag() disables native <audio>
-  // looping in that case so 'ended' actually fires).
+  // Advance to the next track automatically when one ends. With 2+ songs
+  // this goes to the next track (updateAudioLoopFlag() disables native
+  // <audio> looping in that case so 'ended' actually fires). With exactly
+  // one song, native `loop` handles the actual restart of playback, but
+  // that means 'ended' never fires for it — so we drive the typewriter
+  // replay for that case off the 'seeked backward to (near) 0' pattern
+  // native looping produces (currentTime resets), detected in timeupdate.
   DOM.audioPlayer.addEventListener('ended', () => {
     if (state.songs && state.songs.length > 1) {
-      goToSong(state.currentSongIndex + 1, true);
+      goToSong(state.currentSongIndex + 1, true, false);
       renderEditorSongs();
     }
+  });
+
+  let lastAudioTime = 0;
+  DOM.audioPlayer.addEventListener('timeupdate', () => {
+    const cur = DOM.audioPlayer.currentTime || 0;
+    // Detect a loop restart: time jumped backward sharply while looping a
+    // single song (native `loop` doesn't fire 'ended', it just resets
+    // currentTime to 0 and keeps playing).
+    if (DOM.audioPlayer.loop && lastAudioTime > 1 && cur < 0.3 && state.songs && state.songs.length === 1) {
+      typewriterTrackName(state.songs[0].name, true);
+    }
+    lastAudioTime = cur;
   });
 
   const count = parseInt(localStorage.getItem('curbtree_views')) || 0;
