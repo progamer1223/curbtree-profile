@@ -15,6 +15,9 @@
   </script>
   <script defer src="/_vercel/insights/script.js"></script>
 
+  <!-- JSZip: used to bundle selected asset files + profile.json into one downloadable package -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
   <style>
     * { box-sizing: border-box; }
     body { margin:0; font-family:'Inter',sans-serif; background:#0b0b0b; color:white; overflow:hidden; height:100vh; }
@@ -142,7 +145,7 @@
     .font-dm-sans { font-family: 'DM Sans', sans-serif !important; }
     .font-space-grotesk { font-family: 'Space Grotesk', sans-serif !important; }
 
-    /* Pixel TV overlay: tight, well-defined CRT-style grid, only when active */
+    /* Pixel TV overlay: tight, squared, well-defined CRT-style grid, only when active */
     #pixel-grid {
       position: fixed;
       top: 0;
@@ -152,15 +155,15 @@
       pointer-events: none;
       z-index: 3;
       background-image: 
-        linear-gradient(rgba(0,0,0,0.22) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,0,0,0.22) 1px, transparent 1px);
-      background-size: 3px 3px;
+        linear-gradient(rgba(0,0,0,0.3) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.3) 1px, transparent 1px);
+      background-size: 2px 2px;
       opacity: 0;
       transition: opacity 0.3s;
       mix-blend-mode: multiply;
     }
     #pixel-grid.active {
-      opacity: 0.9;
+      opacity: 0.95;
     }
     /* scanline overlay for extra TV feel - tighter spacing, more defined lines */
     #scanlines {
@@ -301,10 +304,12 @@
         <div>
           <label class="block text-xs text-gray-400">Profile Picture URL</label>
           <input type="text" id="input-pfp-url" value="" placeholder="/assets/avatar.gif" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" oninput="updatePfpUrl(this.value)" />
+          <input type="file" id="input-pfp-file" accept="image/*" onchange="handleFileSelect(event,'pfp')" class="w-full text-[0.65rem] text-gray-400 mt-1 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-blue-600/60 file:text-white" />
         </div>
         <div>
           <label class="block text-xs text-gray-400">Background URL</label>
           <input type="text" id="input-bg-url" value="" placeholder="/assets/bg.mp4 or Cloudinary URL" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" oninput="updateBgUrl(this.value)" />
+          <input type="file" id="input-bg-file" accept="image/*,video/*" onchange="handleFileSelect(event,'bg')" class="w-full text-[0.65rem] text-gray-400 mt-1 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-blue-600/60 file:text-white" />
         </div>
         <div>
           <label class="block text-xs text-gray-400">Background Type</label>
@@ -317,11 +322,13 @@
         <div>
           <label class="block text-xs text-gray-400">Music URL</label>
           <input type="text" id="input-audio-url" value="" placeholder="/assets/song.mp3" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" oninput="updateAudioUrl(this.value)" />
+          <input type="file" id="input-audio-file" accept="audio/*" onchange="handleFileSelect(event,'audio')" class="w-full text-[0.65rem] text-gray-400 mt-1 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-blue-600/60 file:text-white" />
         </div>
         <div>
           <label class="block text-xs text-gray-400">Music Display Name</label>
           <input type="text" id="input-music-name" value="track.mp3" oninput="updateMusicName(this.value)" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" />
         </div>
+        <p style="font-size:0.6rem; color:#666;">Choosing a file previews it instantly and gets bundled into a ready-to-upload zip when you hit Save.</p>
       </div>
     </div>
 
@@ -384,6 +391,14 @@
       <div><h4 class="text-xs text-gray-400">Neon Glow</h4>
         <label><input type="checkbox" id="glow-enabled" onchange="updateGlowSetting('enabled',this.checked)" /> On</label>
         <div>Intensity <input type="range" id="glow-intensity" min="0.5" max="15" step="0.5" value="4" class="w-full" oninput="updateGlowSetting('intensity',parseFloat(this.value))" /></div>
+        <div class="grid grid-cols-2 gap-x-2 gap-y-1 mt-2 text-[0.65rem]">
+          <label><input type="checkbox" id="glow-target-username" checked onchange="updateGlowTarget('username',this.checked)" /> Username</label>
+          <label><input type="checkbox" id="glow-target-bio" checked onchange="updateGlowTarget('bio',this.checked)" /> Bio</label>
+          <label><input type="checkbox" id="glow-target-music" checked onchange="updateGlowTarget('music',this.checked)" /> Music text</label>
+          <label><input type="checkbox" id="glow-target-social" checked onchange="updateGlowTarget('social',this.checked)" /> Social icons</label>
+          <label><input type="checkbox" id="glow-target-badges" checked onchange="updateGlowTarget('badges',this.checked)" /> Badges</label>
+          <label><input type="checkbox" id="glow-target-stats" onchange="updateGlowTarget('stats',this.checked)" /> Stats</label>
+        </div>
       </div>
       <div><h4 class="text-xs text-gray-400">Tilt</h4>
         <label><input type="checkbox" id="tilt-enabled" checked onchange="updateTiltSetting('enabled',this.checked)" /> On</label>
@@ -508,7 +523,13 @@ const state = {
   frameOutline: 0.08,
   frameBlur: 10,
   typewriter: { enabled: false, applyUsername: false, cursor: false, typeSpeed: 50, deleteSpeed: 25, pauseTime: 1500, lineGap: 300 },
-  glowEffect: { enabled: false, intensity: 4 },
+  glowEffect: {
+    enabled: false,
+    intensity: 4,
+    // Which text/icon groups the neon glow is allowed to touch. Stats defaults
+    // off to preserve prior behavior (glow always excluded the stats bar).
+    targets: { username: true, bio: true, music: true, social: true, badges: true, stats: false }
+  },
   tilt: { enabled: true, intensity: 8, speed: 0.15 },
   links: [
     { id: '1', name: "Discord", url: "my_discord", icon: "fa-brands fa-discord", color: "#5865F2", spin: false },
@@ -516,8 +537,8 @@ const state = {
     { id: '3', name: "Website", url: "https://example.com", icon: "fa-solid fa-globe", color: "#00ffaa", spin: true }
   ],
   badges: [
-    { id: 'b1', label: "Verified", icon: "fa-solid fa-check-circle", color: "#3b82f6" },
-    { id: 'b2', label: "Pro", icon: "fa-solid fa-star", color: "#fbbf24" }
+    { id: 'b1', label: "Verified", icon: "fa-solid fa-check-circle", color: "#3b82f6", textColor: "#dddddd" },
+    { id: 'b2', label: "Pro", icon: "fa-solid fa-star", color: "#fbbf24", textColor: "#dddddd" }
   ],
   fx: 'none',
   fxColor: '#ffffff',
@@ -561,6 +582,25 @@ const DOM = {
   statsBar: document.getElementById('stats-bar')
 };
 
+// ─── SELECTED ASSET FILES (for live preview + zip export) ──
+// These hold the actual File objects picked via the file inputs. They only
+// live for the current session (browsers won't let us persist raw file
+// contents in localStorage) but that's fine — they exist so "Save" can bundle
+// them into a downloadable zip alongside profile.json.
+const assetFiles = { pfp: null, bg: null, audio: null };
+
+// ─── PERSISTENCE HELPER ─────────────────────────────────────
+// Called after every single state mutation so nothing is ever lost to a
+// refresh or closed tab — not just on the manual Save button or the 30s
+// autosave interval.
+function persistState() {
+  try {
+    localStorage.setItem('curbtree_full_profile', JSON.stringify(state));
+  } catch (e) {
+    console.warn('Could not persist state:', e);
+  }
+}
+
 // ─── CACHE-BUSTING HELPER ──────────────────────────────────
 function getAssetUrl(path) {
   if (!path) return '';
@@ -593,7 +633,7 @@ async function loadProfileFromJSON() {
 }
 
 // ─── SAVE ALL SETTINGS ──────────────────────────────────────
-function saveAllSettings() {
+async function saveAllSettings() {
   // Profile
   state.username = document.getElementById('input-username').value;
   state.location = document.getElementById('input-location').value;
@@ -654,9 +694,98 @@ function saveAllSettings() {
   });
   state.fxColor = document.getElementById('fx-color').value;
 
-  localStorage.setItem('curbtree_full_profile', JSON.stringify(state));
-  alert('✅ All settings saved!');
+  persistState();
+
+  const hadFiles = !!(assetFiles.pfp || assetFiles.bg || assetFiles.audio);
+  if (hadFiles) {
+    try {
+      await downloadAssetsPackage();
+      alert('✅ Settings saved! A curbtree-package.zip also downloaded — unzip it and upload the assets/ folder + profile.json to your GitHub repo.');
+    } catch (e) {
+      console.error('Zip build failed:', e);
+      alert('✅ Settings saved! (Could not build the assets zip — you can still use "Download profile.json" and upload your files manually.)');
+    }
+  } else {
+    alert('✅ All settings saved!');
+  }
   applyAllSettings();
+}
+
+// ─── ASSETS ZIP PACKAGE ──────────────────────────────────────
+// Bundles whatever files were picked via the file inputs, under an assets/
+// folder, together with profile.json, so the whole thing can be dragged
+// straight into a GitHub repo.
+async function downloadAssetsPackage() {
+  if (typeof JSZip === 'undefined') return;
+  const zip = new JSZip();
+  const folder = zip.folder('assets');
+  let any = false;
+  if (assetFiles.pfp) { folder.file(assetFiles.pfp.name, assetFiles.pfp); any = true; }
+  if (assetFiles.bg) { folder.file(assetFiles.bg.name, assetFiles.bg); any = true; }
+  if (assetFiles.audio) { folder.file(assetFiles.audio.name, assetFiles.audio); any = true; }
+  if (!any) return;
+
+  zip.file('profile.json', JSON.stringify(state, null, 2));
+
+  const blob = await zip.generateAsync({ type: 'blob' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'curbtree-package.zip';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ─── FILE PICKERS (avatar / background / music) ─────────────
+// Picking a file previews it immediately (via a blob URL) and fills the
+// matching URL field with a suggested /assets/<filename> path — the path
+// that will actually resolve once the file is uploaded to that location in
+// the repo. The real File object is kept in `assetFiles` so it can be zipped
+// up on Save.
+function handleFileSelect(e, kind) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const blobUrl = URL.createObjectURL(file);
+  const suggestedPath = '/assets/' + file.name;
+
+  if (kind === 'pfp') {
+    assetFiles.pfp = file;
+    state.pfpUrl = suggestedPath;
+    document.getElementById('input-pfp-url').value = suggestedPath;
+    DOM.displayPfp.src = blobUrl;
+  } else if (kind === 'bg') {
+    assetFiles.bg = file;
+    state.bgUrl = suggestedPath;
+    document.getElementById('input-bg-url').value = suggestedPath;
+    const type = file.type.startsWith('video') ? 'video' : 'image';
+    state.bgType = type;
+    document.getElementById('input-bg-type').value = type;
+    if (type === 'image') {
+      DOM.bgImage.src = blobUrl;
+      DOM.bgImage.style.display = 'block';
+      DOM.bgVideo.style.display = 'none';
+      DOM.bgVideo.pause();
+    } else {
+      DOM.bgVideo.src = blobUrl;
+      DOM.bgVideo.style.display = 'block';
+      DOM.bgImage.style.display = 'none';
+      DOM.bgVideo.muted = true;
+      DOM.bgVideo.loop = true;
+      DOM.bgVideo.playsInline = true;
+      DOM.bgVideo.play().catch(() => {});
+    }
+  } else if (kind === 'audio') {
+    assetFiles.audio = file;
+    state.audioUrl = suggestedPath;
+    state.musicDisplayName = file.name;
+    document.getElementById('input-audio-url').value = suggestedPath;
+    document.getElementById('input-music-name').value = file.name;
+    DOM.audioPlayer.src = blobUrl;
+    DOM.inlineMusic.style.display = 'flex';
+    DOM.inlineTrack.textContent = file.name;
+  }
+
+  persistState();
 }
 
 // ─── FRAME STYLING ──────────────────────────────────────────
@@ -676,6 +805,7 @@ function updateFrameStyle() {
   document.getElementById('blur-label').textContent = blur + 'px';
 
   applyFrameStyles(bg, transparency, outline, blur);
+  persistState();
 }
 
 function applyFrameStyles(bg, transparency, outline, blur) {
@@ -775,18 +905,18 @@ function downloadProfileJSON() {
 }
 
 // ─── UPDATE FUNCTIONS ──────────────────────────────────────
-function updatePfpUrl(val) { state.pfpUrl = val; DOM.displayPfp.src = getAssetUrl(val); }
-function updateBgUrl(val) { state.bgUrl = val; applyAllSettings(); }
-function updateBgType(val) { state.bgType = val; applyAllSettings(); }
-function updateAudioUrl(val) { state.audioUrl = val; }
-function updateMusicName(val) { state.musicDisplayName = val; DOM.inlineTrack.textContent = val; }
-function updateLocation(val) { state.location = val; DOM.locationDisplay.textContent = val; }
-function updatePreview() { state.username = document.getElementById('input-username').value; DOM.displayUsername.textContent = state.username; }
-function updateUsernameColor(color) { state.usernameColor = color; DOM.displayUsername.style.color = color; }
-function updateBioColor(color) { state.bioColor = color; DOM.displayBio.style.color = color; }
-function updateMusicColor(color) { state.musicColor = color; DOM.inlineTrack.style.color = color; DOM.volumeIcon.style.color = color; }
-function updateStatsColor(color) { state.statsColor = color; const items = DOM.statsBar.querySelectorAll('.stat-item'); items.forEach(item => item.style.color = color); }
-function updateSocialColor(color) { state.socialColor = color; document.querySelectorAll('.social-tooltip').forEach(el => el.style.color = color); }
+function updatePfpUrl(val) { state.pfpUrl = val; DOM.displayPfp.src = getAssetUrl(val); persistState(); }
+function updateBgUrl(val) { state.bgUrl = val; applyAllSettings(); persistState(); }
+function updateBgType(val) { state.bgType = val; applyAllSettings(); persistState(); }
+function updateAudioUrl(val) { state.audioUrl = val; persistState(); }
+function updateMusicName(val) { state.musicDisplayName = val; DOM.inlineTrack.textContent = val; persistState(); }
+function updateLocation(val) { state.location = val; DOM.locationDisplay.textContent = val; persistState(); }
+function updatePreview() { state.username = document.getElementById('input-username').value; DOM.displayUsername.textContent = state.username; persistState(); }
+function updateUsernameColor(color) { state.usernameColor = color; DOM.displayUsername.style.color = color; persistState(); }
+function updateBioColor(color) { state.bioColor = color; DOM.displayBio.style.color = color; persistState(); }
+function updateMusicColor(color) { state.musicColor = color; DOM.inlineTrack.style.color = color; DOM.volumeIcon.style.color = color; persistState(); }
+function updateStatsColor(color) { state.statsColor = color; const items = DOM.statsBar.querySelectorAll('.stat-item'); items.forEach(item => item.style.color = color); persistState(); }
+function updateSocialColor(color) { state.socialColor = color; document.querySelectorAll('.social-tooltip').forEach(el => el.style.color = color); persistState(); }
 
 // ─── TYPOGRAPHY ─────────────────────────────────────────────
 // FIX: previously this function only re-applied whatever font/weight was already
@@ -845,6 +975,8 @@ function applyTypography() {
     el.classList.remove(...WEIGHT_CLASSES);
     el.classList.add(state.socialWeight || 'font-weight-semibold');
   });
+
+  persistState();
 }
 
 // ─── NEON GLOW (excludes stats bar) ──────────────────────
@@ -853,35 +985,44 @@ function applyTypography() {
 // slider below (which only ever set inline styles) had zero visible effect.
 // The CSS class is now just a bare marker with no !important values, so the
 // numbers here are the only source of truth for glow intensity.
-function updateGlowSetting(key, val) { state.glowEffect[key] = val; applyGlow(); }
+function updateGlowSetting(key, val) { state.glowEffect[key] = val; applyGlow(); persistState(); }
+
+// Per-target toggle: lets each piece of text/iconography opt in or out of the
+// neon glow independently, instead of it being all-or-nothing.
+function updateGlowTarget(target, val) {
+  if (!state.glowEffect.targets) state.glowEffect.targets = {};
+  state.glowEffect.targets[target] = val;
+  applyGlow();
+  persistState();
+}
 
 function applyGlow() {
-  // Apply to username, bio, music player elements, social icons (but NOT stats bar items)
-  const els = [
-    DOM.displayUsername,
-    DOM.displayBio,
-    DOM.inlineTrack,
-    DOM.volumeIcon,
-    DOM.inlinePlayIcon,
-    document.getElementById('inline-audio-toggle')
-  ];
-  // social icons are inside #display-socials, we target the <i> elements directly
-  document.querySelectorAll('#display-socials i').forEach(el => els.push(el));
-  // Also the badge container items
-  document.querySelectorAll('.badge-pill').forEach(el => els.push(el));
-
   const on = state.glowEffect.enabled, g = parseFloat(state.glowEffect.intensity) || 4;
-  els.forEach(el => {
-    if (!el) return;
-    if (!on) {
-      el.classList.remove('neon-text');
-      el.style.textShadow = '';
-      el.style.filter = '';
-      return;
-    }
-    el.classList.add('neon-text');
-    el.style.textShadow = `0 0 ${g*0.2}px currentColor, 0 0 ${g*0.6}px currentColor, 0 0 ${g*1.2}px currentColor, 0 0 ${g*2.0}px currentColor`;
-    el.style.filter = `drop-shadow(0 0 ${g*0.3}px currentColor)`;
+  const t = state.glowEffect.targets || {};
+
+  const groups = {
+    username: [DOM.displayUsername],
+    bio: [DOM.displayBio],
+    music: [DOM.inlineTrack, DOM.volumeIcon, DOM.inlinePlayIcon, document.getElementById('inline-audio-toggle')],
+    social: Array.from(document.querySelectorAll('#display-socials i')),
+    badges: Array.from(document.querySelectorAll('.badge-pill')),
+    stats: Array.from(DOM.statsBar.querySelectorAll('.stat-item'))
+  };
+
+  Object.keys(groups).forEach(groupKey => {
+    const shouldGlow = on && !!t[groupKey];
+    groups[groupKey].forEach(el => {
+      if (!el) return;
+      if (!shouldGlow) {
+        el.classList.remove('neon-text');
+        el.style.textShadow = '';
+        el.style.filter = '';
+        return;
+      }
+      el.classList.add('neon-text');
+      el.style.textShadow = `0 0 ${g*0.2}px currentColor, 0 0 ${g*0.6}px currentColor, 0 0 ${g*1.2}px currentColor, 0 0 ${g*2.0}px currentColor`;
+      el.style.filter = `drop-shadow(0 0 ${g*0.3}px currentColor)`;
+    });
   });
 }
 
@@ -892,6 +1033,7 @@ function updateTypewriterSetting(key, val) {
   state.typewriter[key] = val;
   restartTypewriter();
   applyCursorClasses();
+  persistState();
 }
 
 function restartTypewriter() {
@@ -956,7 +1098,7 @@ function applyCursorClasses() {
 // ─── TILT ────────────────────────────────────────────────────
 let curRX = 0, curRY = 0, tarRX = 0, tarRY = 0, curS = 1, tarS = 1, tiltLoop = null;
 
-function updateTiltSetting(key, val) { state.tilt[key] = val; if (!state.tilt.enabled) { tarRX = 0; tarRY = 0; tarS = 1; } }
+function updateTiltSetting(key, val) { state.tilt[key] = val; if (!state.tilt.enabled) { tarRX = 0; tarRY = 0; tarS = 1; } persistState(); }
 
 function tiltLoopFn() {
   if (!state.tilt.enabled) { tarRX = 0; tarRY = 0; tarS = 1; }
@@ -1008,6 +1150,7 @@ function resizeFxCanvas() {
 
 function setEffect(type) {
   state.fx = type;
+  persistState();
   if (fxAnimId) cancelAnimationFrame(fxAnimId);
   fxParticles = [];
   
@@ -1103,7 +1246,7 @@ function drawFx() {
   fxAnimId = requestAnimationFrame(drawFx);
 }
 
-function updateFxColor() { state.fxColor = document.getElementById('fx-color').value; }
+function updateFxColor() { state.fxColor = document.getElementById('fx-color').value; persistState(); }
 
 // ─── AUDIO ────────────────────────────────────────────────────
 function toggleAudio(force) {
@@ -1187,7 +1330,7 @@ function renderBadges() {
   state.badges.forEach(b => {
     const span = document.createElement('span');
     span.className = 'badge-pill';
-    span.innerHTML = `<i class="${b.icon}" style="color:${b.color}"></i> ${b.label}`;
+    span.innerHTML = `<i class="${b.icon}" style="color:${b.color}"></i> <span style="color:${b.textColor || '#dddddd'}">${b.label}</span>`;
     DOM.badgeContainer.appendChild(span);
   });
 }
@@ -1203,16 +1346,17 @@ function renderEditorBadges() {
     d.innerHTML = `
       <input value="${b.label}" oninput="updateBadge('${b.id}','label',this.value)" class="bg-[#111] border border-[#333] rounded px-2 py-0.5 text-xs w-16 text-white" />
       <select onchange="updateBadge('${b.id}','icon',this.value)" class="bg-[#111] border border-[#333] rounded px-1 py-0.5 text-xs text-white">${opts}</select>
-      <input type="color" value="${b.color}" onchange="updateBadge('${b.id}','color',this.value)" class="w-5 h-5 p-0 border-0 bg-transparent" />
+      <span class="flex items-center gap-0.5" title="Icon color"><i class="fas fa-circle-half-stroke text-[0.6rem] text-gray-500"></i><input type="color" value="${b.color}" onchange="updateBadge('${b.id}','color',this.value)" class="w-5 h-5 p-0 border-0 bg-transparent" /></span>
+      <span class="flex items-center gap-0.5" title="Text color"><i class="fas fa-font text-[0.6rem] text-gray-500"></i><input type="color" value="${b.textColor || '#dddddd'}" onchange="updateBadge('${b.id}','textColor',this.value)" class="w-5 h-5 p-0 border-0 bg-transparent" /></span>
       <button onclick="removeBadge('${b.id}')" class="text-red-400 text-xs"><i class="fas fa-trash"></i></button>
     `;
     c.appendChild(d);
   });
 }
 
-function addBadge() { state.badges.push({ id: genId(), label: "New", icon: "fa-solid fa-bolt", color: "#a78bfa" }); renderEditorBadges(); renderBadges(); }
-function removeBadge(id) { state.badges = state.badges.filter(b => b.id !== id); renderEditorBadges(); renderBadges(); }
-function updateBadge(id, key, val) { const b = state.badges.find(x => x.id === id); if (b) { b[key] = val; renderBadges(); } }
+function addBadge() { state.badges.push({ id: genId(), label: "New", icon: "fa-solid fa-bolt", color: "#a78bfa", textColor: "#dddddd" }); renderEditorBadges(); renderBadges(); persistState(); }
+function removeBadge(id) { state.badges = state.badges.filter(b => b.id !== id); renderEditorBadges(); renderBadges(); persistState(); }
+function updateBadge(id, key, val) { const b = state.badges.find(x => x.id === id); if (b) { b[key] = val; renderBadges(); persistState(); } }
 
 // ─── BIO LINES ──────────────────────────────────────────────
 function renderEditorBioLines() {
@@ -1230,9 +1374,9 @@ function renderEditorBioLines() {
   });
 }
 
-function addBioLine() { state.bioLines.push("New bio line"); renderEditorBioLines(); restartTypewriter(); }
-function removeBioLine(i) { if (state.bioLines.length < 2) return; state.bioLines.splice(i, 1); renderEditorBioLines(); restartTypewriter(); }
-function updateBioLine(i, v) { state.bioLines[i] = v; restartTypewriter(); }
+function addBioLine() { state.bioLines.push("New bio line"); renderEditorBioLines(); restartTypewriter(); persistState(); }
+function removeBioLine(i) { if (state.bioLines.length < 2) return; state.bioLines.splice(i, 1); renderEditorBioLines(); restartTypewriter(); persistState(); }
+function updateBioLine(i, v) { state.bioLines[i] = v; restartTypewriter(); persistState(); }
 
 // ─── SOCIAL LINKS ──────────────────────────────────────────
 const availableIcons = ["fa-brands fa-discord", "fa-brands fa-github", "fa-brands fa-twitter", "fa-brands fa-instagram", "fa-brands fa-youtube", "fa-brands fa-twitch", "fa-brands fa-spotify", "fa-brands fa-steam", "fa-brands fa-reddit", "fa-brands fa-telegram", "fa-brands fa-tiktok", "fa-solid fa-globe", "fa-solid fa-link"];
@@ -1259,9 +1403,9 @@ function renderEditorSocials() {
   });
 }
 
-function addSocialLink() { state.links.push({ id: genId(), name: "Link", url: "https://", icon: "fa-solid fa-link", color: "#ffffff", spin: false }); renderEditorSocials(); renderDisplaySocials(); }
-function removeSocialLink(id) { state.links = state.links.filter(l => l.id !== id); renderEditorSocials(); renderDisplaySocials(); }
-function updateSocialLink(id, key, val) { const l = state.links.find(x => x.id === id); if (l) { l[key] = val; renderDisplaySocials(); } }
+function addSocialLink() { state.links.push({ id: genId(), name: "Link", url: "https://", icon: "fa-solid fa-link", color: "#ffffff", spin: false }); renderEditorSocials(); renderDisplaySocials(); persistState(); }
+function removeSocialLink(id) { state.links = state.links.filter(l => l.id !== id); renderEditorSocials(); renderDisplaySocials(); persistState(); }
+function updateSocialLink(id, key, val) { const l = state.links.find(x => x.id === id); if (l) { l[key] = val; renderDisplaySocials(); persistState(); } }
 
 function renderDisplaySocials() {
   const c = DOM.displaySocials;
@@ -1364,6 +1508,17 @@ async function init() {
   document.getElementById('tw-cursor').checked = state.typewriter.cursor;
   document.getElementById('glow-enabled').checked = state.glowEffect.enabled;
   document.getElementById('glow-intensity').value = state.glowEffect.intensity;
+
+  // Guard against profiles saved before per-target glow existed
+  if (!state.glowEffect.targets) {
+    state.glowEffect.targets = { username: true, bio: true, music: true, social: true, badges: true, stats: false };
+  }
+  document.getElementById('glow-target-username').checked = !!state.glowEffect.targets.username;
+  document.getElementById('glow-target-bio').checked = !!state.glowEffect.targets.bio;
+  document.getElementById('glow-target-music').checked = !!state.glowEffect.targets.music;
+  document.getElementById('glow-target-social').checked = !!state.glowEffect.targets.social;
+  document.getElementById('glow-target-badges').checked = !!state.glowEffect.targets.badges;
+  document.getElementById('glow-target-stats').checked = !!state.glowEffect.targets.stats;
 
   document.querySelectorAll('input[name="fx"]').forEach(el => {
     el.checked = el.value === state.fx;
