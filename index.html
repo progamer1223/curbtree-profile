@@ -93,6 +93,7 @@
       flex-shrink:0;
     }
     .music-player-bar .play-btn:hover { color:white; transform:scale(1.1); background:rgba(255,255,255,0.05); }
+    .music-player-bar .play-btn.secondary { font-size:1rem; color:#999; }
     .music-player-bar .track-name { font-size:0.8rem; color:#bbb; min-width:60px; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex-shrink:1; transition: color 0.2s; }
     .music-player-bar .status-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#4ade80; transition:0.2s; flex-shrink:0; }
     .music-player-bar .status-dot.paused { background:#facc15; }
@@ -212,7 +213,7 @@
 <div id="pixel-grid"></div>
 <div id="scanlines"></div>
 
-<audio id="bg-audio" loop></audio>
+<audio id="bg-audio"></audio>
 
 <div id="enter-screen" onclick="startExperience()">
   <div class="text-center typewriter">
@@ -258,8 +259,14 @@
           </div>
         </div>
         <div class="music-player-bar" id="inline-music-container" style="display:none;">
+          <button class="play-btn secondary" id="inline-prev-btn" onclick="prevSong()" title="Previous track">
+            <i class="fas fa-backward-step"></i>
+          </button>
           <button class="play-btn" id="inline-audio-toggle" onclick="toggleAudio()">
             <i class="fas fa-play" id="inline-play-icon"></i>
+          </button>
+          <button class="play-btn secondary" id="inline-next-btn" onclick="nextSong()" title="Next track">
+            <i class="fas fa-forward-step"></i>
           </button>
           <span class="track-name" id="inline-track-name">track.mp3</span>
           <span class="status-dot" id="inline-status"></span>
@@ -319,17 +326,18 @@
             <option value="video">Video</option>
           </select>
         </div>
-        <div>
-          <label class="block text-xs text-gray-400">Music URL</label>
-          <input type="text" id="input-audio-url" value="" placeholder="/assets/song.mp3" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" oninput="updateAudioUrl(this.value)" />
-          <input type="file" id="input-audio-file" accept="audio/*" onchange="handleFileSelect(event,'audio')" class="w-full text-[0.65rem] text-gray-400 mt-1 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-blue-600/60 file:text-white" />
-        </div>
-        <div>
-          <label class="block text-xs text-gray-400">Music Display Name</label>
-          <input type="text" id="input-music-name" value="track.mp3" oninput="updateMusicName(this.value)" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" />
-        </div>
         <p style="font-size:0.6rem; color:#666;">Choosing a file previews it instantly and gets bundled into a ready-to-upload zip when you hit Save.</p>
       </div>
+    </div>
+
+    <!-- Music / Playlist Section -->
+    <div class="border-t border-white/5 pt-4 space-y-3">
+      <div class="flex justify-between items-center">
+        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Playlist</h3>
+        <button onclick="addSong()" class="text-xs bg-blue-600/70 px-2 py-0.5 rounded"><i class="fas fa-plus"></i> Add song</button>
+      </div>
+      <p style="font-size:0.6rem; color:#666;">Order here is play order. Use the arrows to reorder. Each song can have its own file and display name.</p>
+      <div id="editor-songs" class="space-y-2"></div>
     </div>
 
     <div class="border-t border-white/5 pt-4 space-y-3">
@@ -455,13 +463,13 @@
     <div class="border-t border-white/5 pt-4 space-y-2">
       <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Save</h3>
       <button onclick="saveAllSettings()" class="w-full bg-green-600/60 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
-        <i class="fas fa-save"></i> Save All Settings
+        <i class="fas fa-save"></i> Save & Download Package
       </button>
       <button onclick="downloadProfileJSON()" class="w-full bg-blue-600/60 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
-        <i class="fas fa-download"></i> Download profile.json
+        <i class="fas fa-download"></i> Download profile.json only
       </button>
       <p style="font-size:0.6rem; color:#666; text-align:center; margin-top:4px;">
-        Save your settings, then download profile.json and upload to GitHub!
+        Nothing is saved in the browser anymore — Save downloads a curbtree-package.zip (profile.json + every song/image/video) straight to your computer. Unzip and upload to GitHub!
       </p>
     </div>
 
@@ -515,9 +523,12 @@ const state = {
   pfpUrl: "/assets/avatar.gif",
   bgType: 'none',
   bgUrl: '',
-  audioUrl: '',
+  // Playlist: ordered array of { id, url, name }. Array order === play order,
+  // and since it's a plain JSON array it round-trips through profile.json /
+  // localStorage with order fully intact — no extra "order" field needed.
+  songs: [],
+  currentSongIndex: 0,
   audioPlaying: false,
-  musicDisplayName: 'track.mp3',
   frameBg: '#141414',
   frameTransparency: 0.55,
   frameOutline: 0.08,
@@ -568,6 +579,7 @@ const DOM = {
   editorSocials: document.getElementById('editor-socials'),
   editorBioLines: document.getElementById('editor-bio-lines'),
   editorBadges: document.getElementById('editor-badges'),
+  editorSongs: document.getElementById('editor-songs'),
   tiltGroup: document.getElementById('tilt-group'),
   badgeContainer: document.getElementById('badge-container'),
   mainFrame: document.getElementById('main-frame'),
@@ -577,6 +589,8 @@ const DOM = {
   inlineStatus: document.getElementById('inline-status'),
   inlinePlayIcon: document.getElementById('inline-play-icon'),
   inlineVolume: document.getElementById('inline-volume'),
+  inlinePrevBtn: document.getElementById('inline-prev-btn'),
+  inlineNextBtn: document.getElementById('inline-next-btn'),
   locationDisplay: document.getElementById('location-display'),
   volumeIcon: document.getElementById('volume-icon'),
   statsBar: document.getElementById('stats-bar')
@@ -586,20 +600,17 @@ const DOM = {
 // These hold the actual File objects picked via the file inputs. They only
 // live for the current session (browsers won't let us persist raw file
 // contents in localStorage) but that's fine — they exist so "Save" can bundle
-// them into a downloadable zip alongside profile.json.
-const assetFiles = { pfp: null, bg: null, audio: null };
+// them into a downloadable zip alongside profile.json. songs is a map of
+// songId -> File so every song in the playlist can carry its own file.
+const assetFiles = { pfp: null, bg: null, songs: {} };
 
-// ─── PERSISTENCE HELPER ─────────────────────────────────────
-// Called after every single state mutation so nothing is ever lost to a
-// refresh or closed tab — not just on the manual Save button or the 30s
-// autosave interval.
-function persistState() {
-  try {
-    localStorage.setItem('curbtree_full_profile', JSON.stringify(state));
-  } catch (e) {
-    console.warn('Could not persist state:', e);
-  }
-}
+// ─── PERSISTENCE HELPER (disabled) ───────────────────────────
+// Profile settings are no longer autosaved to localStorage. The "Save All
+// Settings" button is now the only way to persist anything, and it does so
+// by downloading a profile.json + assets zip rather than writing to the
+// browser's local storage. This function is kept as a no-op so the many
+// existing call sites throughout the file don't need to be touched.
+function persistState() {}
 
 // ─── CACHE-BUSTING HELPER ──────────────────────────────────
 function getAssetUrl(path) {
@@ -632,6 +643,19 @@ async function loadProfileFromJSON() {
   return false;
 }
 
+// ─── MIGRATE OLD SINGLE-TRACK PROFILES ──────────────────────
+// Older profile.json/localStorage saves had a single audioUrl +
+// musicDisplayName instead of a songs[] playlist. Fold that into a
+// one-song playlist so existing profiles keep working.
+function migrateLegacyMusic() {
+  if (!Array.isArray(state.songs)) state.songs = [];
+  if (state.songs.length === 0 && state.audioUrl) {
+    state.songs.push({ id: genId(), url: state.audioUrl, name: state.musicDisplayName || 'track.mp3' });
+  }
+  if (typeof state.currentSongIndex !== 'number' || state.currentSongIndex < 0) state.currentSongIndex = 0;
+  if (state.songs.length && state.currentSongIndex >= state.songs.length) state.currentSongIndex = 0;
+}
+
 // ─── SAVE ALL SETTINGS ──────────────────────────────────────
 async function saveAllSettings() {
   // Profile
@@ -642,8 +666,9 @@ async function saveAllSettings() {
   state.pfpUrl = document.getElementById('input-pfp-url').value || '/assets/avatar.gif';
   state.bgUrl = document.getElementById('input-bg-url').value || '';
   state.bgType = document.getElementById('input-bg-type').value;
-  state.audioUrl = document.getElementById('input-audio-url').value || '';
-  state.musicDisplayName = document.getElementById('input-music-name').value || 'track.mp3';
+
+  // Songs (names/urls/order are already kept in sync live via updateSong/
+  // moveSong/addSong/removeSong, nothing to re-read here)
 
   // Colors
   state.usernameColor = document.getElementById('username-color').value;
@@ -694,19 +719,13 @@ async function saveAllSettings() {
   });
   state.fxColor = document.getElementById('fx-color').value;
 
-  persistState();
-
-  const hadFiles = !!(assetFiles.pfp || assetFiles.bg || assetFiles.audio);
-  if (hadFiles) {
-    try {
-      await downloadAssetsPackage();
-      alert('✅ Settings saved! A curbtree-package.zip also downloaded — unzip it and upload the assets/ folder + profile.json to your GitHub repo.');
-    } catch (e) {
-      console.error('Zip build failed:', e);
-      alert('✅ Settings saved! (Could not build the assets zip — you can still use "Download profile.json" and upload your files manually.)');
-    }
-  } else {
-    alert('✅ All settings saved!');
+  try {
+    await downloadAssetsPackage();
+    alert('✅ curbtree-package.zip downloaded! It contains profile.json plus an assets/ folder with every song and file you\'ve picked — unzip it and upload the contents to your GitHub repo.');
+  } catch (e) {
+    console.error('Zip build failed:', e);
+    downloadProfileJSON();
+    alert('⚠️ Could not build the assets zip, so just profile.json was downloaded. Upload your song/image/video files manually alongside it.');
   }
   applyAllSettings();
 }
@@ -714,16 +733,18 @@ async function saveAllSettings() {
 // ─── ASSETS ZIP PACKAGE ──────────────────────────────────────
 // Bundles whatever files were picked via the file inputs, under an assets/
 // folder, together with profile.json, so the whole thing can be dragged
-// straight into a GitHub repo.
+// straight into a GitHub repo. Every song that has a locally-picked file
+// gets included, not just the currently-playing one.
 async function downloadAssetsPackage() {
-  if (typeof JSZip === 'undefined') return;
+  if (typeof JSZip === 'undefined') throw new Error('JSZip not available');
   const zip = new JSZip();
   const folder = zip.folder('assets');
-  let any = false;
-  if (assetFiles.pfp) { folder.file(assetFiles.pfp.name, assetFiles.pfp); any = true; }
-  if (assetFiles.bg) { folder.file(assetFiles.bg.name, assetFiles.bg); any = true; }
-  if (assetFiles.audio) { folder.file(assetFiles.audio.name, assetFiles.audio); any = true; }
-  if (!any) return;
+  if (assetFiles.pfp) folder.file(assetFiles.pfp.name, assetFiles.pfp);
+  if (assetFiles.bg) folder.file(assetFiles.bg.name, assetFiles.bg);
+  Object.keys(assetFiles.songs).forEach(songId => {
+    const file = assetFiles.songs[songId];
+    if (file) folder.file(file.name, file);
+  });
 
   zip.file('profile.json', JSON.stringify(state, null, 2));
 
@@ -736,7 +757,7 @@ async function downloadAssetsPackage() {
   URL.revokeObjectURL(url);
 }
 
-// ─── FILE PICKERS (avatar / background / music) ─────────────
+// ─── FILE PICKERS (avatar / background) ─────────────────────
 // Picking a file previews it immediately (via a blob URL) and fills the
 // matching URL field with a suggested /assets/<filename> path — the path
 // that will actually resolve once the file is uploaded to that location in
@@ -774,15 +795,6 @@ function handleFileSelect(e, kind) {
       DOM.bgVideo.playsInline = true;
       DOM.bgVideo.play().catch(() => {});
     }
-  } else if (kind === 'audio') {
-    assetFiles.audio = file;
-    state.audioUrl = suggestedPath;
-    state.musicDisplayName = file.name;
-    document.getElementById('input-audio-url').value = suggestedPath;
-    document.getElementById('input-music-name').value = file.name;
-    DOM.audioPlayer.src = blobUrl;
-    DOM.inlineMusic.style.display = 'flex';
-    DOM.inlineTrack.textContent = file.name;
   }
 
   persistState();
@@ -861,14 +873,10 @@ function applyAllSettings() {
     DOM.bgVideo.style.display = 'none';
   }
 
-  // Music
-  if (state.audioUrl) {
-    DOM.audioPlayer.src = getAssetUrl(state.audioUrl);
-    DOM.inlineMusic.style.display = 'flex';
-    DOM.inlineTrack.textContent = state.musicDisplayName;
-    DOM.inlineTrack.style.color = state.musicColor;
-    DOM.volumeIcon.style.color = state.musicColor;
-  }
+  // Music / Playlist
+  refreshMusicDisplay();
+  DOM.inlineTrack.style.color = state.musicColor;
+  DOM.volumeIcon.style.color = state.musicColor;
 
   // Stats
   const statItems = DOM.statsBar.querySelectorAll('.stat-item');
@@ -908,8 +916,6 @@ function downloadProfileJSON() {
 function updatePfpUrl(val) { state.pfpUrl = val; DOM.displayPfp.src = getAssetUrl(val); persistState(); }
 function updateBgUrl(val) { state.bgUrl = val; applyAllSettings(); persistState(); }
 function updateBgType(val) { state.bgType = val; applyAllSettings(); persistState(); }
-function updateAudioUrl(val) { state.audioUrl = val; persistState(); }
-function updateMusicName(val) { state.musicDisplayName = val; DOM.inlineTrack.textContent = val; persistState(); }
 function updateLocation(val) { state.location = val; DOM.locationDisplay.textContent = val; persistState(); }
 function updatePreview() { state.username = document.getElementById('input-username').value; DOM.displayUsername.textContent = state.username; persistState(); }
 function updateUsernameColor(color) { state.usernameColor = color; DOM.displayUsername.style.color = color; persistState(); }
@@ -1003,7 +1009,7 @@ function applyGlow() {
   const groups = {
     username: [DOM.displayUsername],
     bio: [DOM.displayBio],
-    music: [DOM.inlineTrack, DOM.volumeIcon, DOM.inlinePlayIcon, document.getElementById('inline-audio-toggle')],
+    music: [DOM.inlineTrack, DOM.volumeIcon, DOM.inlinePlayIcon, DOM.inlinePrevBtn, DOM.inlineNextBtn, document.getElementById('inline-audio-toggle')],
     social: Array.from(document.querySelectorAll('#display-socials i')),
     badges: Array.from(document.querySelectorAll('.badge-pill')),
     stats: Array.from(DOM.statsBar.querySelectorAll('.stat-item'))
@@ -1026,7 +1032,7 @@ function applyGlow() {
   });
 }
 
-// ─── TYPEWRITER ─────────────────────────────────────────────
+// ─── TYPEWRITER (username / bio) ─────────────────────────────
 let usernameTimer = null, bioTimer = null;
 
 function updateTypewriterSetting(key, val) {
@@ -1093,6 +1099,39 @@ function applyCursorClasses() {
   const showCursor = state.typewriter.enabled && state.typewriter.cursor;
   DOM.displayBio.classList.toggle('typewriter-cursor', showCursor);
   DOM.displayUsername.classList.toggle('typewriter-cursor', showCursor && state.typewriter.applyUsername);
+}
+
+// ─── TRACK NAME TYPEWRITER (song changes only) ───────────────
+// Independent of the username/bio typewriter toggle above — this always
+// plays whenever the active song changes (next/prev/auto-advance), erasing
+// the old track name then typing in the new one. Reuses the same
+// type/delete speed sliders from the Typewriter panel for consistency.
+let trackNameTimer = null;
+
+function typewriterTrackName(newName) {
+  clearTimeout(trackNameTimer);
+  const el = DOM.inlineTrack;
+  const oldText = el.textContent || '';
+  const deleteSpeed = (state.typewriter && state.typewriter.deleteSpeed) || 25;
+  const typeSpeed = (state.typewriter && state.typewriter.typeSpeed) || 50;
+
+  function type() {
+    let j = 0;
+    (function step() {
+      el.textContent = newName.slice(0, j);
+      if (j < newName.length) { j++; trackNameTimer = setTimeout(step, typeSpeed); }
+    })();
+  }
+
+  if (!oldText) { type(); return; }
+
+  let i = oldText.length;
+  (function erase() {
+    i--;
+    el.textContent = oldText.slice(0, Math.max(i, 0));
+    if (i > 0) trackNameTimer = setTimeout(erase, deleteSpeed);
+    else trackNameTimer = setTimeout(type, 100);
+  })();
 }
 
 // ─── TILT ────────────────────────────────────────────────────
@@ -1248,9 +1287,70 @@ function drawFx() {
 
 function updateFxColor() { state.fxColor = document.getElementById('fx-color').value; persistState(); }
 
-// ─── AUDIO ────────────────────────────────────────────────────
+// ─── PLAYLIST / MUSIC ────────────────────────────────────────
+// Whether the <audio> element should loop the current track itself (only
+// makes sense with 0-1 songs — with 2+ songs, 'ended' advances to the next
+// track instead, so native loop is turned off).
+function updateAudioLoopFlag() {
+  DOM.audioPlayer.loop = !(state.songs && state.songs.length > 1);
+}
+
+// Rebuilds the inline player display (name, src, show/hide) for whatever
+// song currentSongIndex points at, WITHOUT any typewriter animation — used
+// for initial load / direct edits, not for next/prev.
+function refreshMusicDisplay() {
+  if (state.songs && state.songs.length) {
+    if (state.currentSongIndex >= state.songs.length || state.currentSongIndex < 0) state.currentSongIndex = 0;
+    const song = state.songs[state.currentSongIndex];
+    DOM.inlineMusic.style.display = 'flex';
+    DOM.inlineTrack.textContent = song.name;
+    DOM.audioPlayer.src = getAssetUrl(song.url);
+    updateAudioLoopFlag();
+  } else {
+    DOM.inlineMusic.style.display = 'none';
+    DOM.audioPlayer.removeAttribute('src');
+  }
+}
+
+// Switches to the song at `index` (wrapping around), plays the track-name
+// typewriter transition, and optionally starts playback.
+function goToSong(index, shouldPlay) {
+  if (!state.songs || !state.songs.length) return;
+  const len = state.songs.length;
+  index = ((index % len) + len) % len;
+  const song = state.songs[index];
+  state.currentSongIndex = index;
+  updateAudioLoopFlag();
+
+  DOM.audioPlayer.src = getAssetUrl(song.url);
+  typewriterTrackName(song.name);
+
+  if (shouldPlay) {
+    DOM.audioPlayer.play().then(() => {
+      state.audioPlaying = true;
+      DOM.inlinePlayIcon.className = 'fas fa-pause';
+      DOM.inlineStatus.className = 'status-dot';
+    }).catch(() => {});
+  } else {
+    state.audioPlaying = false;
+    DOM.inlinePlayIcon.className = 'fas fa-play';
+    DOM.inlineStatus.className = 'status-dot paused';
+  }
+  persistState();
+}
+
+function nextSong() {
+  if (!state.songs || !state.songs.length) return;
+  goToSong(state.currentSongIndex + 1, state.audioPlaying);
+}
+
+function prevSong() {
+  if (!state.songs || !state.songs.length) return;
+  goToSong(state.currentSongIndex - 1, state.audioPlaying);
+}
+
 function toggleAudio(force) {
-  if (!state.audioUrl) return;
+  if (!state.songs || !state.songs.length) return;
   const icon = DOM.inlinePlayIcon;
   if (state.audioPlaying && !force) {
     DOM.audioPlayer.pause();
@@ -1267,6 +1367,115 @@ function toggleAudio(force) {
 }
 
 function updateVolume(val) { DOM.audioPlayer.volume = parseFloat(val); }
+
+// ─── EDITOR: PLAYLIST MANAGEMENT ─────────────────────────────
+function renderEditorSongs() {
+  const c = DOM.editorSongs;
+  if (!c) return;
+  c.innerHTML = '';
+  if (!state.songs.length) {
+    c.innerHTML = '<p style="font-size:0.65rem; color:#666;">No songs yet — click "Add song" to start a playlist.</p>';
+    return;
+  }
+  state.songs.forEach((song, i) => {
+    const isCurrent = i === state.currentSongIndex;
+    const d = document.createElement('div');
+    d.className = 'bg-[#222] p-2 rounded border ' + (isCurrent ? 'border-blue-500/50' : 'border-[#333]') + ' text-xs space-y-1';
+    d.innerHTML = `
+      <div class="flex items-center gap-1">
+        <span class="text-gray-500 w-4">${i + 1}.</span>
+        <input value="${(song.name || '').replace(/"/g, '&quot;')}" oninput="updateSong('${song.id}','name',this.value)" placeholder="Song name" class="flex-1 bg-[#111] border border-[#444] rounded px-1 py-0.5 text-white" />
+        <button onclick="moveSong('${song.id}',-1)" class="text-gray-400 hover:text-white" title="Move up"><i class="fas fa-chevron-up"></i></button>
+        <button onclick="moveSong('${song.id}',1)" class="text-gray-400 hover:text-white" title="Move down"><i class="fas fa-chevron-down"></i></button>
+        <button onclick="playSongFromEditor('${song.id}')" class="text-green-400 hover:text-green-300" title="Play this song"><i class="fas fa-play"></i></button>
+        <button onclick="removeSong('${song.id}')" class="text-red-400" title="Remove"><i class="fas fa-trash"></i></button>
+      </div>
+      <input value="${song.url || ''}" oninput="updateSong('${song.id}','url',this.value)" placeholder="/assets/song.mp3" class="w-full bg-[#111] border border-[#444] rounded px-1 py-0.5 text-white" />
+      <input type="file" accept="audio/*" onchange="handleSongFileSelect(event,'${song.id}')" class="w-full text-[0.6rem] text-gray-400 file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[0.6rem] file:bg-blue-600/60 file:text-white" />
+      ${isCurrent ? '<div class="text-[0.6rem] text-blue-400"><i class="fas fa-volume-high"></i> Now playing</div>' : ''}
+    `;
+    c.appendChild(d);
+  });
+}
+
+function addSong() {
+  state.songs.push({ id: genId(), url: '', name: 'New track ' + (state.songs.length + 1) });
+  renderEditorSongs();
+  refreshMusicDisplay();
+  persistState();
+}
+
+function removeSong(id) {
+  const idx = state.songs.findIndex(x => x.id === id);
+  if (idx === -1) return;
+  state.songs.splice(idx, 1);
+  delete assetFiles.songs[id];
+  if (state.currentSongIndex >= state.songs.length) {
+    state.currentSongIndex = Math.max(0, state.songs.length - 1);
+  }
+  if (!state.songs.length) {
+    DOM.audioPlayer.pause();
+    state.audioPlaying = false;
+  }
+  renderEditorSongs();
+  refreshMusicDisplay();
+  persistState();
+}
+
+function updateSong(id, key, val) {
+  const s = state.songs.find(x => x.id === id);
+  if (!s) return;
+  s[key] = val;
+  const isCurrent = state.songs[state.currentSongIndex] && state.songs[state.currentSongIndex].id === id;
+  if (isCurrent) {
+    if (key === 'name') DOM.inlineTrack.textContent = val;
+    if (key === 'url') DOM.audioPlayer.src = getAssetUrl(val);
+  }
+  persistState();
+}
+
+function moveSong(id, dir) {
+  const idx = state.songs.findIndex(x => x.id === id);
+  if (idx === -1) return;
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= state.songs.length) return;
+  const currentId = state.songs[state.currentSongIndex] ? state.songs[state.currentSongIndex].id : null;
+  const [item] = state.songs.splice(idx, 1);
+  state.songs.splice(newIdx, 0, item);
+  if (currentId) state.currentSongIndex = state.songs.findIndex(x => x.id === currentId);
+  renderEditorSongs();
+  persistState();
+}
+
+function playSongFromEditor(id) {
+  const idx = state.songs.findIndex(x => x.id === id);
+  if (idx === -1) return;
+  goToSong(idx, true);
+  renderEditorSongs();
+}
+
+function handleSongFileSelect(e, id) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const blobUrl = URL.createObjectURL(file);
+  const suggestedPath = '/assets/' + file.name;
+  assetFiles.songs[id] = file;
+
+  const s = state.songs.find(x => x.id === id);
+  if (s) {
+    s.url = suggestedPath;
+    if (!s.name || /^New track/.test(s.name)) s.name = file.name;
+  }
+
+  const isCurrent = state.songs[state.currentSongIndex] && state.songs[state.currentSongIndex].id === id;
+  if (isCurrent) {
+    DOM.audioPlayer.src = blobUrl;
+    DOM.inlineTrack.textContent = s.name;
+  }
+
+  renderEditorSongs();
+  persistState();
+}
 
 // ─── VERCEL ANALYTICS VIEW COUNT ──────────────────────────
 async function getViewCount() {
@@ -1298,7 +1507,7 @@ function startExperience() {
       DOM.bgVideo.playsInline = true;
       DOM.bgVideo.play().catch(() => {});
     }
-    if (state.audioUrl) toggleAudio(true);
+    if (state.songs && state.songs.length) toggleAudio(true);
     restartTypewriter();
     applyCursorClasses();
     getViewCount();
@@ -1445,25 +1654,14 @@ function genId() { return Math.random().toString(36).slice(2, 8); }
 async function init() {
   await loadProfileFromJSON();
 
-  try {
-    const saved = localStorage.getItem('curbtree_full_profile');
-    if (saved) {
-      const data = JSON.parse(saved);
-      Object.keys(data).forEach(key => {
-        if (typeof data[key] === 'object' && data[key] !== null && !Array.isArray(data[key])) {
-          state[key] = { ...state[key], ...data[key] };
-        } else {
-          state[key] = data[key];
-        }
-      });
-    }
-  } catch (e) {}
+  migrateLegacyMusic();
 
   renderEditorSocials();
   renderDisplaySocials();
   renderEditorBioLines();
   renderEditorBadges();
   renderBadges();
+  renderEditorSongs();
 
   initFxCanvas();
 
@@ -1477,8 +1675,6 @@ async function init() {
   document.getElementById('input-pfp-url').value = state.pfpUrl;
   document.getElementById('input-bg-url').value = state.bgUrl;
   document.getElementById('input-bg-type').value = state.bgType;
-  document.getElementById('input-audio-url').value = state.audioUrl;
-  document.getElementById('input-music-name').value = state.musicDisplayName;
 
   document.getElementById('username-color').value = state.usernameColor;
   document.getElementById('bio-color').value = state.bioColor;
@@ -1530,14 +1726,18 @@ async function init() {
 
   if (state.fx !== 'none') setEffect(state.fx);
 
+  // Advance to the next track automatically when one ends (only relevant
+  // once there are 2+ songs — updateAudioLoopFlag() disables native <audio>
+  // looping in that case so 'ended' actually fires).
+  DOM.audioPlayer.addEventListener('ended', () => {
+    if (state.songs && state.songs.length > 1) {
+      goToSong(state.currentSongIndex + 1, true);
+      renderEditorSongs();
+    }
+  });
+
   const count = parseInt(localStorage.getItem('curbtree_views')) || 0;
   document.getElementById('view-count').textContent = count.toLocaleString();
-
-  setInterval(() => {
-    try {
-      localStorage.setItem('curbtree_full_profile', JSON.stringify(state));
-    } catch (e) {}
-  }, 30000);
 }
 
 init();
