@@ -13,6 +13,7 @@
   "pfpUrl": "/assets/avatar.png",
   "bgType": "video",
   "bgUrl": "https://res.cloudinary.com/agrc4zdb/video/upload/v1784136136/326a94bd-295d-4ef2-ac19-b54f4b5ac28f_kxhep4.mp4",
+  "bgBrightness": 1,
   "songs": [
     {
       "id": "d8wdh5",
@@ -31,8 +32,8 @@
   "frameTransparency": 0.1,
   "frameOutline": 0.2,
   "frameBlur": 7,
-  "frameWidth": 696,
-  "frameHeight": 366,
+  "frameWidth": 824,
+  "frameHeight": 452,
   "typewriter": {
     "enabled": true,
     "applyUsername": true,
@@ -43,21 +44,21 @@
     "lineGap": 300
   },
   "glowEffect": {
-    "enabled": false,
-    "intensity": 1,
+    "enabled": true,
+    "intensity": 15,
     "targets": {
       "username": true,
       "bio": true,
       "music": true,
       "social": true,
-      "badges": true,
+      "badges": false,
       "stats": false
     }
   },
   "tilt": {
     "enabled": true,
-    "intensity": 9,
-    "speed": 0.05
+    "intensity": 4,
+    "speed": 0.04
   },
   "links": [
     {
