@@ -28,14 +28,14 @@
       "name": "Almost Back - Lucki"
     }
   ],
-  "currentSongIndex": 1,
+  "currentSongIndex": 0,
   "audioPlaying": true,
   "frameBg": "#8f8f8f",
-  "frameTransparency": 0.34,
-  "frameOutline": 0.75,
+  "frameTransparency": 0,
+  "frameOutline": 0.51,
   "frameBlur": 0,
   "frameShadow": true,
-  "frameBorderWidth": 1,
+  "frameBorderWidth": 3,
   "frameBorderColor": "#ffffff",
   "frameWidth": 717,
   "frameHeight": 361,
