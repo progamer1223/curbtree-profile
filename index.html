@@ -121,10 +121,11 @@
     .stats-bar .stat-item { display:flex; align-items:center; gap:5px; transition: color 0.2s; }
     .stats-bar .stat-item i { font-size:0.7rem; opacity:0.7; }
 
-    /* Neon glow - we'll apply only to selected elements via JS, so no global class here */
+    /* Neon glow marker class — intentionally holds NO fixed text-shadow/filter values.
+       All visual intensity is driven purely by inline styles set in applyGlow(),
+       so the intensity slider actually has an effect (no !important fighting it). */
     .neon-text {
-      text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 40px currentColor, 0 0 80px currentColor !important;
-      filter: drop-shadow(0 0 10px currentColor) !important;
+      /* left empty on purpose */
     }
 
     .font-weight-normal { font-weight: 400 !important; }
@@ -141,7 +142,7 @@
     .font-dm-sans { font-family: 'DM Sans', sans-serif !important; }
     .font-space-grotesk { font-family: 'Space Grotesk', sans-serif !important; }
 
-    /* Pixel TV overlay: clean square grid, only when active */
+    /* Pixel TV overlay: tight, well-defined CRT-style grid, only when active */
     #pixel-grid {
       position: fixed;
       top: 0;
@@ -151,17 +152,17 @@
       pointer-events: none;
       z-index: 3;
       background-image: 
-        linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,0,0,0.06) 1px, transparent 1px);
-      background-size: 8px 8px;
+        linear-gradient(rgba(0,0,0,0.22) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.22) 1px, transparent 1px);
+      background-size: 3px 3px;
       opacity: 0;
       transition: opacity 0.3s;
       mix-blend-mode: multiply;
     }
     #pixel-grid.active {
-      opacity: 0.7;
+      opacity: 0.9;
     }
-    /* scanline overlay for extra TV feel */
+    /* scanline overlay for extra TV feel - tighter spacing, more defined lines */
     #scanlines {
       position: fixed;
       top: 0;
@@ -172,17 +173,17 @@
       z-index: 3;
       background: repeating-linear-gradient(
         0deg,
-        rgba(0,0,0,0.08) 0px,
-        rgba(0,0,0,0.08) 1px,
+        rgba(0,0,0,0.35) 0px,
+        rgba(0,0,0,0.35) 1px,
         transparent 1px,
-        transparent 3px
+        transparent 2px
       );
       opacity: 0;
       transition: opacity 0.3s;
       mix-blend-mode: multiply;
     }
     #scanlines.active {
-      opacity: 0.6;
+      opacity: 0.55;
     }
   </style>
 </head>
@@ -611,7 +612,7 @@ function saveAllSettings() {
   state.statsColor = document.getElementById('stats-color').value;
   state.socialColor = document.getElementById('social-color').value;
 
-  // Typography
+  // Typography (kept in sync live by applyTypography(), re-read here for safety)
   state.usernameFont = document.getElementById('username-font').value;
   state.usernameWeight = document.getElementById('username-weight').value;
   state.bioFont = document.getElementById('bio-font').value;
@@ -788,44 +789,70 @@ function updateStatsColor(color) { state.statsColor = color; const items = DOM.s
 function updateSocialColor(color) { state.socialColor = color; document.querySelectorAll('.social-tooltip').forEach(el => el.style.color = color); }
 
 // ─── TYPOGRAPHY ─────────────────────────────────────────────
+// FIX: previously this function only re-applied whatever font/weight was already
+// sitting in `state`, but nothing ever wrote the freshly-selected <select> value
+// back into `state` first — so picking a new font in the dropdown never actually
+// changed anything. Now we read every select's current value into state first,
+// then apply the classes.
+const FONT_CLASSES = ['font-inter', 'font-roboto', 'font-poppins', 'font-montserrat', 'font-playfair', 'font-raleway', 'font-dm-sans', 'font-space-grotesk'];
+const WEIGHT_CLASSES = ['font-weight-normal', 'font-weight-medium', 'font-weight-semibold', 'font-weight-bold', 'font-weight-extrabold'];
+
 function applyTypography() {
+  // 1. Pull the current dropdown selections into state
+  state.usernameFont = document.getElementById('username-font').value;
+  state.usernameWeight = document.getElementById('username-weight').value;
+  state.bioFont = document.getElementById('bio-font').value;
+  state.bioWeight = document.getElementById('bio-weight').value;
+  state.musicFont = document.getElementById('music-font').value;
+  state.musicWeight = document.getElementById('music-weight').value;
+  state.statsFont = document.getElementById('stats-font') ? document.getElementById('stats-font').value : state.statsFont;
+  state.statsWeight = document.getElementById('stats-weight') ? document.getElementById('stats-weight').value : state.statsWeight;
+  state.socialFont = document.getElementById('social-font').value;
+  state.socialWeight = document.getElementById('social-weight').value;
+
+  // 2. Apply classes based on the now up-to-date state
   // Username
-  DOM.displayUsername.classList.remove('font-inter', 'font-roboto', 'font-poppins', 'font-montserrat', 'font-playfair', 'font-raleway', 'font-dm-sans', 'font-space-grotesk');
+  DOM.displayUsername.classList.remove(...FONT_CLASSES);
   DOM.displayUsername.classList.add(state.usernameFont || 'font-inter');
-  DOM.displayUsername.classList.remove('font-weight-normal', 'font-weight-medium', 'font-weight-semibold', 'font-weight-bold', 'font-weight-extrabold');
+  DOM.displayUsername.classList.remove(...WEIGHT_CLASSES);
   DOM.displayUsername.classList.add(state.usernameWeight || 'font-weight-extrabold');
 
   // Bio
-  DOM.displayBio.classList.remove('font-inter', 'font-roboto', 'font-poppins', 'font-montserrat', 'font-playfair', 'font-raleway', 'font-dm-sans', 'font-space-grotesk');
+  DOM.displayBio.classList.remove(...FONT_CLASSES);
   DOM.displayBio.classList.add(state.bioFont || 'font-inter');
-  DOM.displayBio.classList.remove('font-weight-normal', 'font-weight-medium', 'font-weight-semibold', 'font-weight-bold', 'font-weight-extrabold');
+  DOM.displayBio.classList.remove(...WEIGHT_CLASSES);
   DOM.displayBio.classList.add(state.bioWeight || 'font-weight-normal');
 
   // Music
-  DOM.inlineTrack.classList.remove('font-inter', 'font-roboto', 'font-poppins', 'font-montserrat', 'font-playfair', 'font-raleway', 'font-dm-sans', 'font-space-grotesk');
+  DOM.inlineTrack.classList.remove(...FONT_CLASSES);
   DOM.inlineTrack.classList.add(state.musicFont || 'font-inter');
-  DOM.inlineTrack.classList.remove('font-weight-normal', 'font-weight-medium', 'font-weight-semibold', 'font-weight-bold', 'font-weight-extrabold');
+  DOM.inlineTrack.classList.remove(...WEIGHT_CLASSES);
   DOM.inlineTrack.classList.add(state.musicWeight || 'font-weight-normal');
 
   // Stats
   const statItems = DOM.statsBar.querySelectorAll('.stat-item');
   statItems.forEach(item => {
-    item.classList.remove('font-inter', 'font-roboto', 'font-poppins', 'font-montserrat', 'font-playfair', 'font-raleway', 'font-dm-sans', 'font-space-grotesk');
+    item.classList.remove(...FONT_CLASSES);
     item.classList.add(state.statsFont || 'font-inter');
-    item.classList.remove('font-weight-normal', 'font-weight-medium', 'font-weight-semibold', 'font-weight-bold', 'font-weight-extrabold');
+    item.classList.remove(...WEIGHT_CLASSES);
     item.classList.add(state.statsWeight || 'font-weight-normal');
   });
 
   // Social tooltips (they are .social-tooltip class)
   document.querySelectorAll('.social-tooltip').forEach(el => {
-    el.classList.remove('font-inter', 'font-roboto', 'font-poppins', 'font-montserrat', 'font-playfair', 'font-raleway', 'font-dm-sans', 'font-space-grotesk');
+    el.classList.remove(...FONT_CLASSES);
     el.classList.add(state.socialFont || 'font-inter');
-    el.classList.remove('font-weight-normal', 'font-weight-medium', 'font-weight-semibold', 'font-weight-bold', 'font-weight-extrabold');
+    el.classList.remove(...WEIGHT_CLASSES);
     el.classList.add(state.socialWeight || 'font-weight-semibold');
   });
 }
 
 // ─── NEON GLOW (excludes stats bar) ──────────────────────
+// FIX: the .neon-text CSS class used to hard-code its own text-shadow/filter
+// values with !important, which always beats inline styles — so the intensity
+// slider below (which only ever set inline styles) had zero visible effect.
+// The CSS class is now just a bare marker with no !important values, so the
+// numbers here are the only source of truth for glow intensity.
 function updateGlowSetting(key, val) { state.glowEffect[key] = val; applyGlow(); }
 
 function applyGlow() {
@@ -1296,11 +1323,8 @@ async function init() {
 
   initFxCanvas();
 
-  applyAllSettings();
-
-  initTilt();
-
-  // Populate UI fields
+  // Populate UI fields BEFORE applyAllSettings() so applyTypography() (called
+  // inside it) reads the correct restored values from the selects, not defaults.
   document.getElementById('fx-color').value = state.fxColor;
   document.getElementById('bg-overlay').style.opacity = 0.55;
 
@@ -1324,8 +1348,6 @@ async function init() {
   document.getElementById('bio-weight').value = state.bioWeight || 'font-weight-normal';
   document.getElementById('music-font').value = state.musicFont || 'font-inter';
   document.getElementById('music-weight').value = state.musicWeight || 'font-weight-normal';
-  document.getElementById('stats-font').value = state.statsFont || 'font-inter';
-  document.getElementById('stats-weight').value = state.statsWeight || 'font-weight-normal';
   document.getElementById('social-font').value = state.socialFont || 'font-inter';
   document.getElementById('social-weight').value = state.socialWeight || 'font-weight-semibold';
 
@@ -1346,6 +1368,10 @@ async function init() {
   document.querySelectorAll('input[name="fx"]').forEach(el => {
     el.checked = el.value === state.fx;
   });
+
+  applyAllSettings();
+
+  initTilt();
 
   if (state.fx !== 'none') setEffect(state.fx);
 
