@@ -15,7 +15,7 @@
   "badgeScale": 1.5,
   "bgType": "video",
   "bgUrl": "https://res.cloudinary.com/agrc4zdb/video/upload/v1784136136/326a94bd-295d-4ef2-ac19-b54f4b5ac28f_kxhep4.mp4",
-  "bgBrightness": 0.2,
+  "bgBrightness": 1.8,
   "songs": [
     {
       "id": "d8wdh5",
@@ -117,7 +117,7 @@
       "textColor": "#ff4242"
     }
   ],
-  "fx": "pixel",
+  "fx": "snow",
   "fxColor": "#ff0000",
   "usernameFont": "font-dm-sans",
   "usernameWeight": "font-weight-extrabold",
