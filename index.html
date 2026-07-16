@@ -9,13 +9,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Poppins:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&family=Raleway:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-  <!-- Vercel Analytics -->
   <script>
     window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
   </script>
   <script defer src="/_vercel/insights/script.js"></script>
-
-  <!-- JSZip: used to bundle newly-picked asset files + profile.json into one downloadable package -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
   <style>
@@ -27,32 +24,27 @@
       color:white; 
       overflow:hidden; 
       height:100vh;
-      cursor: none; /* Hide default cursor */
+      cursor: none;
     }
     
-    /* Custom dot cursor */
     .custom-cursor {
       width: 8px;
       height: 8px;
-      background: white;
+      background: #ffffff;
       border-radius: 50%;
       position: fixed;
       pointer-events: none;
       z-index: 10000;
-      mix-blend-mode: difference;
-      transition: width 0.2s, height 0.2s, background 0.2s;
+      transition: width 0.15s, height 0.15s, background 0.15s, border 0.15s, opacity 0.15s;
       transform: translate(-50%, -50%);
+      border: 2px solid rgba(255,255,255,0.4);
     }
     
     .custom-cursor.hover {
-      width: 16px;
-      height: 16px;
-      background: rgba(255, 255, 255, 0.8);
-    }
-    
-    /* Show default cursor for inputs and buttons */
-    input, textarea, select, button, a, .clickable {
-      cursor: none;
+      width: 14px;
+      height: 14px;
+      background: rgba(255, 255, 255, 0.4);
+      border-width: 3px;
     }
     
     #bg-container { position:fixed; inset:0; z-index:0; background:#111; }
@@ -88,7 +80,12 @@
     @media (min-width:640px) { .social-icon-sm { font-size:2.6rem !important; } }
     .profile-pic-offset { margin-top:-3.5rem; }
     @media (min-width:640px) { .profile-pic-offset { margin-top:-4.5rem; } }
-    .main-frame-tall { min-height:340px; display:flex; flex-direction:column; position:relative; }
+    .main-frame-tall { 
+      min-height:340px; 
+      display:flex; 
+      flex-direction:column; 
+      position:relative; 
+    }
     @media (min-width:640px) { .main-frame-tall { min-height:400px; } }
     .gap-vertical { gap:0.75rem; }
     @media (min-width:640px) { .gap-vertical { gap:1.25rem; } }
@@ -110,6 +107,9 @@
       border:none !important;
       backdrop-filter:none !important;
       transition: all 0.2s ease;
+      position: relative;
+      z-index: 1;
+      flex-shrink: 0;
     }
     .music-player-bar .player-top-row {
       display:flex;
@@ -171,7 +171,7 @@
     .music-player-bar .spacer { flex:1; min-width:10px; }
     .music-player-bar .vol-icon { color:#888; font-size:0.8rem; flex-shrink:0; transition: color 0.2s; }
 
-    .top-frame-content { display:flex; flex-direction:column; width:100%; flex:1; }
+    .top-frame-content { display:flex; flex-direction:column; width:100%; flex:1; min-height: 0; }
     .frame-common { transition: background 0.2s, border-color 0.2s, backdrop-filter 0.2s, border-width 0.2s; }
 
     .stats-bar-inline {
@@ -188,13 +188,7 @@
     .stats-bar-inline .stat-item { display:flex; align-items:center; gap:5px; transition: color 0.2s; }
     .stats-bar-inline .stat-item i { font-size:0.65rem; opacity:0.7; }
 
-    /* Neon glow marker class — intentionally holds NO fixed text-shadow/filter
-       values. All visual intensity is driven purely by inline styles set in
-       applyGlow(), so the intensity slider actually has an effect (no !important
-       fighting it). */
-    .neon-text {
-      /* left empty on purpose */
-    }
+    .neon-text { }
 
     .font-weight-normal { font-weight: 400 !important; }
     .font-weight-medium { font-weight: 500 !important; }
@@ -210,7 +204,6 @@
     .font-dm-sans { font-family: 'DM Sans', sans-serif !important; }
     .font-space-grotesk { font-family: 'Space Grotesk', sans-serif !important; }
 
-    /* Pixel TV overlay: tight, squared, well-defined CRT-style grid, only when active */
     #pixel-grid {
       position: fixed;
       top: 0;
@@ -230,7 +223,6 @@
     #pixel-grid.active {
       opacity: 0.95;
     }
-    /* scanline overlay for extra TV feel - tighter spacing, more defined lines */
     #scanlines {
       position: fixed;
       top: 0;
@@ -254,7 +246,6 @@
       opacity: 0.55;
     }
 
-    /* ─── RESIZE HANDLES (edit mode only) ───────────────────── */
     #tilt-group.resize-mode #main-frame {
       outline: 1.5px dashed rgba(138,180,248,0.6);
       outline-offset: 3px;
@@ -311,10 +302,8 @@
 </head>
 <body>
 
-<!-- Custom cursor dot -->
 <div class="custom-cursor" id="custom-cursor"></div>
 
-<!-- LOCK SCREEN -->
 <div id="lock-screen" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); backdrop-filter:blur(12px); z-index:9999; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:20px; padding:20px;">
   <h2 style="color:white; font-size:2rem; font-weight:700;">🔒 Edit Mode</h2>
   <p style="color:#888; font-size:0.9rem;">Enter your password to edit this profile</p>
@@ -330,7 +319,6 @@
 </div>
 
 <canvas id="fx-canvas"></canvas>
-<!-- TV overlays for pixel film effect -->
 <div id="pixel-grid"></div>
 <div id="scanlines"></div>
 
@@ -355,14 +343,12 @@
         <i class="fas fa-up-right-and-down-left-from-center"></i> <span id="scale-mode-label">Resize: off</span>
       </div>
 
-      <!-- TOP FRAME -->
       <div class="glass-card p-5 sm:p-8 main-frame-tall relative frame-common" id="main-frame">
         <div id="resize-dims-label">400 × 340</div>
         <div class="resize-handle corner corner-se" onmousedown="startResize(event,'se')"></div>
         <div class="resize-handle edge-e" onmousedown="startResize(event,'e')"></div>
         <div class="resize-handle edge-s" onmousedown="startResize(event,'s')"></div>
         
-        <!-- Stats bar inside main frame -->
         <div class="stats-bar-inline" id="stats-bar-inline">
           <span class="stat-item" id="view-stat">
             <i class="fas fa-eye"></i> <span id="view-count">1,337</span>
@@ -414,7 +400,6 @@
         </div>
       </div>
 
-      <!-- BOTTOM FRAME -->
       <div class="glass-card p-5 sm:p-6 flex flex-col items-center justify-center gap-3 min-h-[120px] frame-common" id="bottom-frame">
         <div id="display-socials" class="w-full flex flex-row flex-wrap items-center justify-center gap-4 sm:gap-6"></div>
       </div>
@@ -442,7 +427,6 @@
       </div>
     </div>
 
-    <!-- Assets Section -->
     <div class="border-t border-white/5 pt-4 space-y-3">
       <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Assets (Files)</h3>
       <div class="space-y-2">
@@ -459,6 +443,13 @@
           </div>
         </div>
         <div>
+          <label class="block text-xs text-gray-400">Badge Scale</label>
+          <div class="flex items-center gap-2">
+            <input type="range" id="badge-scale" min="0.5" max="3" step="0.1" value="1" oninput="updateBadgeScale(this.value)" class="flex-1" />
+            <span id="badge-scale-label" class="text-xs text-gray-500">1x</span>
+          </div>
+        </div>
+        <div>
           <label class="block text-xs text-gray-400">Background URL</label>
           <input type="text" id="input-bg-url" value="" placeholder="/assets/bg.mp4 or Cloudinary URL" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" oninput="updateBgUrl(this.value)" />
           <input type="file" id="input-bg-file" accept="image/*,video/*" onchange="handleFileSelect(event,'bg')" class="w-full text-[0.65rem] text-gray-400 mt-1 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-blue-600/60 file:text-white" />
@@ -472,6 +463,57 @@
           </select>
         </div>
         <p style="font-size:0.6rem; color:#666;">Choosing a file previews it instantly and gets bundled into a ready-to-upload zip when you hit "Save & Download Package".</p>
+      </div>
+    </div>
+
+    <!-- Cursor Settings Section -->
+    <div class="border-t border-white/5 pt-4 space-y-3">
+      <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Cursor Dot</h3>
+      <div class="space-y-2">
+        <div class="flex items-center gap-2">
+          <label class="text-xs text-gray-400 w-24">Dot Color</label>
+          <input type="color" id="cursor-color" value="#ffffff" onchange="updateCursorStyle()" class="w-7 h-7 p-0 border border-white/10 rounded bg-transparent cursor-pointer" />
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-xs text-gray-400 w-24">Dot Opacity</label>
+          <input type="range" id="cursor-opacity" min="0.1" max="1" step="0.05" value="1" oninput="updateCursorStyle()" class="flex-1" />
+          <span id="cursor-opacity-label" class="text-xs text-gray-500 w-8">100%</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-xs text-gray-400 w-24">Dot Size</label>
+          <input type="range" id="cursor-size" min="4" max="20" step="1" value="8" oninput="updateCursorStyle()" class="flex-1" />
+          <span id="cursor-size-label" class="text-xs text-gray-500 w-8">8px</span>
+        </div>
+        <div class="border-t border-white/5 pt-2 mt-2">
+          <label class="text-xs text-gray-400 mb-2 block">Outline Settings</label>
+          <div class="flex items-center gap-2">
+            <label class="text-xs text-gray-400 w-24">Outline Color</label>
+            <input type="color" id="cursor-outline-color" value="#ffffff" onchange="updateCursorStyle()" class="w-7 h-7 p-0 border border-white/10 rounded bg-transparent cursor-pointer" />
+          </div>
+          <div class="flex items-center gap-2 mt-1">
+            <label class="text-xs text-gray-400 w-24">Outline Opacity</label>
+            <input type="range" id="cursor-outline-opacity" min="0" max="1" step="0.05" value="0.4" oninput="updateCursorStyle()" class="flex-1" />
+            <span id="cursor-outline-opacity-label" class="text-xs text-gray-500 w-8">40%</span>
+          </div>
+          <div class="flex items-center gap-2 mt-1">
+            <label class="text-xs text-gray-400 w-24">Outline Width</label>
+            <input type="range" id="cursor-outline-width" min="0" max="6" step="0.5" value="2" oninput="updateCursorStyle()" class="flex-1" />
+            <span id="cursor-outline-width-label" class="text-xs text-gray-500 w-8">2px</span>
+          </div>
+        </div>
+        <div class="border-t border-white/5 pt-2 mt-2">
+          <label class="text-xs text-gray-400 mb-2 block">Hover Settings</label>
+          <div class="flex items-center gap-2">
+            <label class="text-xs text-gray-400 w-24">Hover Size</label>
+            <input type="range" id="cursor-hover-size" min="8" max="30" step="1" value="14" oninput="updateCursorStyle()" class="flex-1" />
+            <span id="cursor-hover-size-label" class="text-xs text-gray-500 w-8">14px</span>
+          </div>
+          <div class="flex items-center gap-2 mt-1">
+            <label class="text-xs text-gray-400 w-24">Hover Opacity</label>
+            <input type="range" id="cursor-hover-opacity" min="0.1" max="1" step="0.05" value="0.4" oninput="updateCursorStyle()" class="flex-1" />
+            <span id="cursor-hover-opacity-label" class="text-xs text-gray-500 w-8">40%</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -572,7 +614,6 @@
       <div class="flex items-center gap-2"><label class="text-xs text-gray-400">FX Color</label><input type="color" id="fx-color" value="#ffffff" onchange="updateFxColor()" class="w-6 h-6 p-0 border-0 bg-transparent" /></div>
     </div>
 
-    <!-- FRAME STYLING SECTION -->
     <div class="border-t border-white/5 pt-4 space-y-3" id="frame-styling-section">
       <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Frame Styling</h3>
       <div class="flex items-center gap-4">
@@ -607,7 +648,6 @@
       </div>
     </div>
 
-    <!-- FRAME DIMENSIONS SECTION -->
     <div class="border-t border-white/5 pt-4 space-y-3" id="frame-dimensions-section">
       <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Frame Dimensions</h3>
       <p style="font-size:0.6rem; color:#666;">Drag the handles on the main frame (top-left toggle "Resize"), or type exact numbers here. Everything inside scales to fit.</p>
@@ -634,7 +674,6 @@
       <div id="editor-socials" class="space-y-2 mt-1"></div>
     </div>
 
-    <!-- Save Section -->
     <div class="border-t border-white/5 pt-4 space-y-2">
       <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Save</h3>
       <button onclick="saveAllSettings()" class="w-full bg-green-600/60 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
@@ -656,6 +695,9 @@
 const customCursor = document.getElementById('custom-cursor');
 let cursorVisible = true;
 
+// Track hover state
+let isHovering = false;
+
 document.addEventListener('mousemove', (e) => {
   if (customCursor) {
     customCursor.style.left = e.clientX + 'px';
@@ -664,6 +706,19 @@ document.addEventListener('mousemove', (e) => {
       customCursor.style.opacity = '1';
       cursorVisible = true;
     }
+    
+    // Check if hovering over interactive element
+    const target = document.elementFromPoint(e.clientX, e.clientY);
+    if (target) {
+      const interactive = target.closest('button, a, input, select, textarea, .stat-item[style*="cursor:pointer"], #enter-screen, #scale-mode-toggle, .resize-handle, [onclick]');
+      if (interactive && !isHovering) {
+        isHovering = true;
+        customCursor.classList.add('hover');
+      } else if (!interactive && isHovering) {
+        isHovering = false;
+        customCursor.classList.remove('hover');
+      }
+    }
   }
 });
 
@@ -671,6 +726,8 @@ document.addEventListener('mouseleave', () => {
   if (customCursor) {
     customCursor.style.opacity = '0';
     cursorVisible = false;
+    isHovering = false;
+    customCursor.classList.remove('hover');
   }
 });
 
@@ -680,6 +737,65 @@ document.addEventListener('mouseenter', () => {
     cursorVisible = true;
   }
 });
+
+// ─── CURSOR STYLE UPDATER ───────────────────────────────────
+function updateCursorStyle() {
+  const color = document.getElementById('cursor-color').value;
+  const opacity = parseFloat(document.getElementById('cursor-opacity').value);
+  const size = parseInt(document.getElementById('cursor-size').value);
+  const outlineColor = document.getElementById('cursor-outline-color').value;
+  const outlineOpacity = parseFloat(document.getElementById('cursor-outline-opacity').value);
+  const outlineWidth = parseFloat(document.getElementById('cursor-outline-width').value);
+  const hoverSize = parseInt(document.getElementById('cursor-hover-size').value);
+  const hoverOpacity = parseFloat(document.getElementById('cursor-hover-opacity').value);
+
+  // Convert hex to rgba
+  function hexToRgba(hex, alpha) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  const dotColor = hexToRgba(color, opacity);
+  const borderColor = hexToRgba(outlineColor, outlineOpacity);
+
+  customCursor.style.width = size + 'px';
+  customCursor.style.height = size + 'px';
+  customCursor.style.background = dotColor;
+  customCursor.style.border = `${outlineWidth}px solid ${borderColor}`;
+
+  // Update hover styles via CSS custom properties or direct style
+  customCursor.style.setProperty('--hover-size', hoverSize + 'px');
+  customCursor.style.setProperty('--hover-bg', hexToRgba(color, hoverOpacity));
+  
+  // Update labels
+  document.getElementById('cursor-opacity-label').textContent = Math.round(opacity * 100) + '%';
+  document.getElementById('cursor-size-label').textContent = size + 'px';
+  document.getElementById('cursor-outline-opacity-label').textContent = Math.round(outlineOpacity * 100) + '%';
+  document.getElementById('cursor-outline-width-label').textContent = outlineWidth + 'px';
+  document.getElementById('cursor-hover-size-label').textContent = hoverSize + 'px';
+  document.getElementById('cursor-hover-opacity-label').textContent = Math.round(hoverOpacity * 100) + '%';
+
+  // Update hover class dynamically
+  const styleId = 'cursor-hover-style';
+  let styleEl = document.getElementById(styleId);
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = styleId;
+    document.head.appendChild(styleEl);
+  }
+  styleEl.textContent = `
+    .custom-cursor.hover {
+      width: ${hoverSize}px !important;
+      height: ${hoverSize}px !important;
+      background: ${hexToRgba(color, hoverOpacity)} !important;
+      border-width: ${Math.max(outlineWidth, outlineWidth * 1.5)}px !important;
+    }
+  `;
+
+  persistState();
+}
 
 // ─── EDIT MODE ──────────────────────────────────────────────
 const urlParams = new URLSearchParams(window.location.search);
@@ -730,6 +846,7 @@ const state = {
   location: "Earth",
   pfpUrl: "/assets/avatar.gif",
   pfpSize: 140,
+  badgeScale: 1,
   bgType: 'none',
   bgUrl: '',
   bgBrightness: 1,
@@ -745,6 +862,16 @@ const state = {
   frameBorderColor: '#ffffff',
   frameWidth: null,
   frameHeight: null,
+  cursor: {
+    color: '#ffffff',
+    opacity: 1,
+    size: 8,
+    outlineColor: '#ffffff',
+    outlineOpacity: 0.4,
+    outlineWidth: 2,
+    hoverSize: 14,
+    hoverOpacity: 0.4
+  },
   typewriter: { enabled: false, applyUsername: false, cursor: false, typeSpeed: 50, deleteSpeed: 25, pauseTime: 1500, lineGap: 300 },
   glowEffect: {
     enabled: false,
@@ -814,10 +941,8 @@ const DOM = {
   resizeDimsLabel: document.getElementById('resize-dims-label')
 };
 
-// ─── SELECTED ASSET PREVIEW BLOBS (for live in-editor preview only) ─────
+// ─── SELECTED ASSET PREVIEW BLOBS ─────
 const assetPreviewBlobs = { pfp: null, bg: null, songs: {} };
-
-// ─── SELECTED ASSET FILES (for zip export on Save) ──────────────────────
 const assetFiles = { pfp: null, bg: null, songs: {} };
 
 function getSongPlaybackSrc(song) {
@@ -834,10 +959,8 @@ function getBgDisplaySrc() {
   return assetPreviewBlobs.bg || getAssetUrl(state.bgUrl);
 }
 
-// ─── PERSISTENCE HELPER (disabled) ───────────────────────────
 function persistState() {}
 
-// ─── CACHE-BUSTING HELPER ──────────────────────────────────
 function getAssetUrl(path) {
   if (!path) return '';
   if (path.startsWith('http://') || path.startsWith('https://')) {
@@ -868,7 +991,6 @@ async function loadProfileFromJSON() {
   return false;
 }
 
-// ─── MIGRATE OLD SINGLE-TRACK PROFILES ──────────────────────
 function migrateLegacyMusic() {
   if (!Array.isArray(state.songs)) state.songs = [];
   if (state.songs.length === 0 && state.audioUrl) {
@@ -881,6 +1003,7 @@ function migrateLegacyMusic() {
   if (typeof state.frameBorderWidth !== 'number') state.frameBorderWidth = 1;
   if (!state.frameBorderColor) state.frameBorderColor = '#ffffff';
   if (typeof state.pfpSize !== 'number') state.pfpSize = 140;
+  if (typeof state.badgeScale !== 'number') state.badgeScale = 1;
 }
 
 // ─── PFP SIZE ────────────────────────────────────────────────
@@ -893,26 +1016,43 @@ function updatePfpSize(size) {
   persistState();
 }
 
+// ─── BADGE SCALE ─────────────────────────────────────────────
+function updateBadgeScale(scale) {
+  const s = parseFloat(scale);
+  state.badgeScale = s;
+  document.getElementById('badge-scale-label').textContent = s + 'x';
+  applyBadgeScale();
+  persistState();
+}
+
+function applyBadgeScale() {
+  const scale = state.badgeScale || 1;
+  const badgePills = document.querySelectorAll('.badge-pill');
+  badgePills.forEach(badge => {
+    badge.style.fontSize = (0.7 * scale) + 'rem';
+    badge.style.padding = (2 * scale) + 'px ' + (10 * scale) + 'px ' + (2 * scale) + 'px ' + (6 * scale) + 'px';
+    badge.style.gap = (4 * scale) + 'px';
+    const icon = badge.querySelector('i');
+    if (icon) icon.style.fontSize = (0.8 * scale) + 'rem';
+  });
+}
+
 // ─── SAVE ALL SETTINGS ──────────────────────────────────────
 async function saveAllSettings() {
-  // Profile
   state.username = document.getElementById('input-username').value;
   state.location = document.getElementById('input-location').value;
-
-  // Assets
   state.pfpUrl = document.getElementById('input-pfp-url').value || '/assets/avatar.gif';
   state.pfpSize = parseInt(document.getElementById('pfp-size').value) || 140;
+  state.badgeScale = parseFloat(document.getElementById('badge-scale').value) || 1;
   state.bgUrl = document.getElementById('input-bg-url').value || '';
   state.bgType = document.getElementById('input-bg-type').value;
 
-  // Colors
   state.usernameColor = document.getElementById('username-color').value;
   state.bioColor = document.getElementById('bio-color').value;
   state.musicColor = document.getElementById('music-color').value;
   state.statsColor = document.getElementById('stats-color').value;
   state.socialColor = document.getElementById('social-color').value;
 
-  // Typography
   state.usernameFont = document.getElementById('username-font').value;
   state.usernameWeight = document.getElementById('username-weight').value;
   state.bioFont = document.getElementById('bio-font').value;
@@ -924,7 +1064,6 @@ async function saveAllSettings() {
   state.socialFont = document.getElementById('social-font').value;
   state.socialWeight = document.getElementById('social-weight').value;
 
-  // Typewriter
   state.typewriter.enabled = document.getElementById('tw-enabled').checked;
   state.typewriter.applyUsername = document.getElementById('tw-apply-username').checked;
   state.typewriter.cursor = document.getElementById('tw-cursor').checked;
@@ -933,7 +1072,6 @@ async function saveAllSettings() {
   state.typewriter.pauseTime = parseInt(document.getElementById('tw-pauseTime').value) || 1500;
   state.typewriter.lineGap = parseInt(document.getElementById('tw-lineGap').value) || 300;
 
-  // Glow
   state.glowEffect.enabled = document.getElementById('glow-enabled').checked;
   state.glowEffect.intensity = parseFloat(document.getElementById('glow-intensity').value) || 4;
   if (!state.glowEffect.targets) state.glowEffect.targets = {};
@@ -942,12 +1080,10 @@ async function saveAllSettings() {
     if (el) state.glowEffect.targets[key] = el.checked;
   });
 
-  // Tilt
   state.tilt.enabled = document.getElementById('tilt-enabled').checked;
   state.tilt.intensity = parseFloat(document.getElementById('tilt-intensity').value) || 8;
   state.tilt.speed = parseFloat(document.getElementById('tilt-speed').value) || 0.15;
 
-  // Frame styling
   state.frameBg = document.getElementById('frame-bg-color').value;
   state.frameTransparency = parseInt(document.getElementById('frame-transparency').value) / 100;
   state.frameOutline = parseInt(document.getElementById('frame-outline-opacity').value) / 100;
@@ -956,10 +1092,17 @@ async function saveAllSettings() {
   state.frameBorderWidth = parseInt(document.getElementById('frame-border-width').value);
   state.frameBorderColor = document.getElementById('frame-border-color').value;
 
-  // Frame dimensions
+  state.cursor.color = document.getElementById('cursor-color').value;
+  state.cursor.opacity = parseFloat(document.getElementById('cursor-opacity').value);
+  state.cursor.size = parseInt(document.getElementById('cursor-size').value);
+  state.cursor.outlineColor = document.getElementById('cursor-outline-color').value;
+  state.cursor.outlineOpacity = parseFloat(document.getElementById('cursor-outline-opacity').value);
+  state.cursor.outlineWidth = parseFloat(document.getElementById('cursor-outline-width').value);
+  state.cursor.hoverSize = parseInt(document.getElementById('cursor-hover-size').value);
+  state.cursor.hoverOpacity = parseFloat(document.getElementById('cursor-hover-opacity').value);
+
   updateFrameDimsFromInputs(true);
 
-  // Background effects
   const brightnessEl = document.getElementById('bg-brightness');
   if (brightnessEl) state.bgBrightness = parseFloat(brightnessEl.value);
   document.querySelectorAll('input[name="fx"]').forEach(el => {
@@ -971,23 +1114,21 @@ async function saveAllSettings() {
 
   try {
     const { newFileCount, fetchedCount, failedFetches } = await downloadAssetsPackage();
-    let msg = '✅ curbtree-package.zip downloaded! It contains profile.json plus a complete assets/ folder';
+    let msg = '✅ curbtree-package.zip downloaded!';
     if (newFileCount || fetchedCount) {
-      msg += ' (' + newFileCount + ' new file(s) picked this session, ' + fetchedCount + ' existing file(s) pulled in from your live site)';
+      msg += ' (' + newFileCount + ' new, ' + fetchedCount + ' existing files)';
     }
-    msg += '.\n\nUnzip it and upload everything to your GitHub repo, replacing your old assets/ folder entirely — old and new files will both be there.';
     if (failedFetches.length) {
-      msg += '\n\n⚠️ Could not fetch these from the live site (they may not be uploaded there yet, or this preview isn\'t running on your real domain): ' + failedFetches.join(', ');
+      msg += '\n⚠️ Could not fetch: ' + failedFetches.join(', ');
     }
     alert(msg);
   } catch (e) {
     console.error('Zip build failed:', e);
     downloadProfileJSON();
-    alert('⚠️ Could not build the assets zip (' + (e && e.message ? e.message : 'unknown error') + '), so just profile.json was downloaded instead. Upload your song/image/video files manually alongside it.');
+    alert('⚠️ Could not build zip, profile.json downloaded instead.');
   }
 }
 
-// ─── RELIABLE FILE DOWNLOAD HELPER ───────────────────────────
 function triggerBlobDownload(blob, filename) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -1002,11 +1143,8 @@ function triggerBlobDownload(blob, filename) {
   }, 1000);
 }
 
-// ─── ASSETS ZIP PACKAGE ──────────────────────────────────────
 async function downloadAssetsPackage() {
-  if (typeof JSZip === 'undefined') {
-    throw new Error('JSZip failed to load (check your internet connection / ad blocker)');
-  }
+  if (typeof JSZip === 'undefined') throw new Error('JSZip failed to load');
   const zip = new JSZip();
   const folder = zip.folder('assets');
   let newFileCount = 0;
@@ -1047,13 +1185,11 @@ async function downloadAssetsPackage() {
   }
 
   zip.file('profile.json', JSON.stringify(state, null, 2));
-
   const blob = await zip.generateAsync({ type: 'blob' });
   triggerBlobDownload(blob, 'curbtree-package.zip');
   return { newFileCount, fetchedCount, failedFetches };
 }
 
-// ─── FILE PICKERS (avatar / background) ─────────────────────
 function handleFileSelect(e, kind) {
   const file = e.target.files && e.target.files[0];
   if (!file) return;
@@ -1089,11 +1225,9 @@ function handleFileSelect(e, kind) {
       DOM.bgVideo.play().catch(() => {});
     }
   }
-
   persistState();
 }
 
-// ─── FRAME STYLING ──────────────────────────────────────────
 function updateFrameStyle() {
   const bg = document.getElementById('frame-bg-color').value;
   const transparency = parseInt(document.getElementById('frame-transparency').value) / 100;
@@ -1125,7 +1259,6 @@ function applyFrameStyles(bg, transparency, outline, blur, shadow, borderWidth, 
   const bgWithAlpha = bg + alpha;
   const blurValue = `blur(${blur}px)`;
   
-  // Convert hex border color to rgba with outline opacity
   const hexToRgb = (hex) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? {
@@ -1136,9 +1269,8 @@ function applyFrameStyles(bg, transparency, outline, blur, shadow, borderWidth, 
   };
   
   const rgb = hexToRgb(borderColor);
-  const borderOpacity = Math.max(0.05, outline); // Keep some minimum visibility
+  const borderOpacity = Math.max(0.05, outline);
   const borderColorRgba = `rgba(${rgb.r},${rgb.g},${rgb.b},${borderOpacity})`;
-  
   const shadowValue = shadow ? '0 8px 32px rgba(0,0,0,0.5)' : 'none';
 
   [DOM.mainFrame, DOM.bottomFrame].forEach(frame => {
@@ -1162,7 +1294,6 @@ function applyFrameStyles(bg, transparency, outline, blur, shadow, borderWidth, 
   });
 }
 
-// ─── FRAME DIMENSIONS (resizable main frame, edit mode only) ──
 let defaultFrameSize = null;
 
 function captureDefaultFrameSize() {
@@ -1193,14 +1324,6 @@ function applyFrameDimensions() {
       inner.style.transformOrigin = 'top left';
       inner.style.width = (100 / scale) + '%';
     }
-    
-    // Scale badges with frame
-    const badgePills = document.querySelectorAll('.badge-pill');
-    badgePills.forEach(badge => {
-      badge.style.fontSize = (0.7 * scale) + 'rem';
-      const icon = badge.querySelector('i');
-      if (icon) icon.style.fontSize = (0.8 * scale) + 'rem';
-    });
   } else {
     DOM.mainFrame.style.width = '';
     DOM.mainFrame.style.height = '';
@@ -1213,15 +1336,9 @@ function applyFrameDimensions() {
       inner.style.transform = '';
       inner.style.width = '';
     }
-    
-    // Reset badge sizes
-    const badgePills = document.querySelectorAll('.badge-pill');
-    badgePills.forEach(badge => {
-      badge.style.fontSize = '0.7rem';
-      const icon = badge.querySelector('i');
-      if (icon) icon.style.fontSize = '0.8rem';
-    });
   }
+
+  applyBadgeScale();
 
   const wInput = document.getElementById('input-frame-width');
   const hInput = document.getElementById('input-frame-height');
@@ -1251,7 +1368,6 @@ function resetFrameDims() {
   persistState();
 }
 
-// ─── SCALE / RESIZE MODE (drag handles, edit mode only) ─────
 let scaleModeOn = false;
 let resizing = false;
 let resizeDir = null;
@@ -1321,7 +1437,6 @@ function stopResize() {
   persistState();
 }
 
-// ─── BACKGROUND BRIGHTNESS ────────────────────────────────────
 function updateBgBrightness(val) {
   const v = parseFloat(val);
   state.bgBrightness = v;
@@ -1329,21 +1444,17 @@ function updateBgBrightness(val) {
   persistState();
 }
 
-// ─── APPLY ALL SETTINGS ─────────────────────────────────────
 function applyAllSettings() {
-  // Profile
   DOM.displayUsername.textContent = state.username;
   DOM.displayUsername.style.color = state.usernameColor;
   DOM.displayBio.textContent = state.bioLines[0] || '';
   DOM.displayBio.style.color = state.bioColor;
   DOM.locationDisplay.textContent = state.location;
 
-  // Profile Picture with size
   if (state.pfpUrl) DOM.displayPfp.src = getPfpDisplaySrc();
   DOM.displayPfp.style.width = state.pfpSize + 'px';
   DOM.displayPfp.style.height = state.pfpSize + 'px';
 
-  // Background media
   if (state.bgType === 'image' && state.bgUrl) {
     DOM.bgImage.src = getBgDisplaySrc();
     DOM.bgImage.style.display = 'block';
@@ -1362,13 +1473,11 @@ function applyAllSettings() {
     DOM.bgVideo.style.display = 'none';
   }
 
-  // Background brightness
   if (typeof state.bgBrightness !== 'number') state.bgBrightness = 1;
   DOM.bgOverlay.style.opacity = 1 - state.bgBrightness / 2.2;
   const brightnessEl = document.getElementById('bg-brightness');
   if (brightnessEl) brightnessEl.value = state.bgBrightness;
 
-  // Music / Playlist
   refreshMusicDisplay();
   DOM.inlineTrack.style.color = state.musicColor;
   DOM.volumeIcon.style.color = state.musicColor;
@@ -1376,11 +1485,9 @@ function applyAllSettings() {
   if (DOM.inlineDurationTime) DOM.inlineDurationTime.style.color = state.musicColor;
   applyMusicThumbColor();
 
-  // Stats (now inline)
   const statItems = DOM.statsBarInline.querySelectorAll('.stat-item');
   statItems.forEach(item => item.style.color = state.statsColor);
 
-  // Frame
   applyFrameStyles(
     state.frameBg, 
     state.frameTransparency, 
@@ -1391,18 +1498,12 @@ function applyAllSettings() {
     state.frameBorderColor
   );
   applyFrameDimensions();
-
-  // Typography
   applyTypography();
-
-  // Glow
   applyGlow();
-
-  // Typewriter
+  applyBadgeScale();
   restartTypewriter();
   applyCursorClasses();
 
-  // Background effects (fx type + color)
   document.querySelectorAll('input[name="fx"]').forEach(el => {
     el.checked = el.value === state.fx;
   });
@@ -1412,11 +1513,28 @@ function applyAllSettings() {
 
   updateScaleModeToggleVisibility();
   
-  // Update PFP size slider
   const pfpSizeEl = document.getElementById('pfp-size');
   if (pfpSizeEl) pfpSizeEl.value = state.pfpSize;
   const pfpSizeLabel = document.getElementById('pfp-size-label');
   if (pfpSizeLabel) pfpSizeLabel.textContent = state.pfpSize + 'px';
+
+  const badgeScaleEl = document.getElementById('badge-scale');
+  if (badgeScaleEl) badgeScaleEl.value = state.badgeScale;
+  const badgeScaleLabel = document.getElementById('badge-scale-label');
+  if (badgeScaleLabel) badgeScaleLabel.textContent = state.badgeScale + 'x';
+
+  // Cursor settings
+  if (state.cursor) {
+    document.getElementById('cursor-color').value = state.cursor.color || '#ffffff';
+    document.getElementById('cursor-opacity').value = state.cursor.opacity || 1;
+    document.getElementById('cursor-size').value = state.cursor.size || 8;
+    document.getElementById('cursor-outline-color').value = state.cursor.outlineColor || '#ffffff';
+    document.getElementById('cursor-outline-opacity').value = state.cursor.outlineOpacity || 0.4;
+    document.getElementById('cursor-outline-width').value = state.cursor.outlineWidth || 2;
+    document.getElementById('cursor-hover-size').value = state.cursor.hoverSize || 14;
+    document.getElementById('cursor-hover-opacity').value = state.cursor.hoverOpacity || 0.4;
+    updateCursorStyle();
+  }
 }
 
 function applyMusicThumbColor() {
@@ -1425,15 +1543,13 @@ function applyMusicThumbColor() {
   }
 }
 
-// ─── DOWNLOAD profile.json ──────────────────────────────────
 function downloadProfileJSON() {
   const data = JSON.stringify(state, null, 2);
   const blob = new Blob([data], {type: 'application/json'});
   triggerBlobDownload(blob, 'profile.json');
-  alert('✅ profile.json downloaded! Remember to also upload any new song/image/video files to the paths shown in the URL fields.');
+  alert('✅ profile.json downloaded!');
 }
 
-// ─── UPDATE FUNCTIONS ──────────────────────────────────────
 function updatePfpUrl(val) { state.pfpUrl = val; assetPreviewBlobs.pfp = null; DOM.displayPfp.src = getPfpDisplaySrc(); persistState(); }
 function updateBgUrl(val) { state.bgUrl = val; assetPreviewBlobs.bg = null; applyAllSettings(); persistState(); }
 function updateBgType(val) { state.bgType = val; applyAllSettings(); persistState(); }
@@ -1445,7 +1561,6 @@ function updateMusicColor(color) { state.musicColor = color; DOM.inlineTrack.sty
 function updateStatsColor(color) { state.statsColor = color; const items = DOM.statsBarInline.querySelectorAll('.stat-item'); items.forEach(item => item.style.color = color); persistState(); }
 function updateSocialColor(color) { state.socialColor = color; document.querySelectorAll('.social-tooltip').forEach(el => el.style.color = color); persistState(); }
 
-// ─── TYPOGRAPHY ─────────────────────────────────────────────
 const FONT_CLASSES = ['font-inter', 'font-roboto', 'font-poppins', 'font-montserrat', 'font-playfair', 'font-raleway', 'font-dm-sans', 'font-space-grotesk'];
 const WEIGHT_CLASSES = ['font-weight-normal', 'font-weight-medium', 'font-weight-semibold', 'font-weight-bold', 'font-weight-extrabold'];
 
@@ -1494,9 +1609,7 @@ function applyTypography() {
   persistState();
 }
 
-// ─── NEON GLOW (light-emission style, excludes stats by default) ──────
 function updateGlowSetting(key, val) { state.glowEffect[key] = val; applyGlow(); persistState(); }
-
 function updateGlowTarget(target, val) {
   if (!state.glowEffect.targets) state.glowEffect.targets = {};
   state.glowEffect.targets[target] = val;
@@ -1539,7 +1652,6 @@ function applyGlow() {
   });
 }
 
-// ─── TYPEWRITER (username / bio) ─────────────────────────────
 let usernameTimer = null, bioTimer = null;
 
 function updateTypewriterSetting(key, val) {
@@ -1608,7 +1720,6 @@ function applyCursorClasses() {
   DOM.displayUsername.classList.toggle('typewriter-cursor', showCursor && state.typewriter.applyUsername);
 }
 
-// ─── TRACK NAME TYPEWRITER (song changes / replays) ──────────
 let trackNameTimer = null;
 
 function typewriterTrackName(newName, force) {
@@ -1627,7 +1738,6 @@ function typewriterTrackName(newName, force) {
   }
 
   if (!oldText) { type(); return; }
-
   if (oldText === newName && !force) {
     el.textContent = newName;
     return;
@@ -1642,7 +1752,6 @@ function typewriterTrackName(newName, force) {
   })();
 }
 
-// ─── TILT ────────────────────────────────────────────────────
 let curRX = 0, curRY = 0, tarRX = 0, tarRY = 0, curS = 1, tarS = 1, tiltLoop = null;
 
 function updateTiltSetting(key, val) { state.tilt[key] = val; if (!state.tilt.enabled) { tarRX = 0; tarRY = 0; tarS = 1; } persistState(); }
@@ -1676,7 +1785,6 @@ function initTilt() {
   if (!tiltLoop) tiltLoopFn();
 }
 
-// ─── EFFECTS ──────────────────────────────────────────────────
 let fxCanvas, ctx, fxParticles = [], fxAnimId = null;
 
 function initFxCanvas() {
@@ -1713,12 +1821,7 @@ function setEffect(type) {
     scanlines.classList.remove('active');
   }
 
-  if (type === 'none') {
-    if (ctx) ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
-    return;
-  }
-
-  if (type === 'pixel') {
+  if (type === 'none' || type === 'pixel') {
     if (ctx) ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
     return;
   }
@@ -1794,7 +1897,6 @@ function drawFx() {
 
 function updateFxColor() { state.fxColor = document.getElementById('fx-color').value; persistState(); }
 
-// ─── PLAYLIST / MUSIC ────────────────────────────────────────
 function updateAudioLoopFlag() {
   DOM.audioPlayer.loop = !(state.songs && state.songs.length > 1);
 }
@@ -1885,7 +1987,7 @@ function toggleAudio(force) {
       DOM.inlineStatus.className = 'status-dot';
     }).catch((err) => {
       console.warn('Playback failed:', err);
-      alert('⚠️ Could not play this track. Make sure the song has a valid file selected or a working URL.');
+      alert('⚠️ Could not play this track.');
     });
   }
 }
@@ -1925,7 +2027,6 @@ function initSeekBar() {
   });
 }
 
-// ─── EDITOR: PLAYLIST MANAGEMENT ─────────────────────────────
 function renderEditorSongs() {
   const c = DOM.editorSongs;
   if (!c) return;
@@ -1950,7 +2051,7 @@ function renderEditorSongs() {
       </div>
       <input value="${song.url || ''}" oninput="updateSong('${song.id}','url',this.value)" placeholder="/assets/song.mp3" class="w-full bg-[#111] border border-[#444] rounded px-1 py-0.5 text-white" />
       <input type="file" accept="audio/*" onchange="handleSongFileSelect(event,'${song.id}')" class="w-full text-[0.6rem] text-gray-400 file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[0.6rem] file:bg-blue-600/60 file:text-white" />
-      ${hasLocalPreview ? '<div class="text-[0.6rem] text-green-400"><i class="fas fa-circle-check"></i> Local file loaded — playable now, included in next Save & Download Package</div>' : ''}
+      ${hasLocalPreview ? '<div class="text-[0.6rem] text-green-400"><i class="fas fa-circle-check"></i> Local file loaded</div>' : ''}
       ${isCurrent ? '<div class="text-[0.6rem] text-blue-400"><i class="fas fa-volume-high"></i> Now playing</div>' : ''}
     `;
     c.appendChild(d);
@@ -2039,7 +2140,6 @@ function handleSongFileSelect(e, id) {
   persistState();
 }
 
-// ─── VERCEL ANALYTICS VIEW COUNT ──────────────────────────
 async function getViewCount() {
   try {
     const hasVisited = sessionStorage.getItem('curbtree_visited');
@@ -2049,7 +2149,7 @@ async function getViewCount() {
         window.va('event', 'page_view', { params: { page: window.location.pathname, timestamp: Date.now() } });
       }
     }
-  } catch (e) { /* ignore */ }
+  } catch (e) {}
 
   try {
     const res = await fetch('/api/views?path=' + encodeURIComponent(window.location.pathname));
@@ -2060,10 +2160,7 @@ async function getViewCount() {
         return data.pageviews;
       }
     }
-    console.warn('⚠️ /api/views did not return a usable pageviews number, falling back to local counter.');
-  } catch (e) {
-    console.warn('⚠️ Could not reach /api/views (is it deployed + configured?), falling back to local counter.', e);
-  }
+  } catch (e) {}
 
   try {
     let count = parseInt(localStorage.getItem('curbtree_views')) || 0;
@@ -2078,7 +2175,6 @@ async function getViewCount() {
   } catch (e) { return 0; }
 }
 
-// ─── START EXPERIENCE ──────────────────────────────────────
 function startExperience() {
   DOM.enterScreen.style.opacity = '0';
   setTimeout(() => {
@@ -2099,7 +2195,6 @@ function startExperience() {
 
 function toggleEditor() { document.getElementById('editor-sidebar').classList.toggle('open'); }
 
-// ─── SHARE LINK ──────────────────────────────────────────────
 function copyProfileLink() {
   const url = window.location.href;
   navigator.clipboard.writeText(url).then(() => {
@@ -2109,7 +2204,6 @@ function copyProfileLink() {
   }).catch(() => {});
 }
 
-// ─── BADGES ──────────────────────────────────────────────────
 const badgeIconOptions = [
   "fa-solid fa-check-circle", "fa-solid fa-star", "fa-solid fa-bolt", "fa-solid fa-crown",
   "fa-solid fa-shield-halved", "fa-solid fa-award", "fa-solid fa-certificate", "fa-solid fa-medal",
@@ -2125,23 +2219,7 @@ function renderBadges() {
     span.innerHTML = `<i class="${b.icon}" style="color:${b.color}"></i> <span style="color:${b.textColor || '#dddddd'}">${b.label}</span>`;
     DOM.badgeContainer.appendChild(span);
   });
-  
-  // Apply current scale to badges if frame is resized
-  if (state.frameWidth || state.frameHeight) {
-    captureDefaultFrameSize();
-    const targetW = state.frameWidth || defaultFrameSize.w;
-    const targetH = state.frameHeight || defaultFrameSize.h;
-    const scaleW = targetW / defaultFrameSize.w;
-    const scaleH = targetH / defaultFrameSize.h;
-    const scale = Math.max(0.5, Math.min(2.2, Math.min(scaleW, scaleH)));
-    
-    const badgePills = document.querySelectorAll('.badge-pill');
-    badgePills.forEach(badge => {
-      badge.style.fontSize = (0.7 * scale) + 'rem';
-      const icon = badge.querySelector('i');
-      if (icon) icon.style.fontSize = (0.8 * scale) + 'rem';
-    });
-  }
+  applyBadgeScale();
 }
 
 function renderEditorBadges() {
@@ -2167,7 +2245,6 @@ function addBadge() { state.badges.push({ id: genId(), label: "New", icon: "fa-s
 function removeBadge(id) { state.badges = state.badges.filter(b => b.id !== id); renderEditorBadges(); renderBadges(); persistState(); }
 function updateBadge(id, key, val) { const b = state.badges.find(x => x.id === id); if (b) { b[key] = val; renderBadges(); persistState(); } }
 
-// ─── BIO LINES ──────────────────────────────────────────────
 function renderEditorBioLines() {
   const c = DOM.editorBioLines;
   if (!c) return;
@@ -2187,7 +2264,6 @@ function addBioLine() { state.bioLines.push("New bio line"); renderEditorBioLine
 function removeBioLine(i) { if (state.bioLines.length < 2) return; state.bioLines.splice(i, 1); renderEditorBioLines(); restartTypewriter(); persistState(); }
 function updateBioLine(i, v) { state.bioLines[i] = v; restartTypewriter(); persistState(); }
 
-// ─── SOCIAL LINKS ──────────────────────────────────────────
 const availableIcons = ["fa-brands fa-discord", "fa-brands fa-github", "fa-brands fa-twitter", "fa-brands fa-instagram", "fa-brands fa-youtube", "fa-brands fa-twitch", "fa-brands fa-spotify", "fa-brands fa-steam", "fa-brands fa-reddit", "fa-brands fa-telegram", "fa-brands fa-tiktok", "fa-solid fa-globe", "fa-solid fa-link"];
 
 function renderEditorSocials() {
@@ -2253,7 +2329,6 @@ function genId() { return Math.random().toString(36).slice(2, 8); }
 // ─── INIT ────────────────────────────────────────────────────
 async function init() {
   await loadProfileFromJSON();
-
   migrateLegacyMusic();
 
   renderEditorSocials();
@@ -2277,6 +2352,8 @@ async function init() {
   document.getElementById('input-bg-type').value = state.bgType;
   document.getElementById('pfp-size').value = state.pfpSize;
   document.getElementById('pfp-size-label').textContent = state.pfpSize + 'px';
+  document.getElementById('badge-scale').value = state.badgeScale || 1;
+  document.getElementById('badge-scale-label').textContent = (state.badgeScale || 1) + 'x';
 
   document.getElementById('username-color').value = state.usernameColor;
   document.getElementById('bio-color').value = state.bioColor;
@@ -2331,8 +2408,21 @@ async function init() {
     el.checked = el.value === state.fx;
   });
 
-  applyAllSettings();
+  // Cursor init
+  if (!state.cursor) {
+    state.cursor = {
+      color: '#ffffff',
+      opacity: 1,
+      size: 8,
+      outlineColor: '#ffffff',
+      outlineOpacity: 0.4,
+      outlineWidth: 2,
+      hoverSize: 14,
+      hoverOpacity: 0.4
+    };
+  }
 
+  applyAllSettings();
   initTilt();
 
   if (state.fx !== 'none') setEffect(state.fx);
