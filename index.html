@@ -66,8 +66,9 @@
 
     .music-player-bar {
       display:flex;
-      align-items:center;
-      gap:14px;
+      flex-direction:column;
+      align-items:stretch;
+      gap:4px;
       width:100%;
       padding:6px 8px 6px 4px;
       margin-top:auto;
@@ -76,6 +77,39 @@
       backdrop-filter:none !important;
       transition: all 0.2s ease;
     }
+    .music-player-bar .player-top-row {
+      display:flex;
+      align-items:center;
+      gap:14px;
+      width:100%;
+    }
+    .music-player-bar .player-seek-row {
+      display:flex;
+      align-items:center;
+      gap:8px;
+      width:100%;
+      padding:0 2px;
+    }
+    .music-player-bar .seek-time {
+      font-size:0.65rem;
+      color:#888;
+      min-width:30px;
+      text-align:center;
+      flex-shrink:0;
+      font-variant-numeric:tabular-nums;
+      transition: color 0.2s;
+    }
+    .music-player-bar .seek-slider {
+      flex:1;
+      height:3px;
+      background:rgba(255,255,255,0.12);
+      border-radius:4px;
+      appearance:none;
+      cursor:pointer;
+      transition:0.2s;
+    }
+    .music-player-bar .seek-slider::-webkit-slider-thumb { appearance:none; width:11px; height:11px; border-radius:50%; background:#8ab4f8; cursor:pointer; box-shadow:0 0 8px rgba(138,180,248,0.3); }
+    .music-player-bar .seek-slider::-moz-range-thumb { width:11px; height:11px; border-radius:50%; background:#8ab4f8; cursor:pointer; border:none; }
     .music-player-bar .play-btn {
       background:transparent;
       border:none;
@@ -259,20 +293,27 @@
           </div>
         </div>
         <div class="music-player-bar" id="inline-music-container" style="display:none;">
-          <button class="play-btn secondary" id="inline-prev-btn" onclick="prevSong()" title="Previous track">
-            <i class="fas fa-backward-step"></i>
-          </button>
-          <button class="play-btn" id="inline-audio-toggle" onclick="toggleAudio()">
-            <i class="fas fa-play" id="inline-play-icon"></i>
-          </button>
-          <button class="play-btn secondary" id="inline-next-btn" onclick="nextSong()" title="Next track">
-            <i class="fas fa-forward-step"></i>
-          </button>
-          <span class="track-name" id="inline-track-name">track.mp3</span>
-          <span class="status-dot" id="inline-status"></span>
-          <span class="spacer"></span>
-          <i class="fas fa-volume-low vol-icon" id="volume-icon"></i>
-          <input type="range" class="volume-slider" id="inline-volume" min="0" max="1" step="0.01" value="0.5" oninput="updateVolume(this.value)" />
+          <div class="player-top-row">
+            <button class="play-btn secondary" id="inline-prev-btn" onclick="prevSong()" title="Previous track">
+              <i class="fas fa-backward-step"></i>
+            </button>
+            <button class="play-btn" id="inline-audio-toggle" onclick="toggleAudio()">
+              <i class="fas fa-play" id="inline-play-icon"></i>
+            </button>
+            <button class="play-btn secondary" id="inline-next-btn" onclick="nextSong()" title="Next track">
+              <i class="fas fa-forward-step"></i>
+            </button>
+            <span class="track-name" id="inline-track-name">track.mp3</span>
+            <span class="status-dot" id="inline-status"></span>
+            <span class="spacer"></span>
+            <i class="fas fa-volume-low vol-icon" id="volume-icon"></i>
+            <input type="range" class="volume-slider" id="inline-volume" min="0" max="1" step="0.01" value="0.5" oninput="updateVolume(this.value)" />
+          </div>
+          <div class="player-seek-row">
+            <span class="seek-time" id="inline-current-time">0:00</span>
+            <input type="range" class="seek-slider" id="inline-seek" min="0" max="0" step="0.1" value="0" />
+            <span class="seek-time" id="inline-duration-time">0:00</span>
+          </div>
         </div>
       </div>
 
@@ -591,6 +632,9 @@ const DOM = {
   inlineVolume: document.getElementById('inline-volume'),
   inlinePrevBtn: document.getElementById('inline-prev-btn'),
   inlineNextBtn: document.getElementById('inline-next-btn'),
+  inlineSeek: document.getElementById('inline-seek'),
+  inlineCurrentTime: document.getElementById('inline-current-time'),
+  inlineDurationTime: document.getElementById('inline-duration-time'),
   locationDisplay: document.getElementById('location-display'),
   volumeIcon: document.getElementById('volume-icon'),
   statsBar: document.getElementById('stats-bar')
@@ -877,6 +921,8 @@ function applyAllSettings() {
   refreshMusicDisplay();
   DOM.inlineTrack.style.color = state.musicColor;
   DOM.volumeIcon.style.color = state.musicColor;
+  if (DOM.inlineCurrentTime) DOM.inlineCurrentTime.style.color = state.musicColor;
+  if (DOM.inlineDurationTime) DOM.inlineDurationTime.style.color = state.musicColor;
 
   // Stats
   const statItems = DOM.statsBar.querySelectorAll('.stat-item');
@@ -920,7 +966,7 @@ function updateLocation(val) { state.location = val; DOM.locationDisplay.textCon
 function updatePreview() { state.username = document.getElementById('input-username').value; DOM.displayUsername.textContent = state.username; persistState(); }
 function updateUsernameColor(color) { state.usernameColor = color; DOM.displayUsername.style.color = color; persistState(); }
 function updateBioColor(color) { state.bioColor = color; DOM.displayBio.style.color = color; persistState(); }
-function updateMusicColor(color) { state.musicColor = color; DOM.inlineTrack.style.color = color; DOM.volumeIcon.style.color = color; persistState(); }
+function updateMusicColor(color) { state.musicColor = color; DOM.inlineTrack.style.color = color; DOM.volumeIcon.style.color = color; if (DOM.inlineCurrentTime) DOM.inlineCurrentTime.style.color = color; if (DOM.inlineDurationTime) DOM.inlineDurationTime.style.color = color; persistState(); }
 function updateStatsColor(color) { state.statsColor = color; const items = DOM.statsBar.querySelectorAll('.stat-item'); items.forEach(item => item.style.color = color); persistState(); }
 function updateSocialColor(color) { state.socialColor = color; document.querySelectorAll('.social-tooltip').forEach(el => el.style.color = color); persistState(); }
 
@@ -1295,6 +1341,21 @@ function updateAudioLoopFlag() {
   DOM.audioPlayer.loop = !(state.songs && state.songs.length > 1);
 }
 
+function formatTime(seconds) {
+  if (!isFinite(seconds) || seconds < 0) return '0:00';
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return m + ':' + String(s).padStart(2, '0');
+}
+
+function resetSeekBar() {
+  if (!DOM.inlineSeek) return;
+  DOM.inlineSeek.value = 0;
+  DOM.inlineSeek.max = 0;
+  DOM.inlineCurrentTime.textContent = '0:00';
+  DOM.inlineDurationTime.textContent = '0:00';
+}
+
 // Rebuilds the inline player display (name, src, show/hide) for whatever
 // song currentSongIndex points at, WITHOUT any typewriter animation — used
 // for initial load / direct edits, not for next/prev.
@@ -1306,6 +1367,7 @@ function refreshMusicDisplay() {
     DOM.inlineTrack.textContent = song.name;
     DOM.audioPlayer.src = getAssetUrl(song.url);
     updateAudioLoopFlag();
+    resetSeekBar();
   } else {
     DOM.inlineMusic.style.display = 'none';
     DOM.audioPlayer.removeAttribute('src');
@@ -1324,6 +1386,7 @@ function goToSong(index, shouldPlay) {
 
   DOM.audioPlayer.src = getAssetUrl(song.url);
   typewriterTrackName(song.name);
+  resetSeekBar();
 
   if (shouldPlay) {
     DOM.audioPlayer.play().then(() => {
@@ -1367,6 +1430,43 @@ function toggleAudio(force) {
 }
 
 function updateVolume(val) { DOM.audioPlayer.volume = parseFloat(val); }
+
+// Seeking: while the user is dragging the slider we show the scrubbed time
+// immediately but don't touch playback yet; the actual seek happens on
+// release ('change'), and normal timeupdate syncing is paused meanwhile so
+// it doesn't fight the drag.
+let isSeeking = false;
+
+function initSeekBar() {
+  if (!DOM.inlineSeek) return;
+
+  DOM.inlineSeek.addEventListener('input', () => {
+    isSeeking = true;
+    DOM.inlineCurrentTime.textContent = formatTime(parseFloat(DOM.inlineSeek.value));
+  });
+
+  DOM.inlineSeek.addEventListener('change', () => {
+    const val = parseFloat(DOM.inlineSeek.value);
+    if (isFinite(val)) DOM.audioPlayer.currentTime = val;
+    isSeeking = false;
+  });
+
+  DOM.audioPlayer.addEventListener('loadedmetadata', () => {
+    const dur = DOM.audioPlayer.duration || 0;
+    DOM.inlineSeek.max = dur;
+    DOM.inlineDurationTime.textContent = formatTime(dur);
+  });
+
+  DOM.audioPlayer.addEventListener('timeupdate', () => {
+    if (isSeeking) return;
+    const cur = DOM.audioPlayer.currentTime || 0;
+    const dur = DOM.audioPlayer.duration || 0;
+    if (dur && DOM.inlineSeek.max != dur) DOM.inlineSeek.max = dur;
+    DOM.inlineSeek.value = cur;
+    DOM.inlineCurrentTime.textContent = formatTime(cur);
+    DOM.inlineDurationTime.textContent = formatTime(dur);
+  });
+}
 
 // ─── EDITOR: PLAYLIST MANAGEMENT ─────────────────────────────
 function renderEditorSongs() {
@@ -1664,6 +1764,7 @@ async function init() {
   renderEditorSongs();
 
   initFxCanvas();
+  initSeekBar();
 
   // Populate UI fields BEFORE applyAllSettings() so applyTypography() (called
   // inside it) reads the correct restored values from the selects, not defaults.
