@@ -18,7 +18,7 @@
   <style>
     * { 
       box-sizing: border-box; 
-      cursor: none !important; /* Hide default cursor everywhere */
+      cursor: none !important;
     }
     body { 
       margin:0; 
@@ -30,7 +30,6 @@
       cursor: none;
     }
     
-    /* Ensure all interactive elements hide their default cursor */
     button, a, input, select, textarea, [onclick], [role="button"], 
     input[type="range"], input[type="color"], input[type="file"],
     input[type="checkbox"], input[type="radio"], .resize-handle {
@@ -45,17 +44,16 @@
       position: fixed;
       pointer-events: none;
       z-index: 10000;
-      transition: opacity 0.15s;
+      transition: width 0.15s, height 0.15s, background 0.15s, border 0.15s, opacity 0.15s;
       transform: translate(-50%, -50%);
       border: 2px solid rgba(255,255,255,0.4);
     }
     
-    /* Override hover state - keep dot looking the same */
     .custom-cursor.hover {
-      width: 8px !important;
-      height: 8px !important;
-      background: #ffffff !important;
-      border-width: 2px !important;
+      width: 14px;
+      height: 14px;
+      background: rgba(255, 255, 255, 0.4);
+      border-width: 3px;
     }
     
     #bg-container { position:fixed; inset:0; z-index:0; background:#111; }
@@ -528,6 +526,7 @@
       </div>
     </div>
 
+    <!-- Rest of the editor sections remain the same as original -->
     <!-- Music / Playlist Section -->
     <div class="border-t border-white/5 pt-4 space-y-3">
       <div class="flex justify-between items-center">
@@ -705,8 +704,8 @@
 // ─── CUSTOM CURSOR ──────────────────────────────────────────
 const customCursor = document.getElementById('custom-cursor');
 let cursorVisible = true;
+let isHovering = false;
 
-// Simplified mousemove - just track position, no hover detection
 document.addEventListener('mousemove', (e) => {
   if (customCursor) {
     customCursor.style.left = e.clientX + 'px';
@@ -715,8 +714,19 @@ document.addEventListener('mousemove', (e) => {
       customCursor.style.opacity = '1';
       cursorVisible = true;
     }
-    // Always keep the same appearance - no hover class
-    customCursor.classList.remove('hover');
+    
+    // Check if hovering over interactive element
+    const target = document.elementFromPoint(e.clientX, e.clientY);
+    if (target) {
+      const interactive = target.closest('button, a, input, select, textarea, #enter-screen, #scale-mode-toggle, .resize-handle, [onclick]');
+      if (interactive && !isHovering) {
+        isHovering = true;
+        customCursor.classList.add('hover');
+      } else if (!interactive && isHovering) {
+        isHovering = false;
+        customCursor.classList.remove('hover');
+      }
+    }
   }
 });
 
@@ -724,6 +734,7 @@ document.addEventListener('mouseleave', () => {
   if (customCursor) {
     customCursor.style.opacity = '0';
     cursorVisible = false;
+    isHovering = false;
     customCursor.classList.remove('hover');
   }
 });
@@ -743,6 +754,8 @@ function updateCursorStyle() {
   const outlineColor = document.getElementById('cursor-outline-color').value;
   const outlineOpacity = parseFloat(document.getElementById('cursor-outline-opacity').value);
   const outlineWidth = parseFloat(document.getElementById('cursor-outline-width').value);
+  const hoverSize = parseInt(document.getElementById('cursor-hover-size').value);
+  const hoverOpacity = parseFloat(document.getElementById('cursor-hover-opacity').value);
 
   // Convert hex to rgba
   function hexToRgba(hex, alpha) {
@@ -754,8 +767,9 @@ function updateCursorStyle() {
 
   const dotColor = hexToRgba(color, opacity);
   const borderColor = hexToRgba(outlineColor, outlineOpacity);
+  const hoverBg = hexToRgba(color, hoverOpacity);
 
-  // Apply styles to cursor
+  // Apply normal cursor styles
   customCursor.style.width = size + 'px';
   customCursor.style.height = size + 'px';
   customCursor.style.background = dotColor;
@@ -766,8 +780,10 @@ function updateCursorStyle() {
   document.getElementById('cursor-size-label').textContent = size + 'px';
   document.getElementById('cursor-outline-opacity-label').textContent = Math.round(outlineOpacity * 100) + '%';
   document.getElementById('cursor-outline-width-label').textContent = outlineWidth + 'px';
+  document.getElementById('cursor-hover-size-label').textContent = hoverSize + 'px';
+  document.getElementById('cursor-hover-opacity-label').textContent = Math.round(hoverOpacity * 100) + '%';
 
-  // Update hover class to maintain same appearance
+  // Update hover class dynamically
   const styleId = 'cursor-hover-style';
   let styleEl = document.getElementById(styleId);
   if (!styleEl) {
@@ -777,10 +793,10 @@ function updateCursorStyle() {
   }
   styleEl.textContent = `
     .custom-cursor.hover {
-      width: ${size}px !important;
-      height: ${size}px !important;
-      background: ${dotColor} !important;
-      border-width: ${outlineWidth}px !important;
+      width: ${hoverSize}px !important;
+      height: ${hoverSize}px !important;
+      background: ${hoverBg} !important;
+      border-width: ${Math.max(outlineWidth, outlineWidth * 1.5)}px !important;
     }
   `;
 
@@ -1763,7 +1779,7 @@ function initTilt() {
   const g = DOM.tiltGroup;
   if (!g || g._tilt) return;
   
-  // Track mouse position relative to the entire window for tilt
+  // Track mouse position relative to the tilt group for tilt TOWARD cursor
   g.addEventListener('mousemove', e => {
     if (!state.tilt.enabled || scaleModeOn) return;
     const r = g.getBoundingClientRect();
@@ -1771,13 +1787,14 @@ function initTilt() {
     const y = e.clientY - r.top;
     
     // Calculate rotation based on mouse position relative to center
-    // More natural tilt: moving mouse right tilts right, moving up tilts up
     const centerX = r.width / 2;
     const centerY = r.height / 2;
     
-    // Invert Y so moving mouse up tilts the top toward you (positive rotateX)
-    tarRY = ((x - centerX) / centerX) * state.tilt.intensity;
-    tarRX = -((y - centerY) / centerY) * state.tilt.intensity;
+    // Tilt TOWARD cursor: reverse signs from original
+    // Moving mouse right → tilts left (card's right edge comes toward you)
+    // Moving mouse up → tilts down (card's top edge comes toward you)
+    tarRY = -((x - centerX) / centerX) * state.tilt.intensity;
+    tarRX = ((y - centerY) / centerY) * state.tilt.intensity;
     tarS = 1.015;
   });
   
