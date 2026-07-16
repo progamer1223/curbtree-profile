@@ -15,9 +15,6 @@
   </script>
   <script defer src="/_vercel/insights/script.js"></script>
 
-  <!-- JSZip: used to bundle selected asset files + profile.json into one downloadable package -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
   <style>
     * { box-sizing: border-box; }
     body { margin:0; font-family:'Inter',sans-serif; background:#0b0b0b; color:white; overflow:hidden; height:100vh; }
@@ -159,9 +156,10 @@
     .stats-bar .stat-item { display:flex; align-items:center; gap:5px; transition: color 0.2s; }
     .stats-bar .stat-item i { font-size:0.7rem; opacity:0.7; }
 
-    /* Neon glow marker class — intentionally holds NO fixed text-shadow/filter values.
-       All visual intensity is driven purely by inline styles set in applyGlow(),
-       so the intensity slider actually has an effect (no !important fighting it). */
+    /* Neon glow marker class — intentionally holds NO fixed text-shadow/filter
+       values. All visual intensity is driven purely by inline styles set in
+       applyGlow(), so the intensity slider actually has an effect (no !important
+       fighting it). */
     .neon-text {
       /* left empty on purpose */
     }
@@ -428,7 +426,7 @@
             <option value="video">Video</option>
           </select>
         </div>
-        <p style="font-size:0.6rem; color:#666;">Choosing a file previews it instantly and gets bundled into a ready-to-upload zip when you hit Save.</p>
+        <p style="font-size:0.6rem; color:#666;">Choosing a file previews it instantly in this tab. Uploading it to your actual site still needs to happen separately (e.g. via GitHub) at the path shown in the URL field above.</p>
       </div>
     </div>
 
@@ -582,13 +580,10 @@
     <div class="border-t border-white/5 pt-4 space-y-2">
       <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Save</h3>
       <button onclick="saveAllSettings()" class="w-full bg-green-600/60 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
-        <i class="fas fa-save"></i> Save & Download Package
-      </button>
-      <button onclick="downloadProfileJSON()" class="w-full bg-blue-600/60 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
-        <i class="fas fa-download"></i> Download profile.json only
+        <i class="fas fa-download"></i> Save & Download profile.json
       </button>
       <p style="font-size:0.6rem; color:#666; text-align:center; margin-top:4px;">
-        Nothing is saved in the browser anymore — Save downloads a curbtree-package.zip (profile.json + every song/image/video) straight to your computer. Unzip and upload to GitHub!
+        This downloads profile.json with all your settings. Upload your song/image/video files separately (e.g. to GitHub) at the paths shown in the URL fields above, then upload profile.json alongside them.
       </p>
     </div>
 
@@ -731,20 +726,38 @@ const DOM = {
   resizeDimsLabel: document.getElementById('resize-dims-label')
 };
 
-// ─── SELECTED ASSET FILES (for live preview + zip export) ──
-// These hold the actual File objects picked via the file inputs. They only
-// live for the current session (browsers won't let us persist raw file
-// contents in localStorage) but that's fine — they exist so "Save" can bundle
-// them into a downloadable zip alongside profile.json. songs is a map of
-// songId -> File so every song in the playlist can carry its own file.
-const assetFiles = { pfp: null, bg: null, songs: {} };
+// ─── SELECTED ASSET PREVIEW BLOBS (for live in-editor preview only) ─────
+// These hold blob: URLs created from locally-picked files via URL.createObjectURL.
+// They only live for the current tab session and are NEVER written into
+// profile.json (blob URLs are meaningless outside this tab) — state.pfpUrl /
+// state.bgUrl / song.url always hold the real "/assets/..." path that will be
+// valid once you actually upload the file to that location on your site.
+// Whenever we need something to actually *play/display right now* in this
+// editor tab, we prefer the blob if one exists for that asset, otherwise we
+// fall back to the real URL. songs is keyed by song id so every song in the
+// playlist can have its own local preview file.
+const assetPreviewBlobs = { pfp: null, bg: null, songs: {} };
+
+function getSongPlaybackSrc(song) {
+  if (!song) return '';
+  if (assetPreviewBlobs.songs[song.id]) return assetPreviewBlobs.songs[song.id];
+  return getAssetUrl(song.url);
+}
+
+function getPfpDisplaySrc() {
+  return assetPreviewBlobs.pfp || getAssetUrl(state.pfpUrl);
+}
+
+function getBgDisplaySrc() {
+  return assetPreviewBlobs.bg || getAssetUrl(state.bgUrl);
+}
 
 // ─── PERSISTENCE HELPER (disabled) ───────────────────────────
-// Profile settings are no longer autosaved to localStorage. The "Save All
-// Settings" button is now the only way to persist anything, and it does so
-// by downloading a profile.json + assets zip rather than writing to the
-// browser's local storage. This function is kept as a no-op so the many
-// existing call sites throughout the file don't need to be touched.
+// Profile settings are no longer autosaved to localStorage. The "Save &
+// Download profile.json" button is the only way to persist anything, and it
+// does so by downloading profile.json rather than writing to the browser's
+// local storage. This function is kept as a no-op so the many existing call
+// sites throughout the file don't need to be touched.
 function persistState() {}
 
 // ─── CACHE-BUSTING HELPER ──────────────────────────────────
@@ -792,7 +805,7 @@ function migrateLegacyMusic() {
 }
 
 // ─── SAVE ALL SETTINGS ──────────────────────────────────────
-async function saveAllSettings() {
+function saveAllSettings() {
   // Profile
   state.username = document.getElementById('input-username').value;
   state.location = document.getElementById('input-location').value;
@@ -858,50 +871,18 @@ async function saveAllSettings() {
   });
   state.fxColor = document.getElementById('fx-color').value;
 
-  try {
-    await downloadAssetsPackage();
-    alert('✅ curbtree-package.zip downloaded! It contains profile.json plus an assets/ folder with every song and file you\'ve picked — unzip it and upload the contents to your GitHub repo.');
-  } catch (e) {
-    console.error('Zip build failed:', e);
-    downloadProfileJSON();
-    alert('⚠️ Could not build the assets zip, so just profile.json was downloaded. Upload your song/image/video files manually alongside it.');
-  }
   applyAllSettings();
-}
-
-// ─── ASSETS ZIP PACKAGE ──────────────────────────────────────
-// Bundles whatever files were picked via the file inputs, under an assets/
-// folder, together with profile.json, so the whole thing can be dragged
-// straight into a GitHub repo. Every song that has a locally-picked file
-// gets included, not just the currently-playing one.
-async function downloadAssetsPackage() {
-  if (typeof JSZip === 'undefined') throw new Error('JSZip not available');
-  const zip = new JSZip();
-  const folder = zip.folder('assets');
-  if (assetFiles.pfp) folder.file(assetFiles.pfp.name, assetFiles.pfp);
-  if (assetFiles.bg) folder.file(assetFiles.bg.name, assetFiles.bg);
-  Object.keys(assetFiles.songs).forEach(songId => {
-    const file = assetFiles.songs[songId];
-    if (file) folder.file(file.name, file);
-  });
-
-  zip.file('profile.json', JSON.stringify(state, null, 2));
-
-  const blob = await zip.generateAsync({ type: 'blob' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'curbtree-package.zip';
-  a.click();
-  URL.revokeObjectURL(url);
+  downloadProfileJSON();
 }
 
 // ─── FILE PICKERS (avatar / background) ─────────────────────
-// Picking a file previews it immediately (via a blob URL) and fills the
-// matching URL field with a suggested /assets/<filename> path — the path
-// that will actually resolve once the file is uploaded to that location in
-// the repo. The real File object is kept in `assetFiles` so it can be zipped
-// up on Save.
+// Picking a file previews it immediately in this tab (via a blob URL) and
+// fills the matching URL field with a suggested /assets/<filename> path —
+// the path that will actually resolve once the file is uploaded to that
+// location in the repo. The blob URL is kept around (in assetPreviewBlobs)
+// so the preview keeps working even after switching tabs/settings within
+// this session, instead of getting silently replaced by the (not-yet-real)
+// "/assets/..." path.
 function handleFileSelect(e, kind) {
   const file = e.target.files && e.target.files[0];
   if (!file) return;
@@ -909,12 +890,12 @@ function handleFileSelect(e, kind) {
   const suggestedPath = '/assets/' + file.name;
 
   if (kind === 'pfp') {
-    assetFiles.pfp = file;
+    assetPreviewBlobs.pfp = blobUrl;
     state.pfpUrl = suggestedPath;
     document.getElementById('input-pfp-url').value = suggestedPath;
     DOM.displayPfp.src = blobUrl;
   } else if (kind === 'bg') {
-    assetFiles.bg = file;
+    assetPreviewBlobs.bg = blobUrl;
     state.bgUrl = suggestedPath;
     document.getElementById('input-bg-url').value = suggestedPath;
     const type = file.type.startsWith('video') ? 'video' : 'image';
@@ -1151,16 +1132,16 @@ function applyAllSettings() {
   DOM.locationDisplay.textContent = state.location;
 
   // Profile Picture
-  if (state.pfpUrl) DOM.displayPfp.src = getAssetUrl(state.pfpUrl);
+  if (state.pfpUrl) DOM.displayPfp.src = getPfpDisplaySrc();
 
   // Background
   if (state.bgType === 'image' && state.bgUrl) {
-    DOM.bgImage.src = getAssetUrl(state.bgUrl);
+    DOM.bgImage.src = getBgDisplaySrc();
     DOM.bgImage.style.display = 'block';
     DOM.bgVideo.style.display = 'none';
     DOM.bgVideo.pause();
   } else if (state.bgType === 'video' && state.bgUrl) {
-    DOM.bgVideo.src = getAssetUrl(state.bgUrl);
+    DOM.bgVideo.src = getBgDisplaySrc();
     DOM.bgVideo.style.display = 'block';
     DOM.bgImage.style.display = 'none';
     DOM.bgVideo.muted = true;
@@ -1227,12 +1208,12 @@ function downloadProfileJSON() {
   a.download = 'profile.json';
   a.click();
   URL.revokeObjectURL(url);
-  alert('✅ profile.json downloaded!');
+  alert('✅ profile.json downloaded! Remember to also upload any new song/image/video files to the paths shown in the URL fields.');
 }
 
 // ─── UPDATE FUNCTIONS ──────────────────────────────────────
-function updatePfpUrl(val) { state.pfpUrl = val; DOM.displayPfp.src = getAssetUrl(val); persistState(); }
-function updateBgUrl(val) { state.bgUrl = val; applyAllSettings(); persistState(); }
+function updatePfpUrl(val) { state.pfpUrl = val; assetPreviewBlobs.pfp = null; DOM.displayPfp.src = getPfpDisplaySrc(); persistState(); }
+function updateBgUrl(val) { state.bgUrl = val; assetPreviewBlobs.bg = null; applyAllSettings(); persistState(); }
 function updateBgType(val) { state.bgType = val; applyAllSettings(); persistState(); }
 function updateLocation(val) { state.location = val; DOM.locationDisplay.textContent = val; persistState(); }
 function updatePreview() { state.username = document.getElementById('input-username').value; DOM.displayUsername.textContent = state.username; persistState(); }
@@ -1642,14 +1623,16 @@ function resetSeekBar() {
 
 // Rebuilds the inline player display (name, src, show/hide) for whatever
 // song currentSongIndex points at, WITHOUT any typewriter animation — used
-// for initial load / direct edits, not for next/prev.
+// for initial load / direct edits, not for next/prev. Uses getSongPlaybackSrc
+// so a locally-picked file (blob preview) keeps playing instead of getting
+// silently swapped for its not-yet-uploaded "/assets/..." path.
 function refreshMusicDisplay() {
   if (state.songs && state.songs.length) {
     if (state.currentSongIndex >= state.songs.length || state.currentSongIndex < 0) state.currentSongIndex = 0;
     const song = state.songs[state.currentSongIndex];
     DOM.inlineMusic.style.display = 'flex';
     DOM.inlineTrack.textContent = song.name;
-    DOM.audioPlayer.src = getAssetUrl(song.url);
+    DOM.audioPlayer.src = getSongPlaybackSrc(song);
     updateAudioLoopFlag();
     resetSeekBar();
   } else {
@@ -1670,7 +1653,7 @@ function goToSong(index, shouldPlay, forceTypewriter) {
   state.currentSongIndex = index;
   updateAudioLoopFlag();
 
-  DOM.audioPlayer.src = getAssetUrl(song.url);
+  DOM.audioPlayer.src = getSongPlaybackSrc(song);
   typewriterTrackName(song.name, forceTypewriter);
   resetSeekBar();
 
@@ -1707,11 +1690,22 @@ function toggleAudio(force) {
     icon.className = 'fas fa-play';
     DOM.inlineStatus.className = 'status-dot paused';
   } else {
+    // Make sure the <audio> element actually has the right src before
+    // attempting playback — if something reset it in the meantime, restore
+    // it from the current song (preferring any local blob preview).
+    const song = state.songs[state.currentSongIndex];
+    const expectedSrc = getSongPlaybackSrc(song);
+    if (song && expectedSrc && !DOM.audioPlayer.src.endsWith(expectedSrc.replace(/^.*\//, ''))) {
+      DOM.audioPlayer.src = expectedSrc;
+    }
     DOM.audioPlayer.play().then(() => {
       state.audioPlaying = true;
       icon.className = 'fas fa-pause';
       DOM.inlineStatus.className = 'status-dot';
-    }).catch(() => {});
+    }).catch((err) => {
+      console.warn('Playback failed:', err);
+      alert('⚠️ Could not play this track. Make sure the song has a valid file selected or a working URL.');
+    });
   }
 }
 
@@ -1765,6 +1759,7 @@ function renderEditorSongs() {
   }
   state.songs.forEach((song, i) => {
     const isCurrent = i === state.currentSongIndex;
+    const hasLocalPreview = !!assetPreviewBlobs.songs[song.id];
     const d = document.createElement('div');
     d.className = 'bg-[#222] p-2 rounded border ' + (isCurrent ? 'border-blue-500/50' : 'border-[#333]') + ' text-xs space-y-1';
     d.innerHTML = `
@@ -1778,6 +1773,7 @@ function renderEditorSongs() {
       </div>
       <input value="${song.url || ''}" oninput="updateSong('${song.id}','url',this.value)" placeholder="/assets/song.mp3" class="w-full bg-[#111] border border-[#444] rounded px-1 py-0.5 text-white" />
       <input type="file" accept="audio/*" onchange="handleSongFileSelect(event,'${song.id}')" class="w-full text-[0.6rem] text-gray-400 file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[0.6rem] file:bg-blue-600/60 file:text-white" />
+      ${hasLocalPreview ? '<div class="text-[0.6rem] text-green-400"><i class="fas fa-circle-check"></i> Local file loaded — playable in this tab</div>' : ''}
       ${isCurrent ? '<div class="text-[0.6rem] text-blue-400"><i class="fas fa-volume-high"></i> Now playing</div>' : ''}
     `;
     c.appendChild(d);
@@ -1795,7 +1791,7 @@ function removeSong(id) {
   const idx = state.songs.findIndex(x => x.id === id);
   if (idx === -1) return;
   state.songs.splice(idx, 1);
-  delete assetFiles.songs[id];
+  delete assetPreviewBlobs.songs[id];
   if (state.currentSongIndex >= state.songs.length) {
     state.currentSongIndex = Math.max(0, state.songs.length - 1);
   }
@@ -1812,10 +1808,13 @@ function updateSong(id, key, val) {
   const s = state.songs.find(x => x.id === id);
   if (!s) return;
   s[key] = val;
+  // Typing a URL by hand means the user wants to use that real URL instead
+  // of whatever local file preview was loaded for this song.
+  if (key === 'url') delete assetPreviewBlobs.songs[id];
   const isCurrent = state.songs[state.currentSongIndex] && state.songs[state.currentSongIndex].id === id;
   if (isCurrent) {
     if (key === 'name') DOM.inlineTrack.textContent = val;
-    if (key === 'url') DOM.audioPlayer.src = getAssetUrl(val);
+    if (key === 'url') DOM.audioPlayer.src = getSongPlaybackSrc(s);
   }
   persistState();
 }
@@ -1845,7 +1844,7 @@ function handleSongFileSelect(e, id) {
   if (!file) return;
   const blobUrl = URL.createObjectURL(file);
   const suggestedPath = '/assets/' + file.name;
-  assetFiles.songs[id] = file;
+  assetPreviewBlobs.songs[id] = blobUrl;
 
   const s = state.songs.find(x => x.id === id);
   if (s) {
