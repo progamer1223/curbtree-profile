@@ -121,13 +121,12 @@
     .stats-bar .stat-item { display:flex; align-items:center; gap:5px; transition: color 0.2s; }
     .stats-bar .stat-item i { font-size:0.7rem; opacity:0.7; }
 
-    /* Neon glow class */
+    /* Neon glow: we'll apply only to selected elements */
     .neon-text {
       text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 40px currentColor, 0 0 80px currentColor !important;
       filter: drop-shadow(0 0 10px currentColor) !important;
     }
 
-    /* Font classes with !important to ensure override */
     .font-weight-normal { font-weight: 400 !important; }
     .font-weight-medium { font-weight: 500 !important; }
     .font-weight-semibold { font-weight: 600 !important; }
@@ -141,6 +140,12 @@
     .font-raleway { font-family: 'Raleway', sans-serif !important; }
     .font-dm-sans { font-family: 'DM Sans', sans-serif !important; }
     .font-space-grotesk { font-family: 'Space Grotesk', sans-serif !important; }
+
+    /* Pixel effect: keep quality high but show blocks */
+    .pixel-canvas {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
   </style>
 </head>
 <body>
@@ -160,7 +165,7 @@
   <div class="bg-overlay" id="bg-overlay"></div>
 </div>
 
-<canvas id="fx-canvas"></canvas>
+<canvas id="fx-canvas" class="pixel-canvas"></canvas>
 <audio id="bg-audio" loop></audio>
 
 <div id="enter-screen" onclick="startExperience()">
@@ -745,7 +750,7 @@ function applyAllSettings() {
   // Typography
   applyTypography();
 
-  // Glow
+  // Glow (applied only to specific elements, not stats)
   applyGlow();
 
   // Typewriter
@@ -821,12 +826,23 @@ function applyTypography() {
   });
 }
 
-// ─── NEON GLOW ────────────────────────────────────────────────────
+// ─── NEON GLOW (excludes stats bar) ──────────────────────
 function updateGlowSetting(key, val) { state.glowEffect[key] = val; applyGlow(); }
 
 function applyGlow() {
-  const els = [DOM.displayUsername, DOM.displayBio, DOM.inlineTrack, DOM.volumeIcon, DOM.inlinePlayIcon];
-  document.querySelectorAll('.stat-item, .social-tooltip').forEach(el => els.push(el));
+  // Apply to username, bio, music player elements, social icons (but NOT stats bar items)
+  const els = [
+    DOM.displayUsername,
+    DOM.displayBio,
+    DOM.inlineTrack,
+    DOM.volumeIcon,
+    DOM.inlinePlayIcon,
+    document.getElementById('inline-audio-toggle')
+  ];
+  // social icons are inside #display-socials, we target the <i> elements directly
+  document.querySelectorAll('#display-socials i').forEach(el => els.push(el));
+  // Also the badge container items
+  document.querySelectorAll('.badge-pill').forEach(el => els.push(el));
 
   const on = state.glowEffect.enabled, g = parseFloat(state.glowEffect.intensity) || 4;
   els.forEach(el => {
@@ -970,22 +986,22 @@ function setEffect(type) {
   fxParticles = [];
   if (type === 'none') { if (ctx) ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height); return; }
 
-  // Pixel (Old TV) effect: large blocky pixels with vibrant colors
+  // Pixel (Old TV) effect: large blocky pixels with vibrant colors, high quality feel
   if (type === 'pixel') {
-    // Create a grid of pixels that shift slowly
-    const cols = Math.floor(fxCanvas.width / 14);
-    const rows = Math.floor(fxCanvas.height / 14);
+    // Use a grid of colorful blocks that slowly shift, giving that "close to TV" look
+    const blockSize = 16;
+    const cols = Math.floor(fxCanvas.width / blockSize);
+    const rows = Math.floor(fxCanvas.height / blockSize);
     for (let i = 0; i < cols * rows; i++) {
       fxParticles.push({
-        x: (i % cols) * 14 + Math.random() * 4 - 2,
-        y: Math.floor(i / cols) * 14 + Math.random() * 4 - 2,
-        w: 10 + Math.random() * 8,
-        h: 10 + Math.random() * 8,
-        r: 150 + Math.random() * 105,
-        g: 150 + Math.random() * 105,
-        b: 150 + Math.random() * 105,
-        speedX: (Math.random() - 0.5) * 0.4,
-        speedY: (Math.random() - 0.5) * 0.4
+        x: (i % cols) * blockSize,
+        y: Math.floor(i / cols) * blockSize,
+        w: blockSize,
+        h: blockSize,
+        r: 100 + Math.random() * 155,
+        g: 100 + Math.random() * 155,
+        b: 100 + Math.random() * 155,
+        shift: Math.random() * 0.3
       });
     }
     drawPixelEffect();
@@ -1011,31 +1027,31 @@ function drawPixelEffect() {
   if (!ctx || !fxCanvas) return;
   ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
   const color = state.fxColor || '#ffffff';
+  const useColor = color !== '#ffffff';
 
+  // subtle drift
   fxParticles.forEach(p => {
-    // subtle movement
-    p.x += p.speedX * 0.1;
-    p.y += p.speedY * 0.1;
-    if (p.x < 0) p.x = fxCanvas.width;
-    if (p.x > fxCanvas.width) p.x = 0;
-    if (p.y < 0) p.y = fxCanvas.height;
-    if (p.y > fxCanvas.height) p.y = 0;
+    p.x += (Math.random() - 0.5) * 0.3;
+    p.y += (Math.random() - 0.5) * 0.3;
+    if (p.x < 0) p.x = fxCanvas.width - p.w;
+    if (p.x > fxCanvas.width - p.w) p.x = 0;
+    if (p.y < 0) p.y = fxCanvas.height - p.h;
+    if (p.y > fxCanvas.height - p.h) p.y = 0;
 
-    ctx.globalAlpha = 0.7;
-    // Use color from state or random vibrant
-    const col = color === '#ffffff' ? `rgb(${p.r},${p.g},${p.b})` : color;
-    ctx.fillStyle = col;
+    ctx.globalAlpha = 0.85;
+    if (useColor) {
+      ctx.fillStyle = color;
+    } else {
+      // vibrant shifting colors
+      ctx.fillStyle = `rgb(${p.r + Math.sin(Date.now()*0.001 + p.x)*20}, ${p.g + Math.cos(Date.now()*0.001 + p.y)*20}, ${p.b + Math.sin(Date.now()*0.001 + p.x + p.y)*20})`;
+    }
     ctx.fillRect(p.x, p.y, p.w, p.h);
+    // subtle outline for that TV look
+    ctx.globalAlpha = 0.2;
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 0.5;
+    ctx.strokeRect(p.x, p.y, p.w, p.h);
   });
-
-  // occasionally shift colors
-  if (Math.random() < 0.02) {
-    fxParticles.forEach(p => {
-      p.r = 150 + Math.random() * 105;
-      p.g = 150 + Math.random() * 105;
-      p.b = 150 + Math.random() * 105;
-    });
-  }
 
   ctx.globalAlpha = 1;
   fxAnimId = requestAnimationFrame(drawPixelEffect);
