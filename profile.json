@@ -1,19 +1,21 @@
 {
   "username": "Curbie",
-  "usernameColor": "#ffffff",
+  "usernameColor": "#ff4747",
   "bioColor": "#ffffff",
   "musicColor": "#ffffff",
   "statsColor": "#ffffff",
-  "socialColor": "#ffffff",
+  "socialColor": "#ff8080",
   "bioLines": [
     "Love yourself.",
     "The sky is the limit."
   ],
   "location": "Canada",
   "pfpUrl": "/assets/avatar.gif",
+  "pfpSize": 218,
+  "badgeScale": 1.5,
   "bgType": "video",
   "bgUrl": "https://res.cloudinary.com/agrc4zdb/video/upload/v1784136136/326a94bd-295d-4ef2-ac19-b54f4b5ac28f_kxhep4.mp4",
-  "bgBrightness": 1.2,
+  "bgBrightness": 0.2,
   "songs": [
     {
       "id": "d8wdh5",
@@ -26,14 +28,27 @@
       "name": "Almost Back - Lucki"
     }
   ],
-  "currentSongIndex": 1,
+  "currentSongIndex": 0,
   "audioPlaying": true,
-  "frameBg": "#000000",
-  "frameTransparency": 0,
-  "frameOutline": 0.79,
-  "frameBlur": 0,
+  "frameBg": "#ffffff",
+  "frameTransparency": 0.16,
+  "frameOutline": 0.27,
+  "frameBlur": 2,
+  "frameShadow": true,
+  "frameBorderWidth": 3,
+  "frameBorderColor": "#ffffff",
   "frameWidth": 717,
   "frameHeight": 361,
+  "cursor": {
+    "color": "#ffffff",
+    "opacity": 1,
+    "size": 8,
+    "outlineColor": "#ffffff",
+    "outlineOpacity": 0.4,
+    "outlineWidth": 2,
+    "hoverSize": 14,
+    "hoverOpacity": 0.4
+  },
   "typewriter": {
     "enabled": true,
     "applyUsername": true,
@@ -98,12 +113,12 @@
       "id": "s1yecd",
       "label": "Developer",
       "icon": "fa-solid fa-crown",
-      "color": "#ff7070",
-      "textColor": "#ffffff"
+      "color": "#fe5d5d",
+      "textColor": "#ff4242"
     }
   ],
   "fx": "pixel",
-  "fxColor": "#ffffff",
+  "fxColor": "#ff0000",
   "usernameFont": "font-dm-sans",
   "usernameWeight": "font-weight-extrabold",
   "bioFont": "font-inter",
