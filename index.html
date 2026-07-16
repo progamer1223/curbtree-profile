@@ -20,7 +20,41 @@
 
   <style>
     * { box-sizing: border-box; }
-    body { margin:0; font-family:'Inter',sans-serif; background:#0b0b0b; color:white; overflow:hidden; height:100vh; }
+    body { 
+      margin:0; 
+      font-family:'Inter',sans-serif; 
+      background:#0b0b0b; 
+      color:white; 
+      overflow:hidden; 
+      height:100vh;
+      cursor: none; /* Hide default cursor */
+    }
+    
+    /* Custom dot cursor */
+    .custom-cursor {
+      width: 8px;
+      height: 8px;
+      background: white;
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 10000;
+      mix-blend-mode: difference;
+      transition: width 0.2s, height 0.2s, background 0.2s;
+      transform: translate(-50%, -50%);
+    }
+    
+    .custom-cursor.hover {
+      width: 16px;
+      height: 16px;
+      background: rgba(255, 255, 255, 0.8);
+    }
+    
+    /* Show default cursor for inputs and buttons */
+    input, textarea, select, button, a, .clickable {
+      cursor: none;
+    }
+    
     #bg-container { position:fixed; inset:0; z-index:0; background:#111; }
     #bg-image, #bg-video { width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; display:none; }
     #bg-video { pointer-events:none; }
@@ -44,10 +78,10 @@
     #fx-canvas { position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:2; }
     .typewriter-cursor::after { content:'|'; display:inline-block; margin-left:2px; font-weight:300; animation:blink-caret 0.7s step-end infinite; }
     @keyframes blink-caret { 50% { opacity:0; } }
-    #enter-screen { position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:100; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:opacity 0.5s; }
+    #enter-screen { position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:100; display:flex; align-items:center; justify-content:center; cursor:none; transition:opacity 0.5s; }
     #enter-screen h1 { border-right:0.15em solid white; white-space:nowrap; animation:typing 1.6s steps(30,end), blink-caret .75s step-end infinite; overflow:hidden; }
     @keyframes typing { from { width:0; } to { width:100%; } }
-    .badge-pill { display:inline-flex; align-items:center; gap:4px; background:rgba(255,255,255,0.08); backdrop-filter:blur(4px); border:1px solid rgba(255,255,255,0.15); padding:2px 10px 2px 6px; border-radius:40px; font-size:0.7rem; font-weight:600; color:#ddd; letter-spacing:0.3px; white-space:nowrap; }
+    .badge-pill { display:inline-flex; align-items:center; gap:4px; background:rgba(255,255,255,0.08); backdrop-filter:blur(4px); border:1px solid rgba(255,255,255,0.15); padding:2px 10px 2px 6px; border-radius:40px; font-size:0.7rem; font-weight:600; color:#ddd; letter-spacing:0.3px; white-space:nowrap; transition: all 0.2s; }
     .badge-pill i { font-size:0.8rem; }
     input[type="range"] { accent-color:#8ab4f8; }
     .social-icon-sm { font-size:2.2rem !important; }
@@ -105,16 +139,16 @@
       background:rgba(255,255,255,0.12);
       border-radius:4px;
       appearance:none;
-      cursor:pointer;
+      cursor:none;
       transition:0.2s;
     }
-    .music-player-bar .seek-slider::-webkit-slider-thumb { appearance:none; width:11px; height:11px; border-radius:50%; background:var(--music-thumb-color,#8ab4f8); cursor:pointer; box-shadow:0 0 8px color-mix(in srgb, var(--music-thumb-color,#8ab4f8) 30%, transparent); }
-    .music-player-bar .seek-slider::-moz-range-thumb { width:11px; height:11px; border-radius:50%; background:var(--music-thumb-color,#8ab4f8); cursor:pointer; border:none; }
+    .music-player-bar .seek-slider::-webkit-slider-thumb { appearance:none; width:11px; height:11px; border-radius:50%; background:var(--music-thumb-color,#8ab4f8); cursor:none; box-shadow:0 0 8px color-mix(in srgb, var(--music-thumb-color,#8ab4f8) 30%, transparent); }
+    .music-player-bar .seek-slider::-moz-range-thumb { width:11px; height:11px; border-radius:50%; background:var(--music-thumb-color,#8ab4f8); cursor:none; border:none; }
     .music-player-bar .play-btn {
       background:transparent;
       border:none;
       color:#ccc;
-      cursor:pointer;
+      cursor:none;
       font-size:1.4rem;
       padding:0;
       width:36px;
@@ -132,8 +166,8 @@
     .music-player-bar .status-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#4ade80; transition:0.2s; flex-shrink:0; }
     .music-player-bar .status-dot.paused { background:#facc15; }
     .music-player-bar .volume-slider { flex:1; min-width:60px; max-width:140px; height:3px; background:rgba(255,255,255,0.12); border-radius:4px; appearance:none; transition:0.2s; }
-    .music-player-bar .volume-slider::-webkit-slider-thumb { appearance:none; width:12px; height:12px; border-radius:50%; background:var(--music-thumb-color,#8ab4f8); cursor:pointer; box-shadow:0 0 8px color-mix(in srgb, var(--music-thumb-color,#8ab4f8) 30%, transparent); }
-    .music-player-bar .volume-slider::-moz-range-thumb { width:12px; height:12px; border-radius:50%; background:var(--music-thumb-color,#8ab4f8); cursor:pointer; border:none; }
+    .music-player-bar .volume-slider::-webkit-slider-thumb { appearance:none; width:12px; height:12px; border-radius:50%; background:var(--music-thumb-color,#8ab4f8); cursor:none; box-shadow:0 0 8px color-mix(in srgb, var(--music-thumb-color,#8ab4f8) 30%, transparent); }
+    .music-player-bar .volume-slider::-moz-range-thumb { width:12px; height:12px; border-radius:50%; background:var(--music-thumb-color,#8ab4f8); cursor:none; border:none; }
     .music-player-bar .spacer { flex:1; min-width:10px; }
     .music-player-bar .vol-icon { color:#888; font-size:0.8rem; flex-shrink:0; transition: color 0.2s; }
 
@@ -232,12 +266,13 @@
       border-radius: 4px;
       z-index: 20;
       display: none;
+      cursor: none;
     }
     #tilt-group.resize-mode .resize-handle { display: block; }
     .resize-handle.corner { width: 14px; height: 14px; }
-    .resize-handle.edge-e { width: 8px; height: 40px; top: 50%; right: -4px; transform: translateY(-50%); cursor: ew-resize; border-radius: 6px; }
-    .resize-handle.edge-s { height: 8px; width: 40px; bottom: -4px; left: 50%; transform: translateX(-50%); cursor: ns-resize; border-radius: 6px; }
-    .resize-handle.corner-se { right: -7px; bottom: -7px; cursor: nwse-resize; }
+    .resize-handle.edge-e { width: 8px; height: 40px; top: 50%; right: -4px; transform: translateY(-50%); border-radius: 6px; }
+    .resize-handle.edge-s { height: 8px; width: 40px; bottom: -4px; left: 50%; transform: translateX(-50%); border-radius: 6px; }
+    .resize-handle.corner-se { right: -7px; bottom: -7px; }
     #resize-dims-label {
       position: absolute;
       top: -34px;
@@ -266,7 +301,7 @@
       border-radius: 30px;
       border: 1px solid rgba(255,255,255,0.06);
       font-size: 0.65rem;
-      cursor: pointer;
+      cursor: none;
       color: #ccc;
       user-select: none;
       z-index: 6;
@@ -275,6 +310,9 @@
   </style>
 </head>
 <body>
+
+<!-- Custom cursor dot -->
+<div class="custom-cursor" id="custom-cursor"></div>
 
 <!-- LOCK SCREEN -->
 <div id="lock-screen" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); backdrop-filter:blur(12px); z-index:9999; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:20px; padding:20px;">
@@ -341,7 +379,7 @@
 
         <div class="top-frame-content">
           <div class="profile-pic-offset">
-            <img id="display-pfp" src="https://placehold.co/140x140/222/FFF?text=Avatar" alt="profile" class="w-28 h-28 sm:w-36 sm:h-36 rounded-2xl object-cover border-2 border-white/10 shadow-2xl transition-transform hover:scale-105 duration-300" />
+            <img id="display-pfp" src="https://placehold.co/140x140/222/FFF?text=Avatar" alt="profile" class="rounded-2xl object-cover border-2 border-white/10 shadow-2xl transition-transform hover:scale-105 duration-300" style="width: 140px; height: 140px;" />
           </div>
           <div class="flex flex-col items-start text-left mt-4 w-full gap-vertical name-bio-expand">
             <div class="flex flex-wrap items-center justify-start gap-2 w-full">
@@ -412,6 +450,13 @@
           <label class="block text-xs text-gray-400">Profile Picture URL</label>
           <input type="text" id="input-pfp-url" value="" placeholder="/assets/avatar.gif" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" oninput="updatePfpUrl(this.value)" />
           <input type="file" id="input-pfp-file" accept="image/*" onchange="handleFileSelect(event,'pfp')" class="w-full text-[0.65rem] text-gray-400 mt-1 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-blue-600/60 file:text-white" />
+        </div>
+        <div>
+          <label class="block text-xs text-gray-400">Profile Picture Size (px)</label>
+          <div class="flex items-center gap-2">
+            <input type="range" id="pfp-size" min="60" max="300" value="140" oninput="updatePfpSize(this.value)" class="flex-1" />
+            <span id="pfp-size-label" class="text-xs text-gray-500">140px</span>
+          </div>
         </div>
         <div>
           <label class="block text-xs text-gray-400">Background URL</label>
@@ -607,6 +652,35 @@
 </div>
 
 <script>
+// ─── CUSTOM CURSOR ──────────────────────────────────────────
+const customCursor = document.getElementById('custom-cursor');
+let cursorVisible = true;
+
+document.addEventListener('mousemove', (e) => {
+  if (customCursor) {
+    customCursor.style.left = e.clientX + 'px';
+    customCursor.style.top = e.clientY + 'px';
+    if (!cursorVisible) {
+      customCursor.style.opacity = '1';
+      cursorVisible = true;
+    }
+  }
+});
+
+document.addEventListener('mouseleave', () => {
+  if (customCursor) {
+    customCursor.style.opacity = '0';
+    cursorVisible = false;
+  }
+});
+
+document.addEventListener('mouseenter', () => {
+  if (customCursor) {
+    customCursor.style.opacity = '1';
+    cursorVisible = true;
+  }
+});
+
 // ─── EDIT MODE ──────────────────────────────────────────────
 const urlParams = new URLSearchParams(window.location.search);
 const isEditMode = urlParams.get('edit') === 'true';
@@ -655,6 +729,7 @@ const state = {
   bioLines: ["Welcome to my profile.", "Creating cool things on Curbtree."],
   location: "Earth",
   pfpUrl: "/assets/avatar.gif",
+  pfpSize: 140,
   bgType: 'none',
   bgUrl: '',
   bgBrightness: 1,
@@ -805,6 +880,17 @@ function migrateLegacyMusic() {
   if (typeof state.frameShadow !== 'boolean') state.frameShadow = true;
   if (typeof state.frameBorderWidth !== 'number') state.frameBorderWidth = 1;
   if (!state.frameBorderColor) state.frameBorderColor = '#ffffff';
+  if (typeof state.pfpSize !== 'number') state.pfpSize = 140;
+}
+
+// ─── PFP SIZE ────────────────────────────────────────────────
+function updatePfpSize(size) {
+  const s = parseInt(size);
+  state.pfpSize = s;
+  DOM.displayPfp.style.width = s + 'px';
+  DOM.displayPfp.style.height = s + 'px';
+  document.getElementById('pfp-size-label').textContent = s + 'px';
+  persistState();
 }
 
 // ─── SAVE ALL SETTINGS ──────────────────────────────────────
@@ -815,6 +901,7 @@ async function saveAllSettings() {
 
   // Assets
   state.pfpUrl = document.getElementById('input-pfp-url').value || '/assets/avatar.gif';
+  state.pfpSize = parseInt(document.getElementById('pfp-size').value) || 140;
   state.bgUrl = document.getElementById('input-bg-url').value || '';
   state.bgType = document.getElementById('input-bg-type').value;
 
@@ -1106,6 +1193,14 @@ function applyFrameDimensions() {
       inner.style.transformOrigin = 'top left';
       inner.style.width = (100 / scale) + '%';
     }
+    
+    // Scale badges with frame
+    const badgePills = document.querySelectorAll('.badge-pill');
+    badgePills.forEach(badge => {
+      badge.style.fontSize = (0.7 * scale) + 'rem';
+      const icon = badge.querySelector('i');
+      if (icon) icon.style.fontSize = (0.8 * scale) + 'rem';
+    });
   } else {
     DOM.mainFrame.style.width = '';
     DOM.mainFrame.style.height = '';
@@ -1118,6 +1213,14 @@ function applyFrameDimensions() {
       inner.style.transform = '';
       inner.style.width = '';
     }
+    
+    // Reset badge sizes
+    const badgePills = document.querySelectorAll('.badge-pill');
+    badgePills.forEach(badge => {
+      badge.style.fontSize = '0.7rem';
+      const icon = badge.querySelector('i');
+      if (icon) icon.style.fontSize = '0.8rem';
+    });
   }
 
   const wInput = document.getElementById('input-frame-width');
@@ -1235,8 +1338,10 @@ function applyAllSettings() {
   DOM.displayBio.style.color = state.bioColor;
   DOM.locationDisplay.textContent = state.location;
 
-  // Profile Picture
+  // Profile Picture with size
   if (state.pfpUrl) DOM.displayPfp.src = getPfpDisplaySrc();
+  DOM.displayPfp.style.width = state.pfpSize + 'px';
+  DOM.displayPfp.style.height = state.pfpSize + 'px';
 
   // Background media
   if (state.bgType === 'image' && state.bgUrl) {
@@ -1306,6 +1411,12 @@ function applyAllSettings() {
   if (state.fx && state.fx !== 'none') setEffect(state.fx); else setEffect('none');
 
   updateScaleModeToggleVisibility();
+  
+  // Update PFP size slider
+  const pfpSizeEl = document.getElementById('pfp-size');
+  if (pfpSizeEl) pfpSizeEl.value = state.pfpSize;
+  const pfpSizeLabel = document.getElementById('pfp-size-label');
+  if (pfpSizeLabel) pfpSizeLabel.textContent = state.pfpSize + 'px';
 }
 
 function applyMusicThumbColor() {
@@ -2014,6 +2125,23 @@ function renderBadges() {
     span.innerHTML = `<i class="${b.icon}" style="color:${b.color}"></i> <span style="color:${b.textColor || '#dddddd'}">${b.label}</span>`;
     DOM.badgeContainer.appendChild(span);
   });
+  
+  // Apply current scale to badges if frame is resized
+  if (state.frameWidth || state.frameHeight) {
+    captureDefaultFrameSize();
+    const targetW = state.frameWidth || defaultFrameSize.w;
+    const targetH = state.frameHeight || defaultFrameSize.h;
+    const scaleW = targetW / defaultFrameSize.w;
+    const scaleH = targetH / defaultFrameSize.h;
+    const scale = Math.max(0.5, Math.min(2.2, Math.min(scaleW, scaleH)));
+    
+    const badgePills = document.querySelectorAll('.badge-pill');
+    badgePills.forEach(badge => {
+      badge.style.fontSize = (0.7 * scale) + 'rem';
+      const icon = badge.querySelector('i');
+      if (icon) icon.style.fontSize = (0.8 * scale) + 'rem';
+    });
+  }
 }
 
 function renderEditorBadges() {
@@ -2147,6 +2275,8 @@ async function init() {
   document.getElementById('input-pfp-url').value = state.pfpUrl;
   document.getElementById('input-bg-url').value = state.bgUrl;
   document.getElementById('input-bg-type').value = state.bgType;
+  document.getElementById('pfp-size').value = state.pfpSize;
+  document.getElementById('pfp-size-label').textContent = state.pfpSize + 'px';
 
   document.getElementById('username-color').value = state.usernameColor;
   document.getElementById('bio-color').value = state.bioColor;
