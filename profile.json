@@ -27,13 +27,13 @@
     }
   ],
   "currentSongIndex": 0,
-  "audioPlaying": true,
+  "audioPlaying": false,
   "frameBg": "#000000",
   "frameTransparency": 0.1,
   "frameOutline": 0.2,
   "frameBlur": 7,
-  "frameWidth": 824,
-  "frameHeight": 452,
+  "frameWidth": 717,
+  "frameHeight": 361,
   "typewriter": {
     "enabled": true,
     "applyUsername": true,
@@ -57,8 +57,8 @@
   },
   "tilt": {
     "enabled": true,
-    "intensity": 4,
-    "speed": 0.04
+    "intensity": 8,
+    "speed": 0.01
   },
   "links": [
     {
