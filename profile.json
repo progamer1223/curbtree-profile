@@ -13,7 +13,7 @@
   "pfpUrl": "/assets/avatar.png",
   "bgType": "video",
   "bgUrl": "https://res.cloudinary.com/agrc4zdb/video/upload/v1784136136/326a94bd-295d-4ef2-ac19-b54f4b5ac28f_kxhep4.mp4",
-  "bgBrightness": 1,
+  "bgBrightness": 1.2,
   "songs": [
     {
       "id": "d8wdh5",
@@ -29,9 +29,9 @@
   "currentSongIndex": 0,
   "audioPlaying": false,
   "frameBg": "#000000",
-  "frameTransparency": 0.1,
-  "frameOutline": 0.2,
-  "frameBlur": 7,
+  "frameTransparency": 0.24,
+  "frameOutline": 0.14,
+  "frameBlur": 0,
   "frameWidth": 717,
   "frameHeight": 361,
   "typewriter": {
