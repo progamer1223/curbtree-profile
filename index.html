@@ -846,8 +846,8 @@ async function saveAllSettings() {
   state.bioWeight = document.getElementById('bio-weight').value;
   state.musicFont = document.getElementById('music-font').value;
   state.musicWeight = document.getElementById('music-weight').value;
-  state.statsFont = document.getElementById('stats-font').value;
-  state.statsWeight = document.getElementById('stats-weight').value;
+  state.statsFont = document.getElementById('stats-font') ? document.getElementById('stats-font').value : state.statsFont;
+  state.statsWeight = document.getElementById('stats-weight') ? document.getElementById('stats-weight').value : state.statsWeight;
   state.socialFont = document.getElementById('social-font').value;
   state.socialWeight = document.getElementById('social-weight').value;
 
@@ -885,15 +885,39 @@ async function saveAllSettings() {
   });
   state.fxColor = document.getElementById('fx-color').value;
 
+  applyAllSettings();
+
   try {
-    await downloadAssetsPackage();
-    alert('✅ curbtree-package.zip downloaded! It contains profile.json plus an assets/ folder with every new song/image/video file you\'ve picked — unzip it and upload the contents to your GitHub repo. Next time the page loads, those files will load from /assets/ automatically.');
+    const fileCount = await downloadAssetsPackage();
+    if (fileCount > 0) {
+      alert('✅ curbtree-package.zip downloaded! It contains profile.json plus an assets/ folder with ' + fileCount + ' new file(s) you picked — unzip it and upload the contents to your GitHub repo. Next time the page loads, those files will load from /assets/ automatically.');
+    } else {
+      alert('✅ curbtree-package.zip downloaded! No new local files were picked this session, so it just contains profile.json (still fine to upload — it updates all your settings).');
+    }
   } catch (e) {
     console.error('Zip build failed:', e);
     downloadProfileJSON();
-    alert('⚠️ Could not build the assets zip, so just profile.json was downloaded. Upload your song/image/video files manually alongside it.');
+    alert('⚠️ Could not build the assets zip (' + (e && e.message ? e.message : 'unknown error') + '), so just profile.json was downloaded instead. Upload your song/image/video files manually alongside it.');
   }
-  applyAllSettings();
+}
+
+// ─── RELIABLE FILE DOWNLOAD HELPER ───────────────────────────
+// Triggers a browser download from a Blob. The anchor is attached to the
+// document (some browsers, notably Firefox, silently ignore .click() on an
+// anchor that was never inserted into the DOM) and the object URL is only
+// revoked after a short delay so the download has time to actually start.
+function triggerBlobDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 1000);
 }
 
 // ─── ASSETS ZIP PACKAGE ──────────────────────────────────────
@@ -901,11 +925,12 @@ async function saveAllSettings() {
 // an assets/ folder, together with profile.json, so the whole thing can be
 // dragged straight into a GitHub repo (or wherever the site is hosted).
 // Every song that has a locally-picked file gets included, not just the
-// currently-playing one. Files already referenced by a plain URL (http/https
-// or an existing /assets/... path with no local pick) are left alone — only
-// genuinely new local picks need bundling.
+// currently-playing one. Returns the number of files bundled (0 is fine —
+// the zip still contains profile.json).
 async function downloadAssetsPackage() {
-  if (typeof JSZip === 'undefined') throw new Error('JSZip not available');
+  if (typeof JSZip === 'undefined') {
+    throw new Error('JSZip failed to load (check your internet connection / ad blocker)');
+  }
   const zip = new JSZip();
   const folder = zip.folder('assets');
   let fileCount = 0;
@@ -920,12 +945,7 @@ async function downloadAssetsPackage() {
   zip.file('profile.json', JSON.stringify(state, null, 2));
 
   const blob = await zip.generateAsync({ type: 'blob' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'curbtree-package.zip';
-  a.click();
-  URL.revokeObjectURL(url);
+  triggerBlobDownload(blob, 'curbtree-package.zip');
   return fileCount;
 }
 
@@ -1258,12 +1278,7 @@ function applyMusicThumbColor() {
 function downloadProfileJSON() {
   const data = JSON.stringify(state, null, 2);
   const blob = new Blob([data], {type: 'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'profile.json';
-  a.click();
-  URL.revokeObjectURL(url);
+  triggerBlobDownload(blob, 'profile.json');
   alert('✅ profile.json downloaded! Remember to also upload any new song/image/video files to the paths shown in the URL fields.');
 }
 
