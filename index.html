@@ -141,30 +141,7 @@
     .font-dm-sans { font-family: 'DM Sans', sans-serif !important; }
     .font-space-grotesk { font-family: 'Space Grotesk', sans-serif !important; }
 
-    /* Pixel TV overlay effect: scanlines + pixel grid */
-    .pixel-canvas {
-      image-rendering: pixelated;
-      image-rendering: crisp-edges;
-    }
-    /* Additional overlay for the "film" look */
-    #tv-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      pointer-events: none;
-      z-index: 3;
-      background: repeating-linear-gradient(
-        0deg,
-        rgba(0,0,0,0.15) 0px,
-        rgba(0,0,0,0.15) 2px,
-        transparent 2px,
-        transparent 4px
-      );
-      mix-blend-mode: multiply;
-      opacity: 0.5;
-    }
+    /* Pixel TV overlay: clean square grid, only when active */
     #pixel-grid {
       position: fixed;
       top: 0;
@@ -174,11 +151,38 @@
       pointer-events: none;
       z-index: 3;
       background-image: 
-        linear-gradient(rgba(0,0,0,0.08) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,0,0,0.08) 1px, transparent 1px);
-      background-size: 12px 12px;
-      opacity: 0.5;
+        linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.06) 1px, transparent 1px);
+      background-size: 8px 8px;
+      opacity: 0;
+      transition: opacity 0.3s;
       mix-blend-mode: multiply;
+    }
+    #pixel-grid.active {
+      opacity: 0.7;
+    }
+    /* scanline overlay for extra TV feel */
+    #scanlines {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 3;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0,0,0,0.08) 0px,
+        rgba(0,0,0,0.08) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+      opacity: 0;
+      transition: opacity 0.3s;
+      mix-blend-mode: multiply;
+    }
+    #scanlines.active {
+      opacity: 0.6;
     }
   </style>
 </head>
@@ -199,10 +203,10 @@
   <div class="bg-overlay" id="bg-overlay"></div>
 </div>
 
-<canvas id="fx-canvas" class="pixel-canvas"></canvas>
+<canvas id="fx-canvas"></canvas>
 <!-- TV overlays for pixel film effect -->
-<div id="tv-overlay"></div>
 <div id="pixel-grid"></div>
+<div id="scanlines"></div>
 
 <audio id="bg-audio" loop></audio>
 
@@ -287,18 +291,6 @@
       <div><label class="block text-xs text-gray-400">Location</label>
         <input type="text" id="input-location" value="Earth" oninput="updateLocation(this.value)" class="w-full bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" />
       </div>
-    </div>
-
-    <!-- Discord PFP Auto-Fetch -->
-    <div class="border-t border-white/5 pt-4 space-y-2">
-      <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Discord PFP</h3>
-      <div class="flex gap-2">
-        <input type="text" id="input-discord-id" placeholder="Discord User ID" class="flex-1 bg-[#222] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-blue-500" />
-        <button onclick="fetchDiscordPFP()" class="bg-blue-600/60 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm transition-colors">
-          <i class="fas fa-sync"></i> Fetch
-        </button>
-      </div>
-      <p class="text-[0.5rem] text-gray-500">Enter your Discord User ID and click Fetch to auto‑load your avatar.</p>
     </div>
 
     <!-- Assets Section -->
@@ -492,37 +484,6 @@ function unlockEditor() {
 if (localStorage.getItem('curbtree_trusted') === 'true' && isEditMode) {
   document.getElementById('lock-screen').style.display = 'none';
   document.getElementById('edit-btn').style.display = 'flex';
-}
-
-// ─── DISCORD PFP FETCHER ──────────────────────────────────
-async function fetchDiscordPFP() {
-  const uid = document.getElementById('input-discord-id').value.trim();
-  if (!uid) { alert('Please enter your Discord User ID.'); return; }
-  try {
-    const res = await fetch(`https://api.webtop.gg/v1/users/${uid}/avatar`);
-    if (!res.ok) throw new Error('User not found');
-    const url = await res.text();
-    document.getElementById('input-pfp-url').value = url;
-    state.pfpUrl = url;
-    DOM.displayPfp.src = getAssetUrl(url);
-    alert('✅ Discord avatar loaded! Click Save All Settings to keep it.');
-  } catch {
-    try {
-      const fallbackRes = await fetch(`https://grux.audibert.dev/user/${uid}`);
-      if (!fallbackRes.ok) throw new Error('User not found');
-      const data = await fallbackRes.json();
-      if (data.avatar_image) {
-        document.getElementById('input-pfp-url').value = data.avatar_image;
-        state.pfpUrl = data.avatar_image;
-        DOM.displayPfp.src = getAssetUrl(data.avatar_image);
-        alert('✅ Discord avatar loaded! Click Save All Settings to keep it.');
-      } else {
-        alert('❌ Could not fetch avatar. Please try again.');
-      }
-    } catch {
-      alert('❌ Failed to fetch Discord avatar. Please check your User ID.');
-    }
-  }
 }
 
 // ─── STATE ──────────────────────────────────────────────────
@@ -1022,14 +983,26 @@ function setEffect(type) {
   state.fx = type;
   if (fxAnimId) cancelAnimationFrame(fxAnimId);
   fxParticles = [];
-  if (type === 'none') { if (ctx) ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height); return; }
-
-  // Pixel (Old TV) effect: we use the canvas to draw a pixel grid with scanlines
+  
+  // Handle pixel grid overlays
+  const pixelGrid = document.getElementById('pixel-grid');
+  const scanlines = document.getElementById('scanlines');
   if (type === 'pixel') {
-    // We'll just clear the canvas and let the CSS overlays handle the TV look
+    pixelGrid.classList.add('active');
+    scanlines.classList.add('active');
+  } else {
+    pixelGrid.classList.remove('active');
+    scanlines.classList.remove('active');
+  }
+
+  if (type === 'none') { 
+    if (ctx) ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height); 
+    return; 
+  }
+
+  // Pixel effect: we just use the CSS overlays now, canvas is clear
+  if (type === 'pixel') {
     if (ctx) ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
-    // But we also want a subtle animated pixel noise? For the "film" feel we'll use canvas for a gentle flicker.
-    drawPixelFlicker();
     return;
   }
 
@@ -1048,38 +1021,12 @@ function setEffect(type) {
   drawFx();
 }
 
-// Pixel flicker: subtle noise overlay for TV feel
-function drawPixelFlicker() {
-  if (!ctx || !fxCanvas) return;
-  ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
-  const color = state.fxColor || '#ffffff';
-  // draw a subtle grid of tiny dots that flicker
-  const step = 20;
-  for (let x = 0; x < fxCanvas.width; x += step) {
-    for (let y = 0; y < fxCanvas.height; y += step) {
-      if (Math.random() > 0.85) {
-        ctx.globalAlpha = 0.08 + Math.random() * 0.1;
-        ctx.fillStyle = color;
-        ctx.fillRect(x, y, 2, 2);
-      }
-    }
-  }
-  // also some horizontal scanline flicker
-  for (let y = 0; y < fxCanvas.height; y += 4) {
-    if (Math.random() > 0.92) {
-      ctx.globalAlpha = 0.05;
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, y, fxCanvas.width, 1);
-    }
-  }
-  ctx.globalAlpha = 1;
-  fxAnimId = requestAnimationFrame(drawPixelFlicker);
-}
-
 function drawFx() {
   if (!ctx || !fxCanvas) return;
-  if (state.fx === 'none') { ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height); return; }
-  if (state.fx === 'pixel') return; // handled separately
+  if (state.fx === 'none' || state.fx === 'pixel') { 
+    ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height); 
+    return; 
+  }
   ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
   const color = state.fxColor || '#ffffff';
   const isSnow = state.fx === 'snow', isRain = state.fx === 'rain';
