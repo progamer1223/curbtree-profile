@@ -520,7 +520,7 @@
 
     <div class="border-t border-white/5 pt-4 space-y-2">
       <h3 class="text-xs font-semibold text-gray-400 uppercase">Background Effects</h3>
-      <div><label class="text-xs text-gray-400">Brightness</label><input type="range" min="0.2" max="1.8" step="0.05" value="1" class="w-full" oninput="document.getElementById('bg-overlay').style.opacity=1-this.value/2.2" /></div>
+      <div><label class="text-xs text-gray-400">Brightness</label><input type="range" id="bg-brightness" min="0.2" max="1.8" step="0.05" value="1" oninput="updateBgBrightness(this.value)" class="w-full" /></div>
       <div class="flex flex-wrap gap-3 text-xs">
         <label><input type="radio" name="fx" value="none" checked onchange="setEffect('none')" /> None</label>
         <label><input type="radio" name="fx" value="snow" onchange="setEffect('snow')" /> Snow</label>
@@ -589,7 +589,7 @@
         <i class="fas fa-download"></i> Download profile.json only
       </button>
       <p style="font-size:0.6rem; color:#666; text-align:center; margin-top:4px;">
-        "Save & Download Package" downloads curbtree-package.zip: profile.json plus an assets/ folder containing every new song/image/video file you picked this session. Unzip and upload the whole thing to your GitHub repo — next time the page loads, those files will be served from /assets/ and load automatically.
+        "Save & Download Package" downloads curbtree-package.zip: profile.json plus an assets/ folder containing every asset your profile currently uses (existing files pulled from the live site, plus any new files you just picked). Unzip and upload the whole thing to your GitHub repo, replacing your old assets folder — everything, old and new, will be there.
       </p>
     </div>
 
@@ -635,6 +635,10 @@ if (localStorage.getItem('curbtree_trusted') === 'true' && isEditMode) {
 }
 
 // ─── STATE ──────────────────────────────────────────────────
+// Every visible/adjustable setting in the editor lives in this object, and
+// this ENTIRE object is what gets written to profile.json on save and read
+// back on load — so nothing the user configures should ever live only in a
+// DOM element or a "local" variable outside of state.
 const state = {
   username: "@username",
   usernameColor: "#ffffff",
@@ -647,9 +651,7 @@ const state = {
   pfpUrl: "/assets/avatar.gif",
   bgType: 'none',
   bgUrl: '',
-  // Playlist: ordered array of { id, url, name }. Array order === play order,
-  // and since it's a plain JSON array it round-trips through profile.json /
-  // localStorage with order fully intact — no extra "order" field needed.
+  bgBrightness: 1,
   songs: [],
   currentSongIndex: 0,
   audioPlaying: false,
@@ -657,17 +659,12 @@ const state = {
   frameTransparency: 0.55,
   frameOutline: 0.08,
   frameBlur: 10,
-  // Main frame dimensions in px. null = auto/default (matches original
-  // min-height:340/400 + intrinsic content width behavior). Once set, the
-  // frame is pinned to that exact size and internal content scales to match.
   frameWidth: null,
   frameHeight: null,
   typewriter: { enabled: false, applyUsername: false, cursor: false, typeSpeed: 50, deleteSpeed: 25, pauseTime: 1500, lineGap: 300 },
   glowEffect: {
     enabled: false,
     intensity: 4,
-    // Which text/icon groups the neon glow is allowed to touch. Stats defaults
-    // off to preserve prior behavior (glow always excluded the stats bar).
     targets: { username: true, bio: true, music: true, social: true, badges: true, stats: false }
   },
   tilt: { enabled: true, intensity: 8, speed: 0.15 },
@@ -700,6 +697,7 @@ const DOM = {
   mainContent: document.getElementById('main-content'),
   bgImage: document.getElementById('bg-image'),
   bgVideo: document.getElementById('bg-video'),
+  bgOverlay: document.getElementById('bg-overlay'),
   audioPlayer: document.getElementById('bg-audio'),
   displayPfp: document.getElementById('display-pfp'),
   displayUsername: document.getElementById('display-username'),
@@ -733,23 +731,9 @@ const DOM = {
 };
 
 // ─── SELECTED ASSET PREVIEW BLOBS (for live in-editor preview only) ─────
-// These hold blob: URLs created from locally-picked files via URL.createObjectURL.
-// They only live for the current tab session and are NEVER written into
-// profile.json (blob URLs are meaningless outside this tab) — state.pfpUrl /
-// state.bgUrl / song.url always hold the real "/assets/..." path that will be
-// valid once you actually upload the file to that location on your site.
-// Whenever we need something to actually *play/display right now* in this
-// editor tab, we prefer the blob if one exists for that asset, otherwise we
-// fall back to the real URL. songs is keyed by song id so every song in the
-// playlist can have its own local preview file.
 const assetPreviewBlobs = { pfp: null, bg: null, songs: {} };
 
 // ─── SELECTED ASSET FILES (for zip export on Save) ──────────────────────
-// Holds the actual File objects picked via the file inputs. These only live
-// for the current tab session, but that's fine — they exist so "Save &
-// Download Package" can bundle them into a zip alongside profile.json. songs
-// is a map of songId -> File so every song in the playlist can carry its own
-// file into the package.
 const assetFiles = { pfp: null, bg: null, songs: {} };
 
 function getSongPlaybackSrc(song) {
@@ -767,11 +751,6 @@ function getBgDisplaySrc() {
 }
 
 // ─── PERSISTENCE HELPER (disabled) ───────────────────────────
-// Profile settings are no longer autosaved to localStorage. The "Save &
-// Download profile.json" button is the only way to persist anything, and it
-// does so by downloading profile.json rather than writing to the browser's
-// local storage. This function is kept as a no-op so the many existing call
-// sites throughout the file don't need to be touched.
 function persistState() {}
 
 // ─── CACHE-BUSTING HELPER ──────────────────────────────────
@@ -806,9 +785,6 @@ async function loadProfileFromJSON() {
 }
 
 // ─── MIGRATE OLD SINGLE-TRACK PROFILES ──────────────────────
-// Older profile.json/localStorage saves had a single audioUrl +
-// musicDisplayName instead of a songs[] playlist. Fold that into a
-// one-song playlist so existing profiles keep working.
 function migrateLegacyMusic() {
   if (!Array.isArray(state.songs)) state.songs = [];
   if (state.songs.length === 0 && state.audioUrl) {
@@ -816,9 +792,13 @@ function migrateLegacyMusic() {
   }
   if (typeof state.currentSongIndex !== 'number' || state.currentSongIndex < 0) state.currentSongIndex = 0;
   if (state.songs.length && state.currentSongIndex >= state.songs.length) state.currentSongIndex = 0;
+  if (typeof state.bgBrightness !== 'number') state.bgBrightness = 1;
 }
 
 // ─── SAVE ALL SETTINGS ──────────────────────────────────────
+// Pulls every live control's current value into `state` (most are already
+// kept in sync live by their own on-change handlers, this is a safety net so
+// NOTHING gets missed when we serialize state to profile.json below).
 async function saveAllSettings() {
   // Profile
   state.username = document.getElementById('input-username').value;
@@ -829,9 +809,6 @@ async function saveAllSettings() {
   state.bgUrl = document.getElementById('input-bg-url').value || '';
   state.bgType = document.getElementById('input-bg-type').value;
 
-  // Songs (names/urls/order are already kept in sync live via updateSong/
-  // moveSong/addSong/removeSong, nothing to re-read here)
-
   // Colors
   state.usernameColor = document.getElementById('username-color').value;
   state.bioColor = document.getElementById('bio-color').value;
@@ -839,7 +816,7 @@ async function saveAllSettings() {
   state.statsColor = document.getElementById('stats-color').value;
   state.socialColor = document.getElementById('social-color').value;
 
-  // Typography (kept in sync live by applyTypography(), re-read here for safety)
+  // Typography
   state.usernameFont = document.getElementById('username-font').value;
   state.usernameWeight = document.getElementById('username-weight').value;
   state.bioFont = document.getElementById('bio-font').value;
@@ -860,26 +837,32 @@ async function saveAllSettings() {
   state.typewriter.pauseTime = parseInt(document.getElementById('tw-pauseTime').value) || 1500;
   state.typewriter.lineGap = parseInt(document.getElementById('tw-lineGap').value) || 300;
 
-  // Glow
+  // Glow (enabled/intensity + every per-target checkbox)
   state.glowEffect.enabled = document.getElementById('glow-enabled').checked;
   state.glowEffect.intensity = parseFloat(document.getElementById('glow-intensity').value) || 4;
+  if (!state.glowEffect.targets) state.glowEffect.targets = {};
+  ['username','bio','music','social','badges','stats'].forEach(key => {
+    const el = document.getElementById('glow-target-' + key);
+    if (el) state.glowEffect.targets[key] = el.checked;
+  });
 
   // Tilt
   state.tilt.enabled = document.getElementById('tilt-enabled').checked;
   state.tilt.intensity = parseFloat(document.getElementById('tilt-intensity').value) || 8;
   state.tilt.speed = parseFloat(document.getElementById('tilt-speed').value) || 0.15;
 
-  // Frame
+  // Frame styling
   state.frameBg = document.getElementById('frame-bg-color').value;
   state.frameTransparency = parseInt(document.getElementById('frame-transparency').value) / 100;
   state.frameOutline = parseInt(document.getElementById('frame-outline-opacity').value) / 100;
   state.frameBlur = parseFloat(document.getElementById('frame-blur').value);
 
-  // Frame dimensions (already kept live in state by updateFrameDimsFromInputs /
-  // drag handlers, re-read here for safety in case of stray edits)
+  // Frame dimensions
   updateFrameDimsFromInputs(true);
 
-  // Effects
+  // Background effects (brightness + fx type + fx color)
+  const brightnessEl = document.getElementById('bg-brightness');
+  if (brightnessEl) state.bgBrightness = parseFloat(brightnessEl.value);
   document.querySelectorAll('input[name="fx"]').forEach(el => {
     if (el.checked) state.fx = el.value;
   });
@@ -888,12 +871,16 @@ async function saveAllSettings() {
   applyAllSettings();
 
   try {
-    const fileCount = await downloadAssetsPackage();
-    if (fileCount > 0) {
-      alert('✅ curbtree-package.zip downloaded! It contains profile.json plus an assets/ folder with ' + fileCount + ' new file(s) you picked — unzip it and upload the contents to your GitHub repo. Next time the page loads, those files will load from /assets/ automatically.');
-    } else {
-      alert('✅ curbtree-package.zip downloaded! No new local files were picked this session, so it just contains profile.json (still fine to upload — it updates all your settings).');
+    const { newFileCount, fetchedCount, failedFetches } = await downloadAssetsPackage();
+    let msg = '✅ curbtree-package.zip downloaded! It contains profile.json plus a complete assets/ folder';
+    if (newFileCount || fetchedCount) {
+      msg += ' (' + newFileCount + ' new file(s) picked this session, ' + fetchedCount + ' existing file(s) pulled in from your live site)';
     }
+    msg += '.\n\nUnzip it and upload everything to your GitHub repo, replacing your old assets/ folder entirely — old and new files will both be there.';
+    if (failedFetches.length) {
+      msg += '\n\n⚠️ Could not fetch these from the live site (they may not be uploaded there yet, or this preview isn\'t running on your real domain): ' + failedFetches.join(', ');
+    }
+    alert(msg);
   } catch (e) {
     console.error('Zip build failed:', e);
     downloadProfileJSON();
@@ -902,10 +889,6 @@ async function saveAllSettings() {
 }
 
 // ─── RELIABLE FILE DOWNLOAD HELPER ───────────────────────────
-// Triggers a browser download from a Blob. The anchor is attached to the
-// document (some browsers, notably Firefox, silently ignore .click() on an
-// anchor that was never inserted into the DOM) and the object URL is only
-// revoked after a short delay so the download has time to actually start.
 function triggerBlobDownload(blob, filename) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -921,42 +904,69 @@ function triggerBlobDownload(blob, filename) {
 }
 
 // ─── ASSETS ZIP PACKAGE ──────────────────────────────────────
-// Bundles whatever files were picked via the file inputs this session, under
-// an assets/ folder, together with profile.json, so the whole thing can be
-// dragged straight into a GitHub repo (or wherever the site is hosted).
-// Every song that has a locally-picked file gets included, not just the
-// currently-playing one. Returns the number of files bundled (0 is fine —
-// the zip still contains profile.json).
+// Bundles a COMPLETE assets/ folder into the zip:
+//  1. Any file picked via the file inputs THIS session (freshest version,
+//     always wins on a filename collision).
+//  2. Every other asset the current profile still references by a relative
+//     "/assets/..." path, fetched straight from wherever this page is
+//     currently being served, so old assets from previous sessions are
+//     included too — not just what changed today.
+// http(s):// URLs (externally hosted, e.g. Cloudinary) are left alone since
+// there's nothing local to bundle for those.
+// Returns { newFileCount, fetchedCount, failedFetches }.
 async function downloadAssetsPackage() {
   if (typeof JSZip === 'undefined') {
     throw new Error('JSZip failed to load (check your internet connection / ad blocker)');
   }
   const zip = new JSZip();
   const folder = zip.folder('assets');
-  let fileCount = 0;
+  let newFileCount = 0;
+  let fetchedCount = 0;
+  const failedFetches = [];
+  const addedFilenames = new Set();
 
-  if (assetFiles.pfp) { folder.file(assetFiles.pfp.name, assetFiles.pfp); fileCount++; }
-  if (assetFiles.bg) { folder.file(assetFiles.bg.name, assetFiles.bg); fileCount++; }
-  Object.keys(assetFiles.songs).forEach(songId => {
-    const file = assetFiles.songs[songId];
-    if (file) { folder.file(file.name, file); fileCount++; }
-  });
+  function addLocalFile(file) {
+    if (!file) return false;
+    folder.file(file.name, file);
+    addedFilenames.add(file.name);
+    return true;
+  }
+
+  // 1. This session's freshly-picked files
+  if (addLocalFile(assetFiles.pfp)) newFileCount++;
+  if (addLocalFile(assetFiles.bg)) newFileCount++;
+  Object.values(assetFiles.songs).forEach(file => { if (addLocalFile(file)) newFileCount++; });
+
+  // 2. Every other asset still referenced by the profile, fetched live
+  const referencedUrls = [];
+  if (state.pfpUrl) referencedUrls.push(state.pfpUrl);
+  if (state.bgUrl) referencedUrls.push(state.bgUrl);
+  state.songs.forEach(s => { if (s.url) referencedUrls.push(s.url); });
+
+  for (const url of referencedUrls) {
+    if (!url || url.startsWith('http://') || url.startsWith('https://')) continue;
+    const filename = url.split('/').pop();
+    if (!filename || addedFilenames.has(filename)) continue;
+    try {
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const blob = await res.blob();
+      folder.file(filename, blob);
+      addedFilenames.add(filename);
+      fetchedCount++;
+    } catch (e) {
+      failedFetches.push(filename || url);
+    }
+  }
 
   zip.file('profile.json', JSON.stringify(state, null, 2));
 
   const blob = await zip.generateAsync({ type: 'blob' });
   triggerBlobDownload(blob, 'curbtree-package.zip');
-  return fileCount;
+  return { newFileCount, fetchedCount, failedFetches };
 }
 
 // ─── FILE PICKERS (avatar / background) ─────────────────────
-// Picking a file previews it immediately in this tab (via a blob URL) and
-// fills the matching URL field with a suggested /assets/<filename> path —
-// the path that will actually resolve once the file is uploaded to that
-// location in the repo. The blob URL is kept around (in assetPreviewBlobs)
-// so the preview keeps working even after switching tabs/settings within
-// this session, instead of getting silently replaced by the (not-yet-real)
-// "/assets/..." path.
 function handleFileSelect(e, kind) {
   const file = e.target.files && e.target.files[0];
   if (!file) return;
@@ -1039,15 +1049,7 @@ function applyFrameStyles(bg, transparency, outline, blur) {
 }
 
 // ─── FRAME DIMENSIONS (resizable main frame, edit mode only) ──
-// The default/undeformed size is captured once on init from the frame's
-// natural rendered box (which itself responds to the responsive
-// .main-frame-tall min-heights + intrinsic content width). Once the user
-// sets an explicit width/height (via drag or the inputs), we pin the frame
-// to px dimensions and scale ALL of its inner content (via a transform
-// scale on the inner content wrapper) so everything — avatar, text, music
-// player — grows/shrinks together rather than just leaving empty space or
-// clipping.
-let defaultFrameSize = null; // {w,h} captured on first layout
+let defaultFrameSize = null;
 
 function captureDefaultFrameSize() {
   if (defaultFrameSize) return;
@@ -1068,8 +1070,6 @@ function applyFrameDimensions() {
     DOM.outerWrap.style.maxWidth = 'none';
     DOM.outerWrap.style.width = targetW + 'px';
 
-    // Scale inner content proportionally to how far we are from the
-    // captured default size, so text/avatar/player all grow together.
     const scaleW = targetW / defaultFrameSize.w;
     const scaleH = targetH / defaultFrameSize.h;
     const scale = Math.max(0.5, Math.min(2.2, Math.min(scaleW, scaleH)));
@@ -1077,12 +1077,9 @@ function applyFrameDimensions() {
     if (inner) {
       inner.style.transform = `scale(${scale})`;
       inner.style.transformOrigin = 'top left';
-      // Compensate the layout box so scaled content doesn't overflow/clip
-      // and the flex column still sizes correctly.
       inner.style.width = (100 / scale) + '%';
     }
   } else {
-    // Reset to default responsive behavior
     DOM.mainFrame.style.width = '';
     DOM.mainFrame.style.height = '';
     DOM.mainFrame.style.minHeight = '';
@@ -1096,7 +1093,6 @@ function applyFrameDimensions() {
     }
   }
 
-  // Keep the number inputs and the drag label in sync
   const wInput = document.getElementById('input-frame-width');
   const hInput = document.getElementById('input-frame-height');
   if (wInput) wInput.value = state.frameWidth || '';
@@ -1143,9 +1139,6 @@ function toggleScaleMode() {
   DOM.scaleModeLabel.textContent = 'Resize: ' + (scaleModeOn ? 'on' : 'off');
   DOM.tiltGroup.classList.toggle('resize-mode', scaleModeOn);
 
-  // Turning scale mode on disables tilt for the duration (and restores the
-  // user's saved tilt preference when turning it back off), so dragging to
-  // resize never fights the tilt transform on the same element.
   if (scaleModeOn) {
     tiltWasEnabledBeforeScaleMode = state.tilt.enabled;
     state.tilt.enabled = false;
@@ -1198,6 +1191,17 @@ function stopResize() {
   persistState();
 }
 
+// ─── BACKGROUND BRIGHTNESS ────────────────────────────────────
+// Was previously just an inline oninput that touched the DOM directly and
+// never wrote to state, so it was lost on save/reload. Now it's a normal
+// state-backed setting like everything else.
+function updateBgBrightness(val) {
+  const v = parseFloat(val);
+  state.bgBrightness = v;
+  DOM.bgOverlay.style.opacity = 1 - v / 2.2;
+  persistState();
+}
+
 // ─── APPLY ALL SETTINGS ─────────────────────────────────────
 function applyAllSettings() {
   // Profile
@@ -1210,7 +1214,7 @@ function applyAllSettings() {
   // Profile Picture
   if (state.pfpUrl) DOM.displayPfp.src = getPfpDisplaySrc();
 
-  // Background
+  // Background media
   if (state.bgType === 'image' && state.bgUrl) {
     DOM.bgImage.src = getBgDisplaySrc();
     DOM.bgImage.style.display = 'block';
@@ -1229,6 +1233,12 @@ function applyAllSettings() {
     DOM.bgVideo.style.display = 'none';
   }
 
+  // Background brightness
+  if (typeof state.bgBrightness !== 'number') state.bgBrightness = 1;
+  DOM.bgOverlay.style.opacity = 1 - state.bgBrightness / 2.2;
+  const brightnessEl = document.getElementById('bg-brightness');
+  if (brightnessEl) brightnessEl.value = state.bgBrightness;
+
   // Music / Playlist
   refreshMusicDisplay();
   DOM.inlineTrack.style.color = state.musicColor;
@@ -1243,31 +1253,29 @@ function applyAllSettings() {
 
   // Frame
   applyFrameStyles(state.frameBg, state.frameTransparency, state.frameOutline, state.frameBlur);
-
-  // Frame dimensions (must run after frame is in the DOM/laid out so the
-  // default size capture reflects real rendered size)
   applyFrameDimensions();
 
   // Typography
   applyTypography();
 
-  // Glow (applied only to specific elements, not stats)
+  // Glow
   applyGlow();
 
   // Typewriter
   restartTypewriter();
   applyCursorClasses();
 
-  // Effects
-  if (state.fx && state.fx !== 'none') setEffect(state.fx);
+  // Background effects (fx type + color)
+  document.querySelectorAll('input[name="fx"]').forEach(el => {
+    el.checked = el.value === state.fx;
+  });
+  const fxColorEl = document.getElementById('fx-color');
+  if (fxColorEl) fxColorEl.value = state.fxColor || '#ffffff';
+  if (state.fx && state.fx !== 'none') setEffect(state.fx); else setEffect('none');
 
   updateScaleModeToggleVisibility();
 }
 
-// Volume + seek slider thumbs are tinted to match the music text color
-// (state.musicColor) via a CSS custom property, instead of the old
-// hardcoded #8ab4f8, so they visually match whatever color the user picks
-// for the music text/icons.
 function applyMusicThumbColor() {
   if (DOM.inlineMusic) {
     DOM.inlineMusic.style.setProperty('--music-thumb-color', state.musicColor || '#8ab4f8');
@@ -1295,16 +1303,10 @@ function updateStatsColor(color) { state.statsColor = color; const items = DOM.s
 function updateSocialColor(color) { state.socialColor = color; document.querySelectorAll('.social-tooltip').forEach(el => el.style.color = color); persistState(); }
 
 // ─── TYPOGRAPHY ─────────────────────────────────────────────
-// FIX: previously this function only re-applied whatever font/weight was already
-// sitting in `state`, but nothing ever wrote the freshly-selected <select> value
-// back into `state` first — so picking a new font in the dropdown never actually
-// changed anything. Now we read every select's current value into state first,
-// then apply the classes.
 const FONT_CLASSES = ['font-inter', 'font-roboto', 'font-poppins', 'font-montserrat', 'font-playfair', 'font-raleway', 'font-dm-sans', 'font-space-grotesk'];
 const WEIGHT_CLASSES = ['font-weight-normal', 'font-weight-medium', 'font-weight-semibold', 'font-weight-bold', 'font-weight-extrabold'];
 
 function applyTypography() {
-  // 1. Pull the current dropdown selections into state
   state.usernameFont = document.getElementById('username-font').value;
   state.usernameWeight = document.getElementById('username-weight').value;
   state.bioFont = document.getElementById('bio-font').value;
@@ -1316,26 +1318,21 @@ function applyTypography() {
   state.socialFont = document.getElementById('social-font').value;
   state.socialWeight = document.getElementById('social-weight').value;
 
-  // 2. Apply classes based on the now up-to-date state
-  // Username
   DOM.displayUsername.classList.remove(...FONT_CLASSES);
   DOM.displayUsername.classList.add(state.usernameFont || 'font-inter');
   DOM.displayUsername.classList.remove(...WEIGHT_CLASSES);
   DOM.displayUsername.classList.add(state.usernameWeight || 'font-weight-extrabold');
 
-  // Bio
   DOM.displayBio.classList.remove(...FONT_CLASSES);
   DOM.displayBio.classList.add(state.bioFont || 'font-inter');
   DOM.displayBio.classList.remove(...WEIGHT_CLASSES);
   DOM.displayBio.classList.add(state.bioWeight || 'font-weight-normal');
 
-  // Music
   DOM.inlineTrack.classList.remove(...FONT_CLASSES);
   DOM.inlineTrack.classList.add(state.musicFont || 'font-inter');
   DOM.inlineTrack.classList.remove(...WEIGHT_CLASSES);
   DOM.inlineTrack.classList.add(state.musicWeight || 'font-weight-normal');
 
-  // Stats
   const statItems = DOM.statsBar.querySelectorAll('.stat-item');
   statItems.forEach(item => {
     item.classList.remove(...FONT_CLASSES);
@@ -1344,7 +1341,6 @@ function applyTypography() {
     item.classList.add(state.statsWeight || 'font-weight-normal');
   });
 
-  // Social tooltips (they are .social-tooltip class)
   document.querySelectorAll('.social-tooltip').forEach(el => {
     el.classList.remove(...FONT_CLASSES);
     el.classList.add(state.socialFont || 'font-inter');
@@ -1355,16 +1351,21 @@ function applyTypography() {
   persistState();
 }
 
-// ─── NEON GLOW (excludes stats bar) ──────────────────────
-// FIX: the .neon-text CSS class used to hard-code its own text-shadow/filter
-// values with !important, which always beats inline styles — so the intensity
-// slider below (which only ever set inline styles) had zero visible effect.
-// The CSS class is now just a bare marker with no !important values, so the
-// numbers here are the only source of truth for glow intensity.
+// ─── NEON GLOW (light-emission style, excludes stats by default) ──────
+// Rebuilt to actually look like the text/icons are EMITTING soft light,
+// instead of just getting bulkier/bolder. The old version stacked several
+// text-shadow layers all using solid `currentColor`, with the first layer at
+// a very tight radius — at low blur that reads as "reinforced edges" (i.e.
+// a bolder glyph), not glow. This version:
+//   - drops the tight/near-zero-blur layer entirely (that's what looked
+//     "bulky"), so nothing directly hugs the letterforms.
+//   - fades each successive, wider layer to a lower opacity via
+//     color-mix(), so brightness falls off the way real light bloom does
+//     instead of being solid all the way out.
+//   - removes the filter:drop-shadow() entirely — combined with text-shadow
+//     it was doubling up the thickening effect.
 function updateGlowSetting(key, val) { state.glowEffect[key] = val; applyGlow(); persistState(); }
 
-// Per-target toggle: lets each piece of text/iconography opt in or out of the
-// neon glow independently, instead of it being all-or-nothing.
 function updateGlowTarget(target, val) {
   if (!state.glowEffect.targets) state.glowEffect.targets = {};
   state.glowEffect.targets[target] = val;
@@ -1396,8 +1397,16 @@ function applyGlow() {
         return;
       }
       el.classList.add('neon-text');
-      el.style.textShadow = `0 0 ${g*0.2}px currentColor, 0 0 ${g*0.6}px currentColor, 0 0 ${g*1.2}px currentColor, 0 0 ${g*2.0}px currentColor`;
-      el.style.filter = `drop-shadow(0 0 ${g*0.3}px currentColor)`;
+      // Soft bloom: fewer, wider, progressively fainter layers. Starts at a
+      // moderate blur (not 0) so it never looks like a bold outline, and
+      // each layer's alpha fades with distance the way actual glow does.
+      el.style.textShadow = [
+        `0 0 ${g * 0.5}px color-mix(in srgb, currentColor 75%, transparent)`,
+        `0 0 ${g * 1.4}px color-mix(in srgb, currentColor 45%, transparent)`,
+        `0 0 ${g * 2.6}px color-mix(in srgb, currentColor 25%, transparent)`,
+        `0 0 ${g * 4.2}px color-mix(in srgb, currentColor 12%, transparent)`
+      ].join(', ');
+      el.style.filter = '';
     });
   });
 }
@@ -1472,12 +1481,6 @@ function applyCursorClasses() {
 }
 
 // ─── TRACK NAME TYPEWRITER (song changes / replays) ──────────
-// Plays whenever the active song changes (next/prev/auto-advance) OR
-// restarts (looping back to itself), erasing the old track name then typing
-// in the new one. Reuses the same type/delete speed sliders from the
-// Typewriter panel for consistency. `force` lets callers replay the effect
-// even when newName is identical to what's already showing (e.g. a single
-// song looping back to itself).
 let trackNameTimer = null;
 
 function typewriterTrackName(newName, force) {
@@ -1498,7 +1501,6 @@ function typewriterTrackName(newName, force) {
   if (!oldText) { type(); return; }
 
   if (oldText === newName && !force) {
-    // Same name and not forced: nothing to animate, just make sure it's set.
     el.textContent = newName;
     return;
   }
@@ -1518,9 +1520,6 @@ let curRX = 0, curRY = 0, tarRX = 0, tarRY = 0, curS = 1, tarS = 1, tiltLoop = n
 function updateTiltSetting(key, val) { state.tilt[key] = val; if (!state.tilt.enabled) { tarRX = 0; tarRY = 0; tarS = 1; } persistState(); }
 
 function tiltLoopFn() {
-  // Tilt is suppressed entirely while resize/scale mode is active, so
-  // dragging the resize handles never fights the tilt transform on the
-  // same #tilt-group element.
   const tiltActive = state.tilt.enabled && !scaleModeOn;
   if (!tiltActive) { tarRX = 0; tarRY = 0; tarS = 1; }
   curRX += (tarRX - curRX) * state.tilt.speed;
@@ -1572,10 +1571,10 @@ function resizeFxCanvas() {
 function setEffect(type) {
   state.fx = type;
   persistState();
+  document.querySelectorAll('input[name="fx"]').forEach(el => { el.checked = el.value === type; });
   if (fxAnimId) cancelAnimationFrame(fxAnimId);
   fxParticles = [];
-  
-  // Handle pixel grid overlays
+
   const pixelGrid = document.getElementById('pixel-grid');
   const scanlines = document.getElementById('scanlines');
   if (type === 'pixel') {
@@ -1586,18 +1585,16 @@ function setEffect(type) {
     scanlines.classList.remove('active');
   }
 
-  if (type === 'none') { 
-    if (ctx) ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height); 
-    return; 
+  if (type === 'none') {
+    if (ctx) ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+    return;
   }
 
-  // Pixel effect: we just use the CSS overlays now, canvas is clear
   if (type === 'pixel') {
     if (ctx) ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
     return;
   }
 
-  // Snow or Rain
   let count = type === 'rain' ? 200 : 220;
   for (let i = 0; i < count; i++) {
     fxParticles.push({
@@ -1614,9 +1611,9 @@ function setEffect(type) {
 
 function drawFx() {
   if (!ctx || !fxCanvas) return;
-  if (state.fx === 'none' || state.fx === 'pixel') { 
-    ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height); 
-    return; 
+  if (state.fx === 'none' || state.fx === 'pixel') {
+    ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+    return;
   }
   ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
   const color = state.fxColor || '#ffffff';
@@ -1670,9 +1667,6 @@ function drawFx() {
 function updateFxColor() { state.fxColor = document.getElementById('fx-color').value; persistState(); }
 
 // ─── PLAYLIST / MUSIC ────────────────────────────────────────
-// Whether the <audio> element should loop the current track itself (only
-// makes sense with 0-1 songs — with 2+ songs, 'ended' advances to the next
-// track instead, so native loop is turned off).
 function updateAudioLoopFlag() {
   DOM.audioPlayer.loop = !(state.songs && state.songs.length > 1);
 }
@@ -1692,11 +1686,6 @@ function resetSeekBar() {
   DOM.inlineDurationTime.textContent = '0:00';
 }
 
-// Rebuilds the inline player display (name, src, show/hide) for whatever
-// song currentSongIndex points at, WITHOUT any typewriter animation — used
-// for initial load / direct edits, not for next/prev. Uses getSongPlaybackSrc
-// so a locally-picked file (blob preview) keeps playing instead of getting
-// silently swapped for its not-yet-uploaded "/assets/..." path.
 function refreshMusicDisplay() {
   if (state.songs && state.songs.length) {
     if (state.currentSongIndex >= state.songs.length || state.currentSongIndex < 0) state.currentSongIndex = 0;
@@ -1712,10 +1701,6 @@ function refreshMusicDisplay() {
   }
 }
 
-// Switches to the song at `index` (wrapping around), plays the track-name
-// typewriter transition, and optionally starts playback. `forceTypewriter`
-// replays the typewriter effect even if landing on the same song (used when
-// a single-song playlist loops back to itself).
 function goToSong(index, shouldPlay, forceTypewriter) {
   if (!state.songs || !state.songs.length) return;
   const len = state.songs.length;
@@ -1761,9 +1746,6 @@ function toggleAudio(force) {
     icon.className = 'fas fa-play';
     DOM.inlineStatus.className = 'status-dot paused';
   } else {
-    // Make sure the <audio> element actually has the right src before
-    // attempting playback — if something reset it in the meantime, restore
-    // it from the current song (preferring any local blob preview).
     const song = state.songs[state.currentSongIndex];
     const expectedSrc = getSongPlaybackSrc(song);
     if (song && expectedSrc && !DOM.audioPlayer.src.endsWith(expectedSrc.replace(/^.*\//, ''))) {
@@ -1782,10 +1764,6 @@ function toggleAudio(force) {
 
 function updateVolume(val) { DOM.audioPlayer.volume = parseFloat(val); }
 
-// Seeking: while the user is dragging the slider we show the scrubbed time
-// immediately but don't touch playback yet; the actual seek happens on
-// release ('change'), and normal timeupdate syncing is paused meanwhile so
-// it doesn't fight the drag.
 let isSeeking = false;
 
 function initSeekBar() {
@@ -1880,8 +1858,6 @@ function updateSong(id, key, val) {
   const s = state.songs.find(x => x.id === id);
   if (!s) return;
   s[key] = val;
-  // Typing a URL by hand means the user wants to use that real URL instead
-  // of whatever local file preview was loaded for this song.
   if (key === 'url') delete assetPreviewBlobs.songs[id];
   const isCurrent = state.songs[state.currentSongIndex] && state.songs[state.currentSongIndex].id === id;
   if (isCurrent) {
@@ -2124,10 +2100,9 @@ async function init() {
   initFxCanvas();
   initSeekBar();
 
-  // Populate UI fields BEFORE applyAllSettings() so applyTypography() (called
-  // inside it) reads the correct restored values from the selects, not defaults.
   document.getElementById('fx-color').value = state.fxColor;
-  document.getElementById('bg-overlay').style.opacity = 0.55;
+  document.getElementById('bg-brightness').value = state.bgBrightness != null ? state.bgBrightness : 1;
+  DOM.bgOverlay.style.opacity = 1 - (state.bgBrightness != null ? state.bgBrightness : 1) / 2.2;
 
   document.getElementById('input-username').value = state.username;
   document.getElementById('input-location').value = state.location;
@@ -2164,10 +2139,13 @@ async function init() {
   document.getElementById('tw-enabled').checked = state.typewriter.enabled;
   document.getElementById('tw-apply-username').checked = state.typewriter.applyUsername;
   document.getElementById('tw-cursor').checked = state.typewriter.cursor;
+  document.getElementById('tw-typeSpeed').value = state.typewriter.typeSpeed;
+  document.getElementById('tw-deleteSpeed').value = state.typewriter.deleteSpeed;
+  document.getElementById('tw-pauseTime').value = state.typewriter.pauseTime;
+  document.getElementById('tw-lineGap').value = state.typewriter.lineGap;
   document.getElementById('glow-enabled').checked = state.glowEffect.enabled;
   document.getElementById('glow-intensity').value = state.glowEffect.intensity;
 
-  // Guard against profiles saved before per-target glow existed
   if (!state.glowEffect.targets) {
     state.glowEffect.targets = { username: true, bio: true, music: true, social: true, badges: true, stats: false };
   }
@@ -2188,13 +2166,6 @@ async function init() {
 
   if (state.fx !== 'none') setEffect(state.fx);
 
-  // Advance to the next track automatically when one ends. With 2+ songs
-  // this goes to the next track (updateAudioLoopFlag() disables native
-  // <audio> looping in that case so 'ended' actually fires). With exactly
-  // one song, native `loop` handles the actual restart of playback, but
-  // that means 'ended' never fires for it — so we drive the typewriter
-  // replay for that case off the 'seeked backward to (near) 0' pattern
-  // native looping produces (currentTime resets), detected in timeupdate.
   DOM.audioPlayer.addEventListener('ended', () => {
     if (state.songs && state.songs.length > 1) {
       goToSong(state.currentSongIndex + 1, true, false);
@@ -2205,9 +2176,6 @@ async function init() {
   let lastAudioTime = 0;
   DOM.audioPlayer.addEventListener('timeupdate', () => {
     const cur = DOM.audioPlayer.currentTime || 0;
-    // Detect a loop restart: time jumped backward sharply while looping a
-    // single song (native `loop` doesn't fire 'ended', it just resets
-    // currentTime to 0 and keeps playing).
     if (DOM.audioPlayer.loop && lastAudioTime > 1 && cur < 0.3 && state.songs && state.songs.length === 1) {
       typewriterTrackName(state.songs[0].name, true);
     }
