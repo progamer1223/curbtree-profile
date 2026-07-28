@@ -28,14 +28,14 @@
       "name": "Almost Back - Lucki"
     }
   ],
-  "currentSongIndex": 1,
+  "currentSongIndex": 0,
   "audioPlaying": true,
   "frameBg": "#ffffff",
   "frameTransparency": 0,
-  "frameOutline": 0.06,
-  "frameBlur": 9.5,
+  "frameOutline": 0.67,
+  "frameBlur": 0,
   "frameShadow": true,
-  "frameBorderWidth": 0,
+  "frameBorderWidth": 3,
   "frameBorderColor": "#ffffff",
   "frameWidth": 780,
   "frameHeight": 414,
@@ -72,7 +72,7 @@
   },
   "tilt": {
     "enabled": true,
-    "intensity": 18,
+    "intensity": 12,
     "speed": 0.08
   },
   "links": [
@@ -117,7 +117,7 @@
       "textColor": "#ffffff"
     }
   ],
-  "fx": "snow",
+  "fx": "pixel",
   "fxColor": "#ffffff",
   "usernameFont": "font-space-grotesk",
   "usernameWeight": "font-weight-extrabold",
